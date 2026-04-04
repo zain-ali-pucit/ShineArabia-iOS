@@ -1,0 +1,712 @@
+import SwiftUI
+
+struct HomeView: View {
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var vm: HomeViewModel
+    @EnvironmentObject var bookingVM: BookingViewModel
+
+    var body: some View {
+        ZStack {
+            Color.shineBG.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Header
+                    HomeHeaderView()
+
+                    // Search bar
+                    SearchBarView(text: $vm.searchText)
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.top, ShineSpacing.lg)
+
+                    if !vm.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                        // Search results
+                        SearchResultsSection { category in
+                            vm.openService(category)
+                        }
+                        .padding(.top, ShineSpacing.md)
+                        .padding(.bottom, ShineSpacing.xl)
+                    } else {
+                        // Default home content
+                        PromoBannerView {
+                            vm.openService(.bundle)
+                        }
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.top, ShineSpacing.lg)
+
+                        SectionHeader(
+                            title: Loc.string("home.services", isArabic: appState.isArabic),
+                            action: Loc.string("home.see_all", isArabic: appState.isArabic)
+                        )
+                        .padding(.top, ShineSpacing.xl)
+
+                        ServiceCardsRow(services: vm.services) { category in
+                            vm.openService(category)
+                        }
+
+                        SectionHeader(
+                            title: Loc.string("home.popular", isArabic: appState.isArabic),
+                            action: Loc.string("home.filter", isArabic: appState.isArabic)
+                        )
+                        .padding(.top, ShineSpacing.lg)
+
+                        PopularListView(items: vm.popularItems) { item in
+                            vm.openService(item.category)
+                        }
+                        .padding(.horizontal, ShineSpacing.lg)
+
+                        SectionHeader(
+                            title: Loc.string("home.how_it_works", isArabic: appState.isArabic),
+                            action: nil
+                        )
+                        .padding(.top, ShineSpacing.lg)
+
+                        HowItWorksView()
+                            .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.bottom, ShineSpacing.xl)
+                    }
+                }
+            }
+
+            // Booking confirmed toast
+            if vm.showBookingConfirmed {
+                VStack {
+                    Spacer()
+                    BookingConfirmedToast(isArabic: appState.isArabic)
+                        .padding(.bottom, 100)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                .animation(.spring(response: 0.5), value: vm.showBookingConfirmed)
+            }
+        }
+        // Service bottom sheet
+        .sheet(isPresented: $vm.showServiceSheet) {
+            if let svc = vm.selectedService {
+                ServiceBottomSheet(
+                    category: svc,
+                    packages: vm.packages,
+                    selectedPackage: $vm.selectedPackage,
+                    isArabic: appState.isArabic
+                ) {
+                    guard let pkg = vm.selectedPackage else { return }
+                    if appState.isAuthenticated {
+                        Task { @MainActor in
+                            await bookingVM.createBooking(package: pkg)
+                            if bookingVM.errorMsg == nil {
+                                vm.confirmBooking()
+                            }
+                        }
+                    } else {
+                        vm.pendingPackageForAuth = pkg
+                        vm.showServiceSheet = false
+                        vm.showAuthPrompt = true
+                    }
+                }
+                .environmentObject(bookingVM)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(32)
+            }
+        }
+        .sheet(isPresented: $vm.showAuthPrompt) {
+            LoginView()
+                .environmentObject(appState)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { _ in
+            guard let pkg = vm.pendingPackageForAuth else { return }
+            vm.showAuthPrompt = false
+            vm.pendingPackageForAuth = nil
+            Task { @MainActor in
+                await bookingVM.createBooking(package: pkg)
+                if bookingVM.errorMsg == nil {
+                    vm.confirmBooking()
+                }
+            }
+        }
+        .task {
+            await vm.loadPopular()
+        }
+    }
+}
+
+// MARK: - Header
+struct HomeHeaderView: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 2) {
+                // Brand
+                HStack(alignment: .bottom, spacing: 6) {
+                    Text("ShineArabia")
+                        .font(ShineFont.displayBold(26))
+                        .foregroundColor(.shineInk)
+                }
+                Text(Loc.string("home.subtitle", isArabic: appState.isArabic))
+                    .font(ShineFont.body(11, weight: .medium))
+                    .foregroundColor(.shineInk3)
+                    .kerning(0.5)
+                    .textCase(.uppercase)
+            }
+
+            Spacer()
+
+            HStack(spacing: 10) {
+                LanguageToggle()
+                NotificationButton()
+            }
+        }
+        .padding(.horizontal, ShineSpacing.lg)
+        .padding(.top, ShineSpacing.lg)
+
+        // Greeting + Hero
+        VStack(alignment: .leading, spacing: 4) {
+            Text(Loc.string("home.greeting", isArabic: appState.isArabic))
+                .font(ShineFont.body(13))
+                .foregroundColor(.shineInk3)
+
+            (Text(Loc.string("home.hero.body", isArabic: appState.isArabic))
+            + Text(Loc.string("home.hero.highlight", isArabic: appState.isArabic))
+                .foregroundColor(.shineCoral))
+                .font(ShineFont.displayBold(34))
+                .foregroundColor(.shineInk)
+                .lineSpacing(4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, ShineSpacing.lg)
+        .padding(.top, ShineSpacing.md)
+    }
+}
+
+// MARK: - Search Bar
+struct SearchBarView: View {
+    @Binding var text: String
+    @EnvironmentObject var appState: AppState
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16))
+                .foregroundColor(.shineInk3)
+
+            TextField(
+                Loc.string("home.search_placeholder", isArabic: appState.isArabic),
+                text: $text
+            )
+            .font(ShineFont.body(14))
+            .foregroundColor(.shineInk)
+            .focused($isFocused)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.shineCoral)
+                    .frame(width: 32, height: 32)
+                    .shineShadowSM()
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
+        .background(Color.shineSurface)
+        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: ShineRadius.md)
+                .stroke(isFocused ? Color.shineCoral : Color.clear, lineWidth: 1.5)
+        )
+        .shineShadowXS()
+        .animation(.easeInOut(duration: 0.25), value: isFocused)
+    }
+}
+
+// MARK: - Promo Banner
+struct PromoBannerView: View {
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                // Background
+                RoundedRectangle(cornerRadius: ShineRadius.lg)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "1C1917"), Color(hex: "2E2925"), Color(hex: "3D3530")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                // Blobs
+                Circle()
+                    .fill(Color.shineCoral.opacity(0.25))
+                    .frame(width: 160, height: 160)
+                    .blur(radius: 30)
+                    .offset(x: 80, y: -40)
+
+                Circle()
+                    .fill(Color.shineAmber.opacity(0.20))
+                    .frame(width: 100, height: 100)
+                    .blur(radius: 25)
+                    .offset(x: -60, y: 30)
+
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        // Pill
+                        HStack(spacing: 5) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 10))
+                            Text("Limited Offer")
+                                .font(ShineFont.body(11, weight: .semibold))
+                                .kerning(0.3)
+                                .textCase(.uppercase)
+                        }
+                        .foregroundColor(Color(hex: "F4A799"))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.shineCoral.opacity(0.2))
+                        .overlay(
+                            Capsule().stroke(Color.shineCoral.opacity(0.35), lineWidth: 1)
+                        )
+                        .clipShape(Capsule())
+
+                        Text("Bundle All Three\nServices & Save")
+                            .font(ShineFont.displayBold(22))
+                            .foregroundColor(.white)
+                            .lineSpacing(3)
+
+                        Text("Laundry + Cleaning + Car Wash")
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.white.opacity(0.5))
+
+                        // CTA button
+                        HStack(spacing: 6) {
+                            Text("Book Bundle")
+                                .font(ShineFont.body(13, weight: .semibold))
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 9)
+                        .background(Color.shineCoral)
+                        .clipShape(Capsule())
+                        .shadow(color: Color.shineCoral.opacity(0.35), radius: 8, x: 0, y: 4)
+                        .padding(.top, 4)
+                    }
+
+                    Spacer()
+
+                    // 30% badge
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                            .frame(width: 64, height: 64)
+                        Circle()
+                            .fill(Color.white.opacity(0.06))
+                            .frame(width: 64, height: 64)
+                        VStack(spacing: 0) {
+                            Text("30%")
+                                .font(ShineFont.displayBold(22))
+                                .foregroundColor(Color(hex: "F4A799"))
+                            Text("OFF")
+                                .font(ShineFont.body(8, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.5))
+                                .kerning(0.5)
+                        }
+                    }
+                    .padding(.trailing, 4)
+                }
+                .padding(22)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(height: 175)
+        .shineShadowMD()
+    }
+}
+
+// MARK: - Section Header
+struct SectionHeader: View {
+    let title: String
+    let action: String?
+
+    var body: some View {
+        HStack(alignment: .bottom) {
+            Text(title)
+                .font(ShineFont.displayBold(20))
+                .foregroundColor(.shineInk)
+            Spacer()
+            if let action = action {
+                Button(action: {}) {
+                    Text(action)
+                        .font(ShineFont.body(13, weight: .medium))
+                        .foregroundColor(.shineCoral)
+                }
+            }
+        }
+        .padding(.horizontal, ShineSpacing.lg)
+        .padding(.bottom, ShineSpacing.sm)
+    }
+}
+
+// MARK: - Service Cards Row (horizontal scroll)
+struct ServiceCardsRow: View {
+    let services: [ServiceCategory]
+    let onTap: (ServiceCategory) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 14) {
+                ForEach(Array(services.enumerated()), id: \.element) { index, svc in
+                    ServiceCard(category: svc, animationDelay: Double(index) * 0.07) {
+                        onTap(svc)
+                    }
+                }
+            }
+            .padding(.horizontal, ShineSpacing.lg)
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+// MARK: - Service Card (148pt wide, matches HTML)
+struct ServiceCard: View {
+    @EnvironmentObject var appState: AppState
+    let category: ServiceCategory
+    let animationDelay: Double
+    let onTap: () -> Void
+
+    @State private var appeared = false
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack(alignment: .bottomTrailing) {
+                // Background blob
+                Circle()
+                    .fill(category.color.opacity(0.08))
+                    .frame(width: 90, height: 90)
+                    .offset(x: 20, y: 20)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    // Icon
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(category.softColor)
+                            .frame(width: 52, height: 52)
+                        Text(category.icon)
+                            .font(.system(size: 24))
+                    }
+                    .padding(.bottom, 14)
+
+                    Text(appState.isArabic ? category.titleAR : category.title)
+                        .font(ShineFont.body(14, weight: .semibold))
+                        .foregroundColor(.shineInk)
+                        .lineLimit(2)
+
+                    Text(category.optionsCount)
+                        .font(ShineFont.body(12))
+                        .foregroundColor(.shineInk3)
+                        .padding(.top, 4)
+
+                    Spacer()
+
+                    // Arrow
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(category.softColor)
+                            .frame(width: 28, height: 28)
+                        Image(systemName: appState.isArabic ? "arrow.left" : "arrow.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(category.color)
+                    }
+                }
+                .padding(18)
+                .frame(width: 148, height: 195)
+                .background(Color.shineSurface)
+                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.lg))
+                .shineShadowSM()
+            }
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 16)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(animationDelay)) {
+                appeared = true
+            }
+        }
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
+    }
+}
+
+// MARK: - Popular List
+struct PopularListView: View {
+    @EnvironmentObject var appState: AppState
+    let items: [PopularItem]
+    let onTap: (PopularItem) -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                PopularCard(item: item, animationDelay: Double(index) * 0.08) {
+                    onTap(item)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Popular Card
+struct PopularCard: View {
+    @EnvironmentObject var appState: AppState
+    let item: PopularItem
+    let animationDelay: Double
+    let onTap: () -> Void
+
+    @State private var appeared = false
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 14) {
+                // Icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: ShineRadius.sm)
+                        .fill(item.category.softColor)
+                        .frame(width: 56, height: 56)
+                    Text(item.emoji)
+                        .font(.system(size: 26))
+                }
+
+                // Info
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(appState.isArabic ? item.nameAR : item.name)
+                        .font(ShineFont.body(15, weight: .semibold))
+                        .foregroundColor(.shineInk)
+                    HStack(spacing: 8) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.shineAmber)
+                            Text(String(format: "%.1f", item.rating))
+                                .font(ShineFont.body(12, weight: .semibold))
+                                .foregroundColor(.shineAmber)
+                        }
+                        Text(appState.isArabic ? item.reviewsAR : item.reviews)
+                            .font(ShineFont.body(12))
+                            .foregroundColor(.shineInk3)
+                    }
+                }
+
+                Spacer()
+
+                // Price
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(item.price)
+                        .font(ShineFont.displayBold(20))
+                        .foregroundColor(.shineInk)
+                    Text(appState.isArabic ? item.unitAR : item.unit)
+                        .font(ShineFont.body(11))
+                        .foregroundColor(.shineInk3)
+                }
+            }
+            .padding(16)
+            .background(Color.shineSurface)
+            .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+            .shineShadowXS()
+            .overlay(alignment: .topTrailing) {
+                if let badge = appState.isArabic ? item.badgeAR : item.badge {
+                    Text(badge)
+                        .font(ShineFont.body(10, weight: .semibold))
+                        .foregroundColor(item.badgeColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(item.badgeColor.opacity(0.12))
+                        .clipShape(Capsule())
+                        .padding(12)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 16)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(animationDelay)) {
+                appeared = true
+            }
+        }
+    }
+}
+
+// MARK: - How It Works
+struct HowItWorksView: View {
+    @EnvironmentObject var appState: AppState
+
+    let steps: [(icon: String, titleKey: String, descKey: String)] = [
+        ("📱", "hiw.choose.title",   "hiw.choose.desc"),
+        ("📅", "hiw.schedule.title", "hiw.schedule.desc"),
+        ("🏠", "hiw.arrive.title",   "hiw.arrive.desc"),
+        ("⭐", "hiw.enjoy.title",    "hiw.enjoy.desc"),
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                VStack(spacing: 8) {
+                    Text(String(format: "%02d", index + 1))
+                        .font(ShineFont.displayBold(36))
+                        .foregroundColor(.shineCoral.opacity(0.2))
+                        .frame(height: 36)
+                    Text(step.icon)
+                        .font(.system(size: 22))
+                    Text(Loc.string(step.titleKey, isArabic: appState.isArabic))
+                        .font(ShineFont.body(12, weight: .semibold))
+                        .foregroundColor(.shineInk)
+                    Text(Loc.string(step.descKey, isArabic: appState.isArabic))
+                        .font(ShineFont.body(11))
+                        .foregroundColor(.shineInk3)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity)
+                .background(Color.shineSurface)
+                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                .shineShadowXS()
+            }
+        }
+    }
+}
+
+// MARK: - Booking Confirmed Toast
+struct BookingConfirmedToast: View {
+    let isArabic: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.shineTeal)
+            Text(Loc.string("home.booking_confirmed", isArabic: isArabic))
+                .font(ShineFont.body(14, weight: .medium))
+                .foregroundColor(.shineInk)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(Color.shineSurface)
+        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+        .shineShadowLG()
+    }
+}
+
+// MARK: - Search Results Section
+struct SearchResultsSection: View {
+    @EnvironmentObject var vm: HomeViewModel
+    @EnvironmentObject var appState: AppState
+
+    let onBook: (ServiceCategory) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if vm.isSearching {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text(appState.isArabic ? "جاري البحث..." : "Searching...")
+                        .font(ShineFont.body(14))
+                        .foregroundColor(.shineInk3)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 48)
+            } else if vm.searchResults.isEmpty {
+                VStack(spacing: 12) {
+                    Text("🔍")
+                        .font(.system(size: 40))
+                    Text(appState.isArabic ? "لا توجد نتائج" : "No results found")
+                        .font(ShineFont.body(16, weight: .semibold))
+                        .foregroundColor(.shineInk)
+                    Text(appState.isArabic ? "جرّب كلمة بحث مختلفة" : "Try a different keyword")
+                        .font(ShineFont.body(13))
+                        .foregroundColor(.shineInk3)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 48)
+            } else {
+                Text(appState.isArabic ? "النتائج" : "Results")
+                    .font(ShineFont.body(11, weight: .semibold))
+                    .foregroundColor(.shineInk3)
+                    .kerning(0.8)
+                    .textCase(.uppercase)
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, ShineSpacing.md)
+
+                VStack(spacing: 10) {
+                    ForEach(vm.searchResults) { pkg in
+                        SearchResultCard(package: pkg, isArabic: appState.isArabic) {
+                            onBook(pkg.category)
+                        }
+                    }
+                }
+                .padding(.horizontal, ShineSpacing.lg)
+            }
+        }
+    }
+}
+
+// MARK: - Search Result Card
+struct SearchResultCard: View {
+    let package: ServicePackage
+    let isArabic: Bool
+    let onBook: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(package.category.softColor)
+                    .frame(width: 52, height: 52)
+                Text(package.emoji)
+                    .font(.system(size: 24))
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(isArabic ? package.nameAR : package.name)
+                    .font(ShineFont.body(14, weight: .semibold))
+                    .foregroundColor(.shineInk)
+                Text(isArabic ? package.category.titleAR : package.category.title)
+                    .font(ShineFont.body(12))
+                    .foregroundColor(.shineInk3)
+                Text(isArabic ? package.detailAR : package.detail)
+                    .font(ShineFont.body(11))
+                    .foregroundColor(.shineInk3)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 6) {
+                Text(package.price)
+                    .font(ShineFont.displayBold(16))
+                    .foregroundColor(.shineInk)
+                Button(action: onBook) {
+                    Text(isArabic ? "احجز" : "Book")
+                        .font(ShineFont.body(12, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Color.shineCoral)
+                        .clipShape(Capsule())
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.shineSurface)
+        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+        .shineShadowXS()
+    }
+}

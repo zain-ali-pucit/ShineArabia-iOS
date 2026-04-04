@@ -1,0 +1,111 @@
+import SwiftUI
+
+struct MainTabView: View {
+    @EnvironmentObject var appState: AppState
+    @StateObject private var homeVM    = HomeViewModel()
+    @StateObject private var bookingVM = BookingViewModel()
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            // Content — full screen, tab bar floats above
+            Group {
+                switch appState.selectedTab {
+                case .home:    HomeView().environmentObject(homeVM).environmentObject(bookingVM)
+                case .explore: ExploreView().environmentObject(homeVM).environmentObject(bookingVM)
+                case .orders:  OrdersView().environmentObject(bookingVM)
+                case .profile: ProfileView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Floating pill tab bar
+            ShineTabBar()
+                .padding(.bottom, 24)
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .background(Color.shineBG)
+    }
+}
+
+// MARK: - Floating Pill Tab Bar
+struct ShineTabBar: View {
+    @EnvironmentObject var appState: AppState
+    @Namespace private var tabAnimation
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(TabItem.allCases, id: \.self) { tab in
+                ShineTabItem(
+                    tab: tab,
+                    isSelected: appState.selectedTab == tab,
+                    isArabic: appState.isArabic,
+                    showBadge: tab == .orders,
+                    namespace: tabAnimation
+                ) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        appState.selectedTab = tab
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 10)
+        .background {
+            Capsule()
+                .fill(Color.shineSurface)
+                .overlay {
+                    Capsule()
+                        .strokeBorder(Color.shineBorder.opacity(0.8), lineWidth: 0.5)
+                }
+        }
+        .shadow(color: .shineInk.opacity(0.10), radius: 20, x: 0, y: 6)
+        .padding(.horizontal, 32)
+    }
+}
+
+// MARK: - Tab Item
+struct ShineTabItem: View {
+    let tab: TabItem
+    let isSelected: Bool
+    let isArabic: Bool
+    let showBadge: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 4) {
+                    Image(systemName: tab.rawValue)
+                        .font(.system(size: 19, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk3)
+                        .frame(width: 50, height: 36)
+                        .background {
+                            if isSelected {
+                                Capsule()
+                                    .fill(Color.shineCoralLight)
+                                    .matchedGeometryEffect(id: "tabIndicator", in: namespace)
+                            }
+                        }
+
+                    Text(isArabic ? tab.titleAR : tab.title)
+                        .font(ShineFont.body(10, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk3)
+                        .opacity(isSelected ? 1 : 0.7)
+                }
+
+                // Badge dot
+                if showBadge {
+                    Circle()
+                        .fill(Color.shineCoral)
+                        .frame(width: 7, height: 7)
+                        .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1.5))
+                        .offset(x: -4, y: 2)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}

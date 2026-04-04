@@ -1,0 +1,62 @@
+// MARK: - Home
+"home.subtitle"            = "Home Services";
+"home.greeting"            = "Good morning, Zain 👋";
+"home.hero.body"           = "What service do\nyou need ";
+"home.hero.highlight"      = "today?";
+"home.services"            = "Services";
+"home.see_all"             = "See all";
+"home.popular"             = "Popular";
+"home.filter"              = "Filter";
+"home.how_it_works"        = "How It Works";
+"home.search_placeholder"  = "Search services, providers…";
+"home.booking_confirmed"   = "✅ Booking confirmed! We'll be in touch shortly.";
+
+// MARK: - How It Works
+"hiw.choose.title"   = "Choose";
+"hiw.choose.desc"    = "Pick a service that fits";
+"hiw.schedule.title" = "Schedule";
+"hiw.schedule.desc"  = "Set your preferred date";
+"hiw.arrive.title"   = "We Arrive";
+"hiw.arrive.desc"    = "Our vetted pros come to you";
+"hiw.enjoy.title"    = "Enjoy";
+"hiw.enjoy.desc"     = "Relax & rate your experience";
+
+// MARK: - Explore
+"explore.title"         = "Explore";
+"explore.all_services"  = "All Services";
+"explore.quick_pricing" = "Quick Pricing";
+"explore.book"          = "Book Now";
+
+// MARK: - Pricing Pills
+"pill.per_kg" = "Per Kg";
+"pill.studio" = "Studio";
+"pill.villa"  = "Villa";
+"pill.sedan"  = "Sedan";
+"pill.suv"    = "SUV";
+
+// MARK: - Orders
+"orders.title"           = "My Orders";
+"orders.active"          = "Active";
+"orders.past"            = "Past";
+"orders.empty.title"     = "No orders yet";
+"orders.empty.subtitle"  = "Book your first service to get started";
+
+// MARK: - Profile
+"profile.orders"      = "Orders";
+"profile.rating"      = "My Rating";
+"profile.saved"       = "Saved";
+"profile.settings"    = "Settings";
+"profile.notifications" = "Notifications";
+"profile.location"    = "Location";
+"profile.language"    = "Language";
+"profile.account"     = "Account";
+"profile.edit"        = "Edit Profile";
+"profile.payment"     = "Payment Methods";
+"profile.addresses"   = "My Addresses";
+"profile.help"        = "Help & Support";
+"profile.signout"     = "Sign Out";
+
+// MARK: - Service Sheet
+"sheet.choose_package" = "Choose your package";
+"sheet.packages"       = "Packages";
+"sheet.book_now"       = "Book Now";

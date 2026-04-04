@@ -1,0 +1,62 @@
+// MARK: - Home
+"home.subtitle"            = "خدمات منزلية";
+"home.greeting"            = "صباح الخير، زين 👋";
+"home.hero.body"           = "ما الخدمة التي\nتحتاجها ";
+"home.hero.highlight"      = "اليوم؟";
+"home.services"            = "الخدمات";
+"home.see_all"             = "عرض الكل";
+"home.popular"             = "الأكثر طلباً";
+"home.filter"              = "فلتر";
+"home.how_it_works"        = "كيف يعمل";
+"home.search_placeholder"  = "ابحث عن خدمة أو مزود…";
+"home.booking_confirmed"   = "✅ تم تأكيد الحجز! سنتواصل معك قريباً.";
+
+// MARK: - How It Works
+"hiw.choose.title"   = "اختر";
+"hiw.choose.desc"    = "حدد الخدمة التي تناسبك";
+"hiw.schedule.title" = "جدوِل";
+"hiw.schedule.desc"  = "اختر التاريخ والوقت";
+"hiw.arrive.title"   = "نصل إليك";
+"hiw.arrive.desc"    = "محترفون موثوقون يأتونك";
+"hiw.enjoy.title"    = "استمتع";
+"hiw.enjoy.desc"     = "ارتاح وقيّم تجربتك";
+
+// MARK: - Explore
+"explore.title"         = "استكشاف";
+"explore.all_services"  = "جميع الخدمات";
+"explore.quick_pricing" = "الأسعار السريعة";
+"explore.book"          = "احجز";
+
+// MARK: - Pricing Pills
+"pill.per_kg" = "لكل كيلو";
+"pill.studio" = "استوديو";
+"pill.villa"  = "فيلا";
+"pill.sedan"  = "سيدان";
+"pill.suv"    = "دفع رباعي";
+
+// MARK: - Orders
+"orders.title"           = "طلباتي";
+"orders.active"          = "نشطة";
+"orders.past"            = "السابقة";
+"orders.empty.title"     = "لا توجد طلبات";
+"orders.empty.subtitle"  = "احجز خدمتك الأولى الآن";
+
+// MARK: - Profile
+"profile.orders"        = "طلب";
+"profile.rating"        = "تقييمي";
+"profile.saved"         = "وُفّر";
+"profile.settings"      = "الإعدادات";
+"profile.notifications" = "الإشعارات";
+"profile.location"      = "الموقع";
+"profile.language"      = "اللغة";
+"profile.account"       = "الحساب";
+"profile.edit"          = "تعديل الملف";
+"profile.payment"       = "طرق الدفع";
+"profile.addresses"     = "عناويني";
+"profile.help"          = "المساعدة";
+"profile.signout"       = "تسجيل الخروج";
+
+// MARK: - Service Sheet
+"sheet.choose_package" = "اختر الباقة المناسبة";
+"sheet.packages"       = "الباقات";
+"sheet.book_now"       = "احجز الآن";

@@ -1,0 +1,642 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		528B82632F81218800CE7E84 /* ManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82612F81218800CE7E84 /* ManagerView.swift */; };
+		528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82642F8121B800CE7E84 /* ManagerViewModel.swift */; };
+		AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000200 /* ShineArabiaApp.swift */; };
+		AA0000000000000000000301 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000201 /* RootView.swift */; };
+		AA0000000000000000000302 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000202 /* AppState.swift */; };
+		AA0000000000000000000303 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000203 /* Models.swift */; };
+		AA0000000000000000000304 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000204 /* HomeViewModel.swift */; };
+		AA0000000000000000000305 /* BookingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000205 /* BookingViewModel.swift */; };
+		AA0000000000000000000306 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000206 /* OnboardingView.swift */; };
+		AA0000000000000000000307 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000207 /* HomeView.swift */; };
+		AA0000000000000000000308 /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000208 /* ExploreView.swift */; };
+		AA0000000000000000000309 /* OrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000209 /* OrdersView.swift */; };
+		AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020A /* ServiceBottomSheet.swift */; };
+		AA000000000000000000030B /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020B /* ProfileView.swift */; };
+		AA000000000000000000030C /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020C /* MainTabView.swift */; };
+		AA000000000000000000030D /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020D /* SharedComponents.swift */; };
+		AA000000000000000000030E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020E /* DesignSystem.swift */; };
+		AA000000000000000000030F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020F /* Extensions.swift */; };
+		AA0000000000000000000310 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000211 /* Assets.xcassets */; };
+		AA0000000000000000000311 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000212 /* Localizable.strings */; };
+		AA0000000000000000000312 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000215 /* SplashView.swift */; };
+		BB0000000000000000000101 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000001 /* APIClient.swift */; };
+		BB0000000000000000000102 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* AuthService.swift */; };
+		BB0000000000000000000103 /* BookingAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000003 /* BookingAPIService.swift */; };
+		BB0000000000000000000104 /* ServiceAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* ServiceAPIService.swift */; };
+		BB0000000000000000000105 /* UserAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000005 /* UserAPIService.swift */; };
+		BB0000000000000000000106 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006 /* AuthViewModel.swift */; };
+		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
+		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
+		CC0000000000000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000002 /* GoogleSignIn */; };
+		CC0000000000000000000006 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000005 /* FacebookLogin */; };
+		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
+		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
+		FF0000000000000000000006 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		521F0CFA2F7EAF96000C1AD0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		528B82612F81218800CE7E84 /* ManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerView.swift; sourceTree = "<group>"; };
+		528B82642F8121B800CE7E84 /* ManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerViewModel.swift; sourceTree = "<group>"; };
+		52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		AA0000000000000000000005 /* ShineArabia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShineArabia.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000200 /* ShineArabiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShineArabiaApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000201 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000202 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		AA0000000000000000000203 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AA0000000000000000000204 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000205 /* BookingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000206 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000207 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000208 /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000209 /* OrdersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersView.swift; sourceTree = "<group>"; };
+		AA000000000000000000020A /* ServiceBottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceBottomSheet.swift; sourceTree = "<group>"; };
+		AA000000000000000000020B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		AA000000000000000000020C /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		AA000000000000000000020D /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
+		AA000000000000000000020E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		AA000000000000000000020F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		AA0000000000000000000210 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000211 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000214 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0000000000000000000215 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		BB0000000000000000000001 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		BB0000000000000000000002 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000003 /* BookingAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingAPIService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000004 /* ServiceAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAPIService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000005 /* UserAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPIService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000006 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC0000000000000000000003 /* GoogleSignIn in Frameworks */,
+				CC0000000000000000000006 /* FacebookLogin in Frameworks */,
+				FF0000000000000000000004 /* FirebaseCore in Frameworks */,
+				FF0000000000000000000005 /* FirebaseMessaging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		528B82622F81218800CE7E84 /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				528B82612F81218800CE7E84 /* ManagerView.swift */,
+			);
+			path = Manager;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */,
+				AA0000000000000000000100 /* App */,
+				AA0000000000000000000101 /* Models */,
+				AA0000000000000000000102 /* ViewModels */,
+				BB0000000000000000000200 /* Services */,
+				AA0000000000000000000103 /* Views */,
+				AA000000000000000000010A /* Resources */,
+				AA000000000000000000010B /* Utilities */,
+				AA0000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000005 /* ShineArabia.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000100 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000200 /* ShineArabiaApp.swift */,
+				AA0000000000000000000201 /* RootView.swift */,
+				AA0000000000000000000202 /* AppState.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000101 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000203 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000102 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				528B82642F8121B800CE7E84 /* ManagerViewModel.swift */,
+				AA0000000000000000000204 /* HomeViewModel.swift */,
+				AA0000000000000000000205 /* BookingViewModel.swift */,
+				BB0000000000000000000006 /* AuthViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000103 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				528B82622F81218800CE7E84 /* Manager */,
+				BB0000000000000000000201 /* Auth */,
+				AA000000000000000000010C /* Splash */,
+				AA0000000000000000000104 /* Onboarding */,
+				AA0000000000000000000105 /* Home */,
+				AA0000000000000000000106 /* Booking */,
+				AA0000000000000000000107 /* Services */,
+				AA0000000000000000000108 /* Profile */,
+				AA0000000000000000000109 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000104 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000206 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000105 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000207 /* HomeView.swift */,
+				AA0000000000000000000208 /* ExploreView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000106 /* Booking */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000209 /* OrdersView.swift */,
+			);
+			path = Booking;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000107 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000020A /* ServiceBottomSheet.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000108 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000020B /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000109 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000020C /* MainTabView.swift */,
+				AA000000000000000000020D /* SharedComponents.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000010A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000020E /* DesignSystem.swift */,
+				AA0000000000000000000210 /* Info.plist */,
+				AA0000000000000000000211 /* Assets.xcassets */,
+				AA0000000000000000000212 /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000010B /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000020F /* Extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000010C /* Splash */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000215 /* SplashView.swift */,
+			);
+			path = Splash;
+			sourceTree = "<group>";
+		};
+		BB0000000000000000000200 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000000000000000000001 /* APIClient.swift */,
+				BB0000000000000000000002 /* AuthService.swift */,
+				BB0000000000000000000003 /* BookingAPIService.swift */,
+				BB0000000000000000000004 /* ServiceAPIService.swift */,
+				BB0000000000000000000005 /* UserAPIService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		BB0000000000000000000201 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000000000000000000007 /* LoginView.swift */,
+				BB0000000000000000000008 /* RegisterView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000004 /* ShineArabia */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000021 /* Build configuration list for PBXNativeTarget "ShineArabia" */;
+			buildPhases = (
+				AA0000000000000000000010 /* Sources */,
+				AA0000000000000000000012 /* Frameworks */,
+				AA0000000000000000000011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShineArabia;
+			packageProductDependencies = (
+				CC0000000000000000000002 /* GoogleSignIn */,
+				CC0000000000000000000005 /* FacebookLogin */,
+				FF0000000000000000000002 /* FirebaseCore */,
+				FF0000000000000000000003 /* FirebaseMessaging */,
+			);
+			productName = ShineArabia;
+			productReference = AA0000000000000000000005 /* ShineArabia.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AA0000000000000000000004 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = AA0000000000000000000020 /* Build configuration list for PBXProject "ShineArabia-iOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				ar,
+			);
+			mainGroup = AA0000000000000000000002;
+			packageReferences = (
+				CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
+				FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			productRefGroup = AA0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000000000000000000004 /* ShineArabia */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000310 /* Assets.xcassets in Resources */,
+				AA0000000000000000000311 /* Localizable.strings in Resources */,
+				FF0000000000000000000006 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000010 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */,
+				AA0000000000000000000301 /* RootView.swift in Sources */,
+				AA0000000000000000000302 /* AppState.swift in Sources */,
+				AA0000000000000000000303 /* Models.swift in Sources */,
+				AA0000000000000000000304 /* HomeViewModel.swift in Sources */,
+				AA0000000000000000000305 /* BookingViewModel.swift in Sources */,
+				AA0000000000000000000306 /* OnboardingView.swift in Sources */,
+				AA0000000000000000000307 /* HomeView.swift in Sources */,
+				AA0000000000000000000308 /* ExploreView.swift in Sources */,
+				AA0000000000000000000309 /* OrdersView.swift in Sources */,
+				AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */,
+				AA000000000000000000030B /* ProfileView.swift in Sources */,
+				AA000000000000000000030C /* MainTabView.swift in Sources */,
+				AA000000000000000000030D /* SharedComponents.swift in Sources */,
+				AA000000000000000000030E /* DesignSystem.swift in Sources */,
+				AA000000000000000000030F /* Extensions.swift in Sources */,
+				AA0000000000000000000312 /* SplashView.swift in Sources */,
+				BB0000000000000000000101 /* APIClient.swift in Sources */,
+				BB0000000000000000000102 /* AuthService.swift in Sources */,
+				BB0000000000000000000103 /* BookingAPIService.swift in Sources */,
+				BB0000000000000000000104 /* ServiceAPIService.swift in Sources */,
+				BB0000000000000000000105 /* UserAPIService.swift in Sources */,
+				528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */,
+				BB0000000000000000000106 /* AuthViewModel.swift in Sources */,
+				BB0000000000000000000107 /* LoginView.swift in Sources */,
+				528B82632F81218800CE7E84 /* ManagerView.swift in Sources */,
+				BB0000000000000000000108 /* RegisterView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AA0000000000000000000212 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				521F0CFA2F7EAF96000C1AD0 /* en */,
+				AA0000000000000000000214 /* ar */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000030 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000031 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA0000000000000000000032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DK2W9Z27GC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shinearabia.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DK2W9Z27GC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shinearabia.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000020 /* Build configuration list for PBXProject "ShineArabia-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000030 /* Debug */,
+				AA0000000000000000000031 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000021 /* Build configuration list for PBXNativeTarget "ShineArabia" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000032 /* Debug */,
+				AA0000000000000000000033 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+		CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 17.0.0;
+			};
+		};
+		FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CC0000000000000000000002 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		CC0000000000000000000005 /* FacebookLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */;
+			productName = FacebookLogin;
+		};
+		FF0000000000000000000002 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		FF0000000000000000000003 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AA0000000000000000000001 /* Project object */;
+}
