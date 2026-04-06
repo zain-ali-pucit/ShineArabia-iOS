@@ -247,6 +247,15 @@ struct Booking: Identifiable, Codable {
     }
 }
 
+// MARK: - APICategory UI Helpers
+extension APICategory {
+    var color: Color     { Color(hex: colorHex) }
+    var softColor: Color { Color(hex: softColorHex) }
+    var icon: String     { iconEmoji }
+    var title: String    { nameEn }
+    var titleAR: String  { nameAr }
+}
+
 // MARK: - APIUser → User conversion
 extension APIUser {
     func toUser() -> User {

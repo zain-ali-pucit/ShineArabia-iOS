@@ -5,13 +5,15 @@ struct ExploreView: View {
     @EnvironmentObject var vm: HomeViewModel
     @EnvironmentObject var bookingVM: BookingViewModel
 
-    let allServices = ServiceCategory.allCases.filter { $0 != .bundle }
+    var allServices: [APICategory] {
+        vm.categories.filter { $0.slug != "bundle" }
+    }
 
-    var filteredServices: [ServiceCategory] {
+    var filteredServices: [APICategory] {
         let q = vm.searchText.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return allServices }
         return allServices.filter {
-            $0.title.lowercased().contains(q) || $0.titleAR.contains(q)
+            $0.nameEn.lowercased().contains(q) || $0.nameAr.contains(q)
         }
     }
 
@@ -65,9 +67,18 @@ struct ExploreView: View {
                             columns: [GridItem(.flexible()), GridItem(.flexible())],
                             spacing: 14
                         ) {
-                            ForEach(filteredServices) { svc in
-                                ExploreServiceTile(category: svc, isArabic: appState.isArabic) {
-                                    vm.openService(svc)
+                            if vm.isLoadingCategories {
+                                ForEach(0..<4, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: ShineRadius.md)
+                                        .fill(Color.shineSurface)
+                                        .frame(height: 140)
+                                        .shineShadowSM()
+                                }
+                            } else {
+                                ForEach(filteredServices) { svc in
+                                    ExploreServiceTile(category: svc, isArabic: appState.isArabic) {
+                                        vm.openService(svc)
+                                    }
                                 }
                             }
                         }
@@ -83,8 +94,8 @@ struct ExploreView: View {
                         .padding(.bottom, ShineSpacing.xl)
                     }
 
-                    // Pricing pills — only visible when not searching
-                    if !isSearching {
+                    // Pricing pills — only visible when not searching and popular items are loaded
+                    if !isSearching && !vm.popularItems.isEmpty {
                         Text(Loc.string("explore.quick_pricing", isArabic: appState.isArabic))
                             .font(ShineFont.body(11, weight: .semibold))
                             .foregroundColor(.shineInk3)
@@ -93,7 +104,7 @@ struct ExploreView: View {
                             .padding(.horizontal, ShineSpacing.lg)
                             .padding(.bottom, ShineSpacing.md)
 
-                        PricingPillsRow { category in
+                        PricingPillsRow(items: vm.popularItems) { category in
                             vm.openService(category)
                         }
                         .padding(.bottom, ShineSpacing.xl)
@@ -119,7 +130,8 @@ struct ExploreView: View {
                     category: svc,
                     packages: vm.packages,
                     selectedPackage: $vm.selectedPackage,
-                    isArabic: appState.isArabic
+                    isArabic: appState.isArabic,
+                    isLoading: vm.isLoadingPackages
                 ) {
                     guard let pkg = vm.selectedPackage else { return }
                     if appState.isAuthenticated {
@@ -163,7 +175,7 @@ struct ExploreView: View {
 
 // MARK: - Explore Service Tile
 struct ExploreServiceTile: View {
-    let category: ServiceCategory
+    let category: APICategory
     let isArabic: Bool
     let onTap: () -> Void
 
@@ -210,35 +222,28 @@ struct ExploreServiceTile: View {
     }
 }
 
-// MARK: - Pricing Pills
+// MARK: - Pricing Pills (driven by popular items from backend)
 struct PricingPillsRow: View {
     @EnvironmentObject var appState: AppState
     @State private var selected = 0
 
+    let items: [PopularItem]
     let onSelect: (ServiceCategory) -> Void
-
-    let pills: [(icon: String, key: String, price: String, category: ServiceCategory)] = [
-        ("👕", "pill.per_kg",  "QAR 12",  .laundry),
-        ("🧹", "pill.studio",  "QAR 149", .cleaning),
-        ("🏠", "pill.villa",   "QAR 349", .cleaning),
-        ("🚗", "pill.sedan",   "QAR 89",  .carWash),
-        ("🚙", "pill.suv",     "QAR 119", .carWash),
-    ]
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                ForEach(Array(pills.enumerated()), id: \.offset) { i, pill in
+                ForEach(Array(items.prefix(5).enumerated()), id: \.offset) { i, item in
                     Button {
                         withAnimation(.spring(response: 0.3)) { selected = i }
-                        onSelect(pill.category)
+                        onSelect(item.category)
                     } label: {
                         HStack(spacing: 8) {
-                            Text(pill.icon).font(.system(size: 15))
-                            Text(Loc.string(pill.key, isArabic: appState.isArabic))
+                            Text(item.emoji).font(.system(size: 15))
+                            Text(appState.isArabic ? item.nameAR : item.name)
                                 .font(ShineFont.body(13, weight: .medium))
                                 .foregroundColor(selected == i ? .white : .shineInk)
-                            Text(pill.price)
+                            Text(item.price)
                                 .font(ShineFont.body(13, weight: .semibold))
                                 .foregroundColor(selected == i ? .white.opacity(0.8) : .shineCoral)
                         }

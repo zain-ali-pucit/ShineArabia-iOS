@@ -5,6 +5,7 @@ struct ServiceBottomSheet: View {
     let packages: [ServicePackage]
     @Binding var selectedPackage: ServicePackage?
     let isArabic: Bool
+    let isLoading: Bool
     let onBook: () -> Void
 
     @EnvironmentObject var bookingVM: BookingViewModel
@@ -100,21 +101,32 @@ struct ServiceBottomSheet: View {
                     .padding(.bottom, ShineSpacing.md)
 
                 // Package list
-                ScrollView(showsIndicators: false) {
+                if isLoading {
                     VStack(spacing: 10) {
-                        ForEach(packages) { pkg in
-                            PackageRow(
-                                package: pkg,
-                                isSelected: selectedPackage?.id == pkg.id,
-                                isArabic: isArabic
-                            ) {
-                                withAnimation(.spring(response: 0.3)) {
-                                    selectedPackage = pkg
+                        ProgressView()
+                        Text(isArabic ? "جاري تحميل الخدمات..." : "Loading packages...")
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk3)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 10) {
+                            ForEach(packages) { pkg in
+                                PackageRow(
+                                    package: pkg,
+                                    isSelected: selectedPackage?.id == pkg.id,
+                                    isArabic: isArabic
+                                ) {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        selectedPackage = pkg
+                                    }
                                 }
                             }
                         }
+                        .padding(.horizontal, ShineSpacing.lg)
                     }
-                    .padding(.horizontal, ShineSpacing.lg)
                 }
 
                 // Date & Time Picker

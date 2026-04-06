@@ -3,9 +3,9 @@ import Foundation
 // MARK: - API Configuration
 enum APIConfig {
     #if DEBUG
-    static let baseURL = "http://127.0.0.1:3000/api"
+    static let baseURL = "https://www.shine-arabia.com/api"
     #else
-    static let baseURL = "https://api.shinearabia.com/api"
+    static let baseURL = "https://www.shine-arabia.com/api"
     #endif
 
     static var headers: [String: String] {

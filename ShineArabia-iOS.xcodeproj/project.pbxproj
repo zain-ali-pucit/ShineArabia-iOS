@@ -32,7 +32,9 @@
 		BB0000000000000000000102 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* AuthService.swift */; };
 		BB0000000000000000000103 /* BookingAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000003 /* BookingAPIService.swift */; };
 		BB0000000000000000000104 /* ServiceAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* ServiceAPIService.swift */; };
+		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
 		BB0000000000000000000105 /* UserAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000005 /* UserAPIService.swift */; };
+		BB0000000000000000000106B /* ManagerAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006B /* ManagerAPIService.swift */; };
 		BB0000000000000000000106 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006 /* AuthViewModel.swift */; };
 		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
 		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
@@ -73,7 +75,9 @@
 		BB0000000000000000000002 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000003 /* BookingAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000004 /* ServiceAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAPIService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000005 /* UserAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPIService.swift; sourceTree = "<group>"; };
+		BB0000000000000000000006B /* ManagerAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000006 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
@@ -254,7 +258,9 @@
 				BB0000000000000000000002 /* AuthService.swift */,
 				BB0000000000000000000003 /* BookingAPIService.swift */,
 				BB0000000000000000000004 /* ServiceAPIService.swift */,
+				BB0000000000000000000009 /* LocalCacheService.swift */,
 				BB0000000000000000000005 /* UserAPIService.swift */,
+				BB0000000000000000000006B /* ManagerAPIService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -372,7 +378,9 @@
 				BB0000000000000000000102 /* AuthService.swift in Sources */,
 				BB0000000000000000000103 /* BookingAPIService.swift in Sources */,
 				BB0000000000000000000104 /* ServiceAPIService.swift in Sources */,
+				BB0000000000000000000109 /* LocalCacheService.swift in Sources */,
 				BB0000000000000000000105 /* UserAPIService.swift in Sources */,
+				BB0000000000000000000106B /* ManagerAPIService.swift in Sources */,
 				528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */,
 				BB0000000000000000000106 /* AuthViewModel.swift in Sources */,
 				BB0000000000000000000107 /* LoginView.swift in Sources */,

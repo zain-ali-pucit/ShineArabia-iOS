@@ -2,29 +2,38 @@ import SwiftUI
 import Combine
 
 class HomeViewModel: ObservableObject {
-    @Published var searchText: String          = ""
+    @Published var searchText: String               = ""
     @Published var selectedService: ServiceCategory? = nil
-    @Published var showServiceSheet: Bool      = false
+    @Published var showServiceSheet: Bool           = false
     @Published var selectedPackage: ServicePackage? = nil
-    @Published var showBookingConfirmed: Bool  = false
-    @Published var showAuthPrompt: Bool        = false
+    @Published var showBookingConfirmed: Bool       = false
+    @Published var showAuthPrompt: Bool             = false
     @Published var pendingPackageForAuth: ServicePackage? = nil
-    @Published var isLoading: Bool             = false
-    @Published var errorMsg: String?           = nil
+    @Published var isLoading: Bool                  = false
+    @Published var errorMsg: String?                = nil
 
-    // API-backed data
-    @Published var packages: [ServicePackage]  = []
-    @Published var popularItems: [PopularItem] = SampleData.popularItems
-    @Published var searchResults: [ServicePackage] = []
-    @Published var isSearching: Bool           = false
+    // Data
+    @Published var categories: [APICategory]        = []
+    @Published var packages: [ServicePackage]       = []
+    @Published var popularItems: [PopularItem]      = SampleData.popularItems
+    @Published var searchResults: [ServicePackage]  = []
 
-    let services: [ServiceCategory] = [.laundry, .cleaning, .carWash, .pest]
+    // Loading flags (only true when no cache exists yet)
+    @Published var isSearching: Bool                = false
+    @Published var isLoadingCategories: Bool        = false
+    @Published var isLoadingPackages: Bool          = false
 
     private let serviceAPI = ServiceAPIService.shared
+    private let cache      = LocalCacheService.shared
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        // Auto-trigger search with 300ms debounce whenever searchText changes
+        setupSearch()
+    }
+
+    // MARK: - Search (debounced)
+
+    private func setupSearch() {
         $searchText
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .removeDuplicates()
@@ -52,39 +61,107 @@ class HomeViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
-    // MARK: Load popular items from API
-    func loadPopular() async {
-        do {
-            let items = try await serviceAPI.fetchPopular()
+    // MARK: - Categories  (cache-first → background refresh)
+
+    func loadCategories() async {
+        // 1. Show cached data instantly — no spinner if cache exists
+        if let cached = cache.loadCategories() {
             await MainActor.run {
-                popularItems = items.map { PopularItem(from: $0) }
+                categories          = cached.sorted { $0.sortOrder < $1.sortOrder }
+                isLoadingCategories = false
             }
-        } catch {
-            // Keep sample data on failure — silent fallback
+        } else {
+            await MainActor.run { isLoadingCategories = true }
         }
+
+        // 2. Fetch from server; update UI + cache only when something changed
+        do {
+            let fresh = try await serviceAPI.fetchCategories()
+            let changed = cache.updateCategoriesIfChanged(fresh)
+            if changed || categories.isEmpty {
+                await MainActor.run {
+                    categories = fresh.sorted { $0.sortOrder < $1.sortOrder }
+                }
+            }
+        } catch { /* server unreachable — cached data is already shown */ }
+
+        await MainActor.run { isLoadingCategories = false }
     }
 
-    // MARK: Open service sheet and load packages
+    // MARK: - Popular items  (cache-first → background refresh)
+
+    func loadPopular() async {
+        // 1. Load from cache
+        if let cached = cache.loadPopularItems() {
+            await MainActor.run {
+                popularItems = cached.map { PopularItem(from: $0) }
+            }
+        }
+
+        // 2. Background refresh
+        do {
+            let fresh   = try await serviceAPI.fetchPopular()
+            let changed = cache.updatePopularItemsIfChanged(fresh)
+            if changed || popularItems.isEmpty {
+                await MainActor.run {
+                    popularItems = fresh.map { PopularItem(from: $0) }
+                }
+            }
+        } catch { /* keep cached */ }
+    }
+
+    // MARK: - Open service sheet — from backend category card
+
+    func openService(_ apiCategory: APICategory) {
+        selectedService  = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
+        selectedPackage  = nil
+        showServiceSheet = true
+        loadPackages(slug: apiCategory.slug)
+    }
+
+    // MARK: - Open service sheet — from popular items, search results, or bundle promo
+
     func openService(_ category: ServiceCategory) {
         selectedService  = category
         selectedPackage  = nil
-        packages         = SampleData.packages[category] ?? []  // show instantly
         showServiceSheet = true
+        loadPackages(slug: category.rawValue)
+    }
 
-        // Load from API in background
+    // MARK: - Packages  (cache-first → background refresh)
+
+    private func loadPackages(slug: String) {
+        // 1. Show cached packages instantly — no spinner if cache exists
+        if let cached = cache.loadPackages(slug: slug) {
+            packages          = cached.map { ServicePackage(from: $0) }
+            isLoadingPackages = false
+        } else {
+            packages          = []
+            isLoadingPackages = true
+        }
+
+        // 2. Background refresh
         Task {
             do {
-                let apiPackages = try await serviceAPI.fetchPackages(for: category.rawValue)
-                await MainActor.run {
-                    if !apiPackages.isEmpty {
-                        packages = apiPackages.map { ServicePackage(from: $0) }
+                let fresh   = try await serviceAPI.fetchPackages(for: slug)
+                let changed = cache.updatePackagesIfChanged(fresh, slug: slug)
+                if changed || packages.isEmpty {
+                    await MainActor.run {
+                        packages = fresh.map { ServicePackage(from: $0) }
                     }
                 }
             } catch {
-                // Keep sample data on failure
+                // If no cache and fetch failed, fall back to sample data
+                if packages.isEmpty {
+                    let fallback = SampleData.packages[ServiceCategory(rawValue: slug) ?? .laundry] ?? []
+                    await MainActor.run { packages = fallback }
+                }
             }
+            await MainActor.run { isLoadingPackages = false }
         }
     }
+
+    // MARK: - Booking helpers
 
     func selectPackage(_ pkg: ServicePackage) {
         selectedPackage = pkg
@@ -97,5 +174,4 @@ class HomeViewModel: ObservableObject {
             self.showBookingConfirmed = false
         }
     }
-
 }

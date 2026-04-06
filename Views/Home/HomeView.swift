@@ -40,7 +40,7 @@ struct HomeView: View {
                         )
                         .padding(.top, ShineSpacing.xl)
 
-                        ServiceCardsRow(services: vm.services) { category in
+                        ServiceCardsRow(categories: vm.categories, isLoading: vm.isLoadingCategories) { category in
                             vm.openService(category)
                         }
 
@@ -86,7 +86,8 @@ struct HomeView: View {
                     category: svc,
                     packages: vm.packages,
                     selectedPackage: $vm.selectedPackage,
-                    isArabic: appState.isArabic
+                    isArabic: appState.isArabic,
+                    isLoading: vm.isLoadingPackages
                 ) {
                     guard let pkg = vm.selectedPackage else { return }
                     if appState.isAuthenticated {
@@ -124,7 +125,9 @@ struct HomeView: View {
             }
         }
         .task {
-            await vm.loadPopular()
+            async let cats: () = vm.loadCategories()
+            async let popular: () = vm.loadPopular()
+            _ = await (cats, popular)
         }
     }
 }
@@ -353,15 +356,25 @@ struct SectionHeader: View {
 
 // MARK: - Service Cards Row (horizontal scroll)
 struct ServiceCardsRow: View {
-    let services: [ServiceCategory]
-    let onTap: (ServiceCategory) -> Void
+    let categories: [APICategory]
+    let isLoading: Bool
+    let onTap: (APICategory) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
-                ForEach(Array(services.enumerated()), id: \.element) { index, svc in
-                    ServiceCard(category: svc, animationDelay: Double(index) * 0.07) {
-                        onTap(svc)
+                if isLoading {
+                    ForEach(0..<4, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: ShineRadius.lg)
+                            .fill(Color.shineSurface)
+                            .frame(width: 148, height: 195)
+                            .shineShadowSM()
+                    }
+                } else {
+                    ForEach(Array(categories.enumerated()), id: \.element.id) { index, cat in
+                        ServiceCard(category: cat, animationDelay: Double(index) * 0.07) {
+                            onTap(cat)
+                        }
                     }
                 }
             }
@@ -374,7 +387,7 @@ struct ServiceCardsRow: View {
 // MARK: - Service Card (148pt wide, matches HTML)
 struct ServiceCard: View {
     @EnvironmentObject var appState: AppState
-    let category: ServiceCategory
+    let category: APICategory
     let animationDelay: Double
     let onTap: () -> Void
 

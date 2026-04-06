@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import UserNotifications
 
 @MainActor
@@ -84,7 +85,7 @@ class ManagerViewModel: ObservableObject {
     func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             guard granted else { return }
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 UIApplication.shared.registerForRemoteNotifications()
             }
             // If an FCM token already arrived (stored before permission was granted), register it now
