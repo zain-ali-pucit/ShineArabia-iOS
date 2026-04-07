@@ -4,29 +4,29 @@
 
     <!-- ═══ GRADIENTS ═══ -->
 
-    <!-- Icon background: warm coral → amber diagonal -->
+    <!-- Icon background: Qatar maroon diagonal -->
     <linearGradient id="bgGrad" x1="0" y1="0" x2="900" y2="900" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#F07B62"/>
-      <stop offset="55%"  stop-color="#E8715A"/>
-      <stop offset="100%" stop-color="#C97930"/>
+      <stop offset="0%"   stop-color="#A3203F"/>
+      <stop offset="55%"  stop-color="#8D1B3D"/>
+      <stop offset="100%" stop-color="#5A0A23"/>
     </linearGradient>
 
     <!-- Subtle radial warmth glow at icon center -->
     <radialGradient id="iconGlow" cx="450" cy="430" r="310" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Star fill: pure white with slight warmth glow -->
+    <!-- Star fill: pure white glowing -->
     <radialGradient id="starGlow" cx="450" cy="415" r="180" gradientUnits="userSpaceOnUse">
       <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#FFE9DF" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#FFE8EE" stop-opacity="0.92"/>
     </radialGradient>
 
-    <!-- Wordmark "Shine" gradient: coral → amber (horizontal) -->
+    <!-- Wordmark "Shine" gradient: maroon shades -->
     <linearGradient id="shineGrad" x1="1020" y1="0" x2="1780" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#E8715A"/>
-      <stop offset="100%" stop-color="#D4893A"/>
+      <stop offset="0%"   stop-color="#8D1B3D"/>
+      <stop offset="100%" stop-color="#6B1230"/>
     </linearGradient>
 
     <!-- ═══ FILTERS ═══ -->
@@ -45,15 +45,6 @@
       <feDropShadow dx="0" dy="12" stdDeviation="28" flood-color="#1C1917" flood-opacity="0.22"/>
     </filter>
 
-    <!-- Glow for small teal diamonds -->
-    <filter id="diamondGlow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="7" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-
   </defs>
 
   <!-- ══════════════════════════════════════════════════════════ -->
@@ -70,93 +61,11 @@
     <rect x="50" y="50" width="800" height="800" rx="180"
           fill="url(#iconGlow)"/>
 
-    <!-- ── Subtle geometric rings (Arabic-inspired) ── -->
-    <circle cx="450" cy="450" r="368"
-            fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.07"/>
-    <circle cx="450" cy="450" r="295"
-            fill="none" stroke="#FFFFFF" stroke-width="1"   stroke-opacity="0.05"/>
-
-    <!-- ── Moorish Pointed Arch (Islamic architecture silhouette) ── -->
-    <!--   Outer arch: from (205,790) → pointed tip (450,135) → (695,790) -->
-    <path d="M 205,790
-             L 205,495
-             Q 205,170 450,115
-             Q 695,170 695,495
-             L 695,790"
-          fill="rgba(255,255,255,0.09)"
-          stroke="rgba(255,255,255,0.52)"
-          stroke-width="5.5"
-          stroke-linejoin="round"/>
-
-    <!--   Inner arch (double frame — a hallmark of Islamic portals) -->
-    <path d="M 245,790
-             L 245,510
-             Q 245,210 450,160
-             Q 655,210 655,510
-             L 655,790"
-          fill="none"
-          stroke="rgba(255,255,255,0.22)"
-          stroke-width="3"
-          stroke-linejoin="round"/>
-
-    <!--   Arch base line -->
-    <line x1="162" y1="790" x2="738" y2="790"
-          stroke="rgba(255,255,255,0.40)" stroke-width="5" stroke-linecap="round"/>
-
-    <!--   Decorative knobs at arch feet (keyhole arch detail) -->
-    <circle cx="205" cy="790" r="20" fill="rgba(255,255,255,0.30)"/>
-    <circle cx="695" cy="790" r="20" fill="rgba(255,255,255,0.30)"/>
-
-    <!--   Finial jewel at arch crown -->
-    <circle cx="450" cy="115" r="14" fill="rgba(255,255,255,0.55)"/>
-    <circle cx="450" cy="115" r="7"  fill="#FFFFFF"/>
-
     <!-- ── Central 4-Pointed Sparkle Star ── -->
-    <!--
-      Center: (450, 430)
-      Outer ray radius: 195 (tall, elegant proportions)
-      Inner waist radius at 45°: 55  →  55 × sin45 ≈ 39
-      Outer points  : top(450,235)  right(645,430)  bottom(450,625)  left(255,430)
-      Inner waypoints: (489,391)  (489,469)  (411,469)  (411,391)
-    -->
     <polygon
       points="450,235 489,391 645,430 489,469 450,625 411,469 255,430 411,391"
       fill="url(#starGlow)"
       filter="url(#starFilter)"/>
-
-    <!-- ── Teal Diamond Accents (4 × between star rays at 45°) ── -->
-    <!--   Distance from star center = 130 → 130×sin45 ≈ 92   -->
-    <!--   Center positions: (542,338)  (542,522)  (358,522)  (358,338)  -->
-    <g fill="#2D8C7A" filter="url(#diamondGlow)">
-      <!-- top-right -->
-      <polygon points="542,319  560,338  542,357  524,338"/>
-      <!-- bottom-right -->
-      <polygon points="542,503  560,522  542,541  524,522"/>
-      <!-- bottom-left -->
-      <polygon points="358,503  376,522  358,541  340,522"/>
-      <!-- top-left -->
-      <polygon points="358,319  376,338  358,357  340,338"/>
-    </g>
-
-    <!-- ── Scattered Mini Sparkle Stars (depth / atmosphere) ── -->
-    <g fill="#FFFFFF">
-      <!-- top-left corner sparkle (medium) -->
-      <polygon points="165,195 172,213 190,220 172,227 165,245 158,227 140,220 158,213"
-               opacity="0.70"/>
-      <!-- top-right corner sparkle (small) -->
-      <polygon points="740,175 745,189 759,194 745,199 740,213 735,199 721,194 735,189"
-               opacity="0.55"/>
-      <!-- bottom-left dot cluster -->
-      <circle cx="148" cy="680" r="7"  opacity="0.45"/>
-      <circle cx="168" cy="706" r="4"  opacity="0.30"/>
-      <!-- bottom-right dot cluster -->
-      <circle cx="756" cy="710" r="8"  opacity="0.40"/>
-      <circle cx="778" cy="690" r="4"  opacity="0.25"/>
-      <!-- lone dot top-center-right -->
-      <circle cx="668" cy="138" r="5"  opacity="0.50"/>
-      <!-- lone dot left-mid -->
-      <circle cx="120" cy="390" r="4"  opacity="0.30"/>
-    </g>
 
   </g><!-- end badge group -->
 
@@ -167,7 +76,7 @@
 
   <g font-family="'SF Pro Display', 'Helvetica Neue', 'Arial', sans-serif">
 
-    <!-- "Shine" — bold, coral-to-amber gradient -->
+    <!-- "Shine" — bold, maroon gradient -->
     <text x="1030" y="520"
           font-size="310"
           font-weight="700"
@@ -182,9 +91,9 @@
           fill="#1C1917"
           opacity="0.88">ARABIA</text>
 
-    <!-- Accent line under "Arabia" (teal, matches diamond color) -->
+    <!-- Accent line under "Arabia" (maroon) -->
     <rect x="1038" y="712" width="220" height="5" rx="2.5"
-          fill="#2D8C7A" opacity="0.75"/>
+          fill="#8D1B3D" opacity="0.75"/>
 
     <!-- Tagline -->
     <text x="1038" y="790"
@@ -192,11 +101,6 @@
           font-weight="400"
           letter-spacing="7"
           fill="#6B6560">Premium Home Services</text>
-
-    <!-- Small sparkle accent floating above the "S" in Shine -->
-    <g fill="#D4893A" opacity="0.80">
-      <polygon points="1088,175  1094,195  1114,201  1094,207  1088,227  1082,207  1062,201  1082,195"/>
-    </g>
 
   </g>
 

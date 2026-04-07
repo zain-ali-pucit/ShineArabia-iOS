@@ -81,6 +81,11 @@ class ServiceAPIService {
         return res.data?.items ?? []
     }
 
+    func fetchBundles() async throws -> [APIBundle] {
+        let res: APIBundlesResponse = try await client.request("/services/bundles")
+        return res.data?.bundles ?? []
+    }
+
     func search(_ query: String) async throws -> [APIPackage] {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
         let res: APIPackagesResponse = try await client.request("/services/search?q=\(encoded)")

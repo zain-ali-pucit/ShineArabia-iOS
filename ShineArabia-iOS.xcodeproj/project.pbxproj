@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5276C62C2F845E1B003AD0D8 /* LocationService.swift */; };
 		528B82632F81218800CE7E84 /* ManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82612F81218800CE7E84 /* ManagerView.swift */; };
 		528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82642F8121B800CE7E84 /* ManagerViewModel.swift */; };
 		AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000200 /* ShineArabiaApp.swift */; };
@@ -21,6 +22,8 @@
 		AA0000000000000000000309 /* OrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000209 /* OrdersView.swift */; };
 		AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020A /* ServiceBottomSheet.swift */; };
 		AA000000000000000000030B /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020B /* ProfileView.swift */; };
+		DD000000000000000000001B /* AddressesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* AddressesView.swift */; };
+		CC0000000000000000000001 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000002 /* RewardsView.swift */; };
 		AA000000000000000000030C /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020C /* MainTabView.swift */; };
 		AA000000000000000000030D /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020D /* SharedComponents.swift */; };
 		AA000000000000000000030E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020E /* DesignSystem.swift */; };
@@ -32,13 +35,13 @@
 		BB0000000000000000000102 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000002 /* AuthService.swift */; };
 		BB0000000000000000000103 /* BookingAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000003 /* BookingAPIService.swift */; };
 		BB0000000000000000000104 /* ServiceAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* ServiceAPIService.swift */; };
-		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
 		BB0000000000000000000105 /* UserAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000005 /* UserAPIService.swift */; };
-		BB0000000000000000000106B /* ManagerAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006B /* ManagerAPIService.swift */; };
 		BB0000000000000000000106 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006 /* AuthViewModel.swift */; };
+		BB0000000000000000000106B /* ManagerAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006B /* ManagerAPIService.swift */; };
 		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
 		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
-		CC0000000000000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000002 /* GoogleSignIn */; };
+		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
+		CC0000000000000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000007 /* GoogleSignIn */; };
 		CC0000000000000000000006 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000005 /* FacebookLogin */; };
 		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
 		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
@@ -47,6 +50,7 @@
 
 /* Begin PBXFileReference section */
 		521F0CFA2F7EAF96000C1AD0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		5276C62C2F845E1B003AD0D8 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		528B82612F81218800CE7E84 /* ManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerView.swift; sourceTree = "<group>"; };
 		528B82642F8121B800CE7E84 /* ManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerViewModel.swift; sourceTree = "<group>"; };
 		52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -63,6 +67,8 @@
 		AA0000000000000000000209 /* OrdersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020A /* ServiceBottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceBottomSheet.swift; sourceTree = "<group>"; };
 		AA000000000000000000020B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		DD000000000000000000001A /* AddressesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressesView.swift; sourceTree = "<group>"; };
+		CC0000000000000000000002 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020C /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020D /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		AA000000000000000000020E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -75,12 +81,12 @@
 		BB0000000000000000000002 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000003 /* BookingAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000004 /* ServiceAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAPIService.swift; sourceTree = "<group>"; };
-		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000005 /* UserAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPIService.swift; sourceTree = "<group>"; };
-		BB0000000000000000000006B /* ManagerAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000006 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		BB0000000000000000000006B /* ManagerAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,8 +176,17 @@
 				AA0000000000000000000107 /* Services */,
 				AA0000000000000000000108 /* Profile */,
 				AA0000000000000000000109 /* Components */,
+				CC0000000000000000000009 /* Rewards */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000009 /* Rewards */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000000000000000000002 /* RewardsView.swift */,
+			);
+			path = Rewards;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000104 /* Onboarding */ = {
@@ -211,6 +226,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000000000000000000020B /* ProfileView.swift */,
+				DD000000000000000000001A /* AddressesView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -254,6 +270,7 @@
 		BB0000000000000000000200 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				5276C62C2F845E1B003AD0D8 /* LocationService.swift */,
 				BB0000000000000000000001 /* APIClient.swift */,
 				BB0000000000000000000002 /* AuthService.swift */,
 				BB0000000000000000000003 /* BookingAPIService.swift */,
@@ -291,7 +308,7 @@
 			);
 			name = ShineArabia;
 			packageProductDependencies = (
-				CC0000000000000000000002 /* GoogleSignIn */,
+				CC0000000000000000000007 /* GoogleSignIn */,
 				CC0000000000000000000005 /* FacebookLogin */,
 				FF0000000000000000000002 /* FirebaseCore */,
 				FF0000000000000000000003 /* FirebaseMessaging */,
@@ -326,7 +343,7 @@
 			);
 			mainGroup = AA0000000000000000000002;
 			packageReferences = (
-				CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
 				FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
@@ -369,6 +386,7 @@
 				AA0000000000000000000309 /* OrdersView.swift in Sources */,
 				AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */,
 				AA000000000000000000030B /* ProfileView.swift in Sources */,
+				DD000000000000000000001B /* AddressesView.swift in Sources */,
 				AA000000000000000000030C /* MainTabView.swift in Sources */,
 				AA000000000000000000030D /* SharedComponents.swift in Sources */,
 				AA000000000000000000030E /* DesignSystem.swift in Sources */,
@@ -379,6 +397,7 @@
 				BB0000000000000000000103 /* BookingAPIService.swift in Sources */,
 				BB0000000000000000000104 /* ServiceAPIService.swift in Sources */,
 				BB0000000000000000000109 /* LocalCacheService.swift in Sources */,
+				5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */,
 				BB0000000000000000000105 /* UserAPIService.swift in Sources */,
 				BB0000000000000000000106B /* ManagerAPIService.swift in Sources */,
 				528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */,
@@ -386,6 +405,7 @@
 				BB0000000000000000000107 /* LoginView.swift in Sources */,
 				528B82632F81218800CE7E84 /* ManagerView.swift in Sources */,
 				BB0000000000000000000108 /* RegisterView.swift in Sources */,
+				CC0000000000000000000001 /* RewardsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -597,7 +617,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+		CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
 			requirement = {
@@ -624,9 +644,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CC0000000000000000000002 /* GoogleSignIn */ = {
+		CC0000000000000000000007 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CC0000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			package = CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
 		};
 		CC0000000000000000000005 /* FacebookLogin */ = {

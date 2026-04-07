@@ -2,15 +2,15 @@ import SwiftUI
 
 // MARK: - ShineArabia Design System
 // Mirrors the exact CSS variables from the HTML prototype:
-// --coral: #E8715A  --teal: #2D8C7A  --amber: #D4893A  --lavender: #7B6FA0
+// --coral: #8D1B3D  --teal: #2D8C7A  --amber: #D4893A  --lavender: #7B6FA0
 // --bg: #F7F5F2  --surface: #FFFFFF  --ink: #1C1917
 
 // MARK: - Colors
 extension Color {
-    // Primary accent — coral
-    static let shineCoral       = Color(hex: "E8715A")
-    static let shineCoralLight  = Color(hex: "FDECEA")
-    static let shineCoralMid    = Color(hex: "F4A799")
+    // Primary accent — Qatar maroon
+    static let shineCoral       = Color(hex: "8D1B3D")
+    static let shineCoralLight  = Color(hex: "F7E8EE")
+    static let shineCoralMid    = Color(hex: "C4728E")
 
     // Secondary — teal
     static let shineTeal        = Color(hex: "2D8C7A")

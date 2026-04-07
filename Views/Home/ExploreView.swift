@@ -9,18 +9,6 @@ struct ExploreView: View {
         vm.categories.filter { $0.slug != "bundle" }
     }
 
-    var filteredServices: [APICategory] {
-        let q = vm.searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return allServices }
-        return allServices.filter {
-            $0.nameEn.lowercased().contains(q) || $0.nameAr.contains(q)
-        }
-    }
-
-    var isSearching: Bool {
-        !vm.searchText.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
     var body: some View {
         ZStack {
             Color.shineBG.ignoresSafeArea()
@@ -33,16 +21,10 @@ struct ExploreView: View {
                         .foregroundColor(.shineInk)
                         .padding(.horizontal, ShineSpacing.lg)
                         .padding(.top, ShineSpacing.lg)
-
-                    // Search
-                    SearchBarView(text: $vm.searchText)
-                        .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.vertical, ShineSpacing.lg)
+                        .padding(.bottom, ShineSpacing.lg)
 
                     // Section label
-                    Text(isSearching
-                         ? (appState.isArabic ? "الفئات المطابقة" : "Matching Categories")
-                         : Loc.string("explore.all_services", isArabic: appState.isArabic))
+                    Text(Loc.string("explore.all_services", isArabic: appState.isArabic))
                         .font(ShineFont.body(11, weight: .semibold))
                         .foregroundColor(.shineInk3)
                         .kerning(0.8)
@@ -50,52 +32,31 @@ struct ExploreView: View {
                         .padding(.horizontal, ShineSpacing.lg)
                         .padding(.bottom, ShineSpacing.md)
 
-                    if filteredServices.isEmpty && isSearching {
-                        // No matching categories
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.grid.2x2")
-                                .foregroundColor(.shineInk3)
-                            Text(appState.isArabic ? "لا توجد فئات مطابقة" : "No matching categories")
-                                .font(ShineFont.body(13))
-                                .foregroundColor(.shineInk3)
-                        }
-                        .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.bottom, ShineSpacing.md)
-                    } else {
-                        // Service grid
-                        LazyVGrid(
-                            columns: [GridItem(.flexible()), GridItem(.flexible())],
-                            spacing: 14
-                        ) {
-                            if vm.isLoadingCategories {
-                                ForEach(0..<4, id: \.self) { _ in
-                                    RoundedRectangle(cornerRadius: ShineRadius.md)
-                                        .fill(Color.shineSurface)
-                                        .frame(height: 140)
-                                        .shineShadowSM()
-                                }
-                            } else {
-                                ForEach(filteredServices) { svc in
-                                    ExploreServiceTile(category: svc, isArabic: appState.isArabic) {
-                                        vm.openService(svc)
-                                    }
+                    // Service grid
+                    LazyVGrid(
+                        columns: [GridItem(.flexible()), GridItem(.flexible())],
+                        spacing: 14
+                    ) {
+                        if vm.isLoadingCategories {
+                            ForEach(0..<4, id: \.self) { _ in
+                                RoundedRectangle(cornerRadius: ShineRadius.md)
+                                    .fill(Color.shineSurface)
+                                    .frame(height: 140)
+                                    .shineShadowSM()
+                            }
+                        } else {
+                            ForEach(allServices) { svc in
+                                ExploreServiceTile(category: svc, isArabic: appState.isArabic) {
+                                    vm.openService(svc)
                                 }
                             }
                         }
-                        .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.bottom, ShineSpacing.xl)
                     }
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, ShineSpacing.xl)
 
-                    // Package search results from API
-                    if isSearching {
-                        SearchResultsSection { category in
-                            vm.openService(category)
-                        }
-                        .padding(.bottom, ShineSpacing.xl)
-                    }
-
-                    // Pricing pills — only visible when not searching and popular items are loaded
-                    if !isSearching && !vm.popularItems.isEmpty {
+                    // Pricing pills
+                    if !vm.popularItems.isEmpty {
                         Text(Loc.string("explore.quick_pricing", isArabic: appState.isArabic))
                             .font(ShineFont.body(11, weight: .semibold))
                             .foregroundColor(.shineInk3)
@@ -148,8 +109,8 @@ struct ExploreView: View {
                     }
                 }
                 .environmentObject(bookingVM)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(32)
             }
         }

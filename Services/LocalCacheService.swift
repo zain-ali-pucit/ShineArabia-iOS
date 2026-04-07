@@ -88,6 +88,23 @@ class LocalCacheService {
         return true
     }
 
+    // MARK: - Bundles
+
+    func saveBundles(_ bundles: [APIBundle]) {
+        write(bundles, key: "bundles")
+    }
+
+    func loadBundles() -> [APIBundle]? {
+        read(key: "bundles")
+    }
+
+    @discardableResult
+    func updateBundlesIfChanged(_ bundles: [APIBundle]) -> Bool {
+        guard isDifferent(bundles, fromKey: "bundles") else { return false }
+        saveBundles(bundles)
+        return true
+    }
+
     // MARK: - Popular Items
 
     func savePopularItems(_ items: [APIPopularItem]) {

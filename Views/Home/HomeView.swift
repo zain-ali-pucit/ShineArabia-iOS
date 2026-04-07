@@ -14,57 +14,57 @@ struct HomeView: View {
                     // Header
                     HomeHeaderView()
 
-                    // Search bar
-                    SearchBarView(text: $vm.searchText)
-                        .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.top, ShineSpacing.lg)
+                    // Default home content
+                    PromoBannerView(bundle: vm.featuredBundle, isArabic: appState.isArabic) {
+                        vm.openService(.bundle)
+                    }
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.top, ShineSpacing.lg)
 
-                    if !vm.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                        // Search results
-                        SearchResultsSection { category in
-                            vm.openService(category)
-                        }
-                        .padding(.top, ShineSpacing.md)
-                        .padding(.bottom, ShineSpacing.xl)
-                    } else {
-                        // Default home content
-                        PromoBannerView {
-                            vm.openService(.bundle)
-                        }
-                        .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.top, ShineSpacing.lg)
+                    SectionHeader(
+                        title: Loc.string("home.services", isArabic: appState.isArabic),
+                        action: Loc.string("home.see_all", isArabic: appState.isArabic)
+                    )
+                    .padding(.top, ShineSpacing.xl)
 
-                        SectionHeader(
-                            title: Loc.string("home.services", isArabic: appState.isArabic),
-                            action: Loc.string("home.see_all", isArabic: appState.isArabic)
-                        )
-                        .padding(.top, ShineSpacing.xl)
+                    ServiceCardsRow(categories: vm.categories, isLoading: vm.isLoadingCategories) { category in
+                        vm.openService(category)
+                    }
 
-                        ServiceCardsRow(categories: vm.categories, isLoading: vm.isLoadingCategories) { category in
-                            vm.openService(category)
-                        }
-
+                    if vm.isLoadingPopular || !vm.popularItems.isEmpty {
                         SectionHeader(
                             title: Loc.string("home.popular", isArabic: appState.isArabic),
-                            action: Loc.string("home.filter", isArabic: appState.isArabic)
-                        )
-                        .padding(.top, ShineSpacing.lg)
-
-                        PopularListView(items: vm.popularItems) { item in
-                            vm.openService(item.category)
-                        }
-                        .padding(.horizontal, ShineSpacing.lg)
-
-                        SectionHeader(
-                            title: Loc.string("home.how_it_works", isArabic: appState.isArabic),
                             action: nil
                         )
                         .padding(.top, ShineSpacing.lg)
 
-                        HowItWorksView()
+                        if vm.isLoadingPopular {
+                            VStack(spacing: 14) {
+                                ForEach(0..<3, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: ShineRadius.md)
+                                        .fill(Color.shineSurface)
+                                        .frame(height: 88)
+                                        .shineShadowXS()
+                                }
+                            }
                             .padding(.horizontal, ShineSpacing.lg)
-                            .padding(.bottom, ShineSpacing.xl)
+                        } else {
+                            PopularListView(items: vm.popularItems) { item in
+                                vm.openService(item.category)
+                            }
+                            .padding(.horizontal, ShineSpacing.lg)
+                        }
                     }
+
+                    SectionHeader(
+                        title: Loc.string("home.how_it_works", isArabic: appState.isArabic),
+                        action: nil
+                    )
+                    .padding(.top, ShineSpacing.lg)
+
+                    HowItWorksView()
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.bottom, ShineSpacing.xl)
                 }
             }
 
@@ -104,8 +104,8 @@ struct HomeView: View {
                     }
                 }
                 .environmentObject(bookingVM)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(32)
             }
         }
@@ -125,9 +125,10 @@ struct HomeView: View {
             }
         }
         .task {
-            async let cats: () = vm.loadCategories()
-            async let popular: () = vm.loadPopular()
-            _ = await (cats, popular)
+            async let cats: ()     = vm.loadCategories()
+            async let popular: ()  = vm.loadPopular()
+            async let bundles: ()  = vm.loadBundles()
+            _ = await (cats, popular, bundles)
         }
     }
 }
@@ -141,9 +142,11 @@ struct HomeHeaderView: View {
             VStack(alignment: .leading, spacing: 2) {
                 // Brand
                 HStack(alignment: .bottom, spacing: 6) {
-                    Text("ShineArabia")
-                        .font(ShineFont.displayBold(26))
+                    (Text("Shine")
                         .foregroundColor(.shineInk)
+                    + Text("Arabia")
+                        .foregroundColor(Color(hex: "800020")))
+                        .font(ShineFont.displayBold(26))
                 }
                 Text(Loc.string("home.subtitle", isArabic: appState.isArabic))
                     .font(ShineFont.body(11, weight: .medium))
@@ -163,17 +166,40 @@ struct HomeHeaderView: View {
         .padding(.top, ShineSpacing.lg)
 
         // Greeting + Hero
-        VStack(alignment: .leading, spacing: 4) {
-            Text(Loc.string("home.greeting", isArabic: appState.isArabic))
-                .font(ShineFont.body(13))
-                .foregroundColor(.shineInk3)
+        HStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Loc.string("home.greeting", isArabic: appState.isArabic))
+                    .font(ShineFont.body(13))
+                    .foregroundColor(.shineInk3)
 
-            (Text(Loc.string("home.hero.body", isArabic: appState.isArabic))
-            + Text(Loc.string("home.hero.highlight", isArabic: appState.isArabic))
-                .foregroundColor(.shineCoral))
-                .font(ShineFont.displayBold(34))
-                .foregroundColor(.shineInk)
-                .lineSpacing(4)
+                (Text(Loc.string("home.hero.body", isArabic: appState.isArabic))
+                + Text(Loc.string("home.hero.highlight", isArabic: appState.isArabic))
+                    .foregroundColor(.shineCoral))
+                    .font(ShineFont.displayBold(34))
+                    .foregroundColor(.shineInk)
+                    .lineSpacing(4)
+            }
+
+            Spacer()
+
+            if appState.isAuthenticated {
+                HStack(spacing: 5) {
+                    Text("⭐")
+                        .font(.system(size: 13))
+                    Text("\(appState.userPoints)")
+                        .font(ShineFont.body(13, weight: .semibold))
+                        .foregroundColor(Color(hex: "B45309"))
+                    Text(appState.isArabic ? "نقطة" : "pts")
+                        .font(ShineFont.body(11))
+                        .foregroundColor(Color(hex: "B45309").opacity(0.7))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(Color.shineAmber.opacity(0.12))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.shineAmber.opacity(0.3), lineWidth: 1))
+                .padding(.bottom, 4)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, ShineSpacing.lg)
@@ -181,57 +207,32 @@ struct HomeHeaderView: View {
     }
 }
 
-// MARK: - Search Bar
-struct SearchBarView: View {
-    @Binding var text: String
-    @EnvironmentObject var appState: AppState
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 16))
-                .foregroundColor(.shineInk3)
-
-            TextField(
-                Loc.string("home.search_placeholder", isArabic: appState.isArabic),
-                text: $text
-            )
-            .font(ShineFont.body(14))
-            .foregroundColor(.shineInk)
-            .focused($isFocused)
-
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.shineCoral)
-                    .frame(width: 32, height: 32)
-                    .shineShadowSM()
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-        .background(Color.shineSurface)
-        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: ShineRadius.md)
-                .stroke(isFocused ? Color.shineCoral : Color.clear, lineWidth: 1.5)
-        )
-        .shineShadowXS()
-        .animation(.easeInOut(duration: 0.25), value: isFocused)
-    }
-}
-
-// MARK: - Promo Banner
+// MARK: - Promo Banner (driven by featured bundle from backend)
 struct PromoBannerView: View {
+    let bundle: APIBundle?
+    let isArabic: Bool
     let onTap: () -> Void
+
+    private var title: String {
+        guard let b = bundle else { return isArabic ? "احجز باقة\nووفّر أكثر" : "Bundle Services\n& Save" }
+        return isArabic ? b.nameAr : b.nameEn
+    }
+
+    private var subtitle: String {
+        guard let b = bundle else { return isArabic ? "اكتشف باقاتنا" : "Discover our bundles" }
+        return b.componentSubtitle(isArabic: isArabic)
+    }
+
+    private var discountText: String { "30%" }
+
+    private var priceText: String {
+        guard let b = bundle else { return "" }
+        return b.priceDisplay
+    }
 
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                // Background
                 RoundedRectangle(cornerRadius: ShineRadius.lg)
                     .fill(
                         LinearGradient(
@@ -241,7 +242,6 @@ struct PromoBannerView: View {
                         )
                     )
 
-                // Blobs
                 Circle()
                     .fill(Color.shineCoral.opacity(0.25))
                     .frame(width: 160, height: 160)
@@ -260,7 +260,7 @@ struct PromoBannerView: View {
                         HStack(spacing: 5) {
                             Image(systemName: "bolt.fill")
                                 .font(.system(size: 10))
-                            Text("Limited Offer")
+                            Text(isArabic ? "عرض محدود" : "Limited Offer")
                                 .font(ShineFont.body(11, weight: .semibold))
                                 .kerning(0.3)
                                 .textCase(.uppercase)
@@ -269,39 +269,47 @@ struct PromoBannerView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
                         .background(Color.shineCoral.opacity(0.2))
-                        .overlay(
-                            Capsule().stroke(Color.shineCoral.opacity(0.35), lineWidth: 1)
-                        )
+                        .overlay(Capsule().stroke(Color.shineCoral.opacity(0.35), lineWidth: 1))
                         .clipShape(Capsule())
 
-                        Text("Bundle All Three\nServices & Save")
+                        Text(title)
                             .font(ShineFont.displayBold(22))
                             .foregroundColor(.white)
                             .lineSpacing(3)
 
-                        Text("Laundry + Cleaning + Car Wash")
-                            .font(ShineFont.body(13))
-                            .foregroundColor(.white.opacity(0.5))
-
-                        // CTA button
-                        HStack(spacing: 6) {
-                            Text("Book Bundle")
-                                .font(ShineFont.body(13, weight: .semibold))
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
+                        if !subtitle.isEmpty {
+                            Text(subtitle)
+                                .font(ShineFont.body(13))
+                                .foregroundColor(.white.opacity(0.5))
+                                .lineLimit(1)
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 9)
-                        .background(Color.shineCoral)
-                        .clipShape(Capsule())
-                        .shadow(color: Color.shineCoral.opacity(0.35), radius: 8, x: 0, y: 4)
+
+                        // Price + CTA
+                        HStack(spacing: 10) {
+                            if !priceText.isEmpty {
+                                Text(priceText)
+                                    .font(ShineFont.displayBold(16))
+                                    .foregroundColor(Color(hex: "F4A799"))
+                            }
+                            HStack(spacing: 6) {
+                                Text(isArabic ? "احجز الآن" : "Book Bundle")
+                                    .font(ShineFont.body(13, weight: .semibold))
+                                Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 9)
+                            .background(Color.shineCoral)
+                            .clipShape(Capsule())
+                            .shadow(color: Color.shineCoral.opacity(0.35), radius: 8, x: 0, y: 4)
+                        }
                         .padding(.top, 4)
                     }
 
                     Spacer()
 
-                    // 30% badge
+                    // Discount sticker — always 30% OFF
                     ZStack {
                         Circle()
                             .stroke(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [4]))
@@ -310,7 +318,7 @@ struct PromoBannerView: View {
                             .fill(Color.white.opacity(0.06))
                             .frame(width: 64, height: 64)
                         VStack(spacing: 0) {
-                            Text("30%")
+                            Text(discountText)
                                 .font(ShineFont.displayBold(22))
                                 .foregroundColor(Color(hex: "F4A799"))
                             Text("OFF")
@@ -332,6 +340,7 @@ struct PromoBannerView: View {
 
 // MARK: - Section Header
 struct SectionHeader: View {
+    @EnvironmentObject var appState: AppState
     let title: String
     let action: String?
 
@@ -342,7 +351,11 @@ struct SectionHeader: View {
                 .foregroundColor(.shineInk)
             Spacer()
             if let action = action {
-                Button(action: {}) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        appState.selectedTab = .explore
+                    }
+                } label: {
                     Text(action)
                         .font(ShineFont.body(13, weight: .medium))
                         .foregroundColor(.shineCoral)
@@ -503,13 +516,15 @@ struct PopularCard: View {
                         .font(ShineFont.body(15, weight: .semibold))
                         .foregroundColor(.shineInk)
                     HStack(spacing: 8) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.shineAmber)
-                            Text(String(format: "%.1f", item.rating))
-                                .font(ShineFont.body(12, weight: .semibold))
-                                .foregroundColor(.shineAmber)
+                        if item.rating > 0 {
+                            HStack(spacing: 3) {
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.shineAmber)
+                                Text(String(format: "%.1f", item.rating))
+                                    .font(ShineFont.body(12, weight: .semibold))
+                                    .foregroundColor(.shineAmber)
+                            }
                         }
                         Text(appState.isArabic ? item.reviewsAR : item.reviews)
                             .font(ShineFont.body(12))
@@ -618,108 +633,3 @@ struct BookingConfirmedToast: View {
     }
 }
 
-// MARK: - Search Results Section
-struct SearchResultsSection: View {
-    @EnvironmentObject var vm: HomeViewModel
-    @EnvironmentObject var appState: AppState
-
-    let onBook: (ServiceCategory) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if vm.isSearching {
-                HStack(spacing: 10) {
-                    ProgressView()
-                    Text(appState.isArabic ? "جاري البحث..." : "Searching...")
-                        .font(ShineFont.body(14))
-                        .foregroundColor(.shineInk3)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 48)
-            } else if vm.searchResults.isEmpty {
-                VStack(spacing: 12) {
-                    Text("🔍")
-                        .font(.system(size: 40))
-                    Text(appState.isArabic ? "لا توجد نتائج" : "No results found")
-                        .font(ShineFont.body(16, weight: .semibold))
-                        .foregroundColor(.shineInk)
-                    Text(appState.isArabic ? "جرّب كلمة بحث مختلفة" : "Try a different keyword")
-                        .font(ShineFont.body(13))
-                        .foregroundColor(.shineInk3)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 48)
-            } else {
-                Text(appState.isArabic ? "النتائج" : "Results")
-                    .font(ShineFont.body(11, weight: .semibold))
-                    .foregroundColor(.shineInk3)
-                    .kerning(0.8)
-                    .textCase(.uppercase)
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
-
-                VStack(spacing: 10) {
-                    ForEach(vm.searchResults) { pkg in
-                        SearchResultCard(package: pkg, isArabic: appState.isArabic) {
-                            onBook(pkg.category)
-                        }
-                    }
-                }
-                .padding(.horizontal, ShineSpacing.lg)
-            }
-        }
-    }
-}
-
-// MARK: - Search Result Card
-struct SearchResultCard: View {
-    let package: ServicePackage
-    let isArabic: Bool
-    let onBook: () -> Void
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(package.category.softColor)
-                    .frame(width: 52, height: 52)
-                Text(package.emoji)
-                    .font(.system(size: 24))
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(isArabic ? package.nameAR : package.name)
-                    .font(ShineFont.body(14, weight: .semibold))
-                    .foregroundColor(.shineInk)
-                Text(isArabic ? package.category.titleAR : package.category.title)
-                    .font(ShineFont.body(12))
-                    .foregroundColor(.shineInk3)
-                Text(isArabic ? package.detailAR : package.detail)
-                    .font(ShineFont.body(11))
-                    .foregroundColor(.shineInk3)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 6) {
-                Text(package.price)
-                    .font(ShineFont.displayBold(16))
-                    .foregroundColor(.shineInk)
-                Button(action: onBook) {
-                    Text(isArabic ? "احجز" : "Book")
-                        .font(ShineFont.body(12, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 6)
-                        .background(Color.shineCoral)
-                        .clipShape(Capsule())
-                }
-            }
-        }
-        .padding(14)
-        .background(Color.shineSurface)
-        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-        .shineShadowXS()
-    }
-}

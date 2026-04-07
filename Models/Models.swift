@@ -165,8 +165,8 @@ struct PopularItem: Identifiable {
         self.name     = api.nameEn
         self.nameAR   = api.nameAr
         self.rating   = api.rating
-        self.reviews  = "(\(api.reviewCount) reviews)"
-        self.reviewsAR = "(\(api.reviewCount) تقييم)"
+        self.reviews  = "\(api.reviewCount) orders"
+        self.reviewsAR = "\(api.reviewCount) طلب"
         self.price    = api.priceDisplay
         self.unit     = api.priceUnitEn
         self.unitAR   = api.priceUnitAr
@@ -247,6 +247,74 @@ struct Booking: Identifiable, Codable {
     }
 }
 
+// MARK: - Bundle DTOs
+
+struct APIBundleComponent: Codable, Identifiable {
+    let id: String
+    let emoji: String
+    let nameEn: String
+    let nameAr: String
+    let priceDisplay: String
+    let priceAmount: Double
+    let categorySlug: String
+    let categoryName: String?
+    let sortOrder: Int?
+}
+
+struct APIBundle: Codable, Identifiable {
+    let id: String
+    let emoji: String
+    let nameEn: String
+    let nameAr: String
+    let detailEn: String
+    let detailAr: String
+    let priceDisplay: String
+    let priceAmount: Double
+    let priceUnit: String?
+    let sortOrder: Int
+    let isActive: Bool?
+    let components: [APIBundleComponent]
+    let originalTotal: Double    // sum of component prices
+    let discountPct: Int         // auto-calculated on backend
+
+    // Convenience: component names joined for subtitle
+    func componentSubtitle(isArabic: Bool) -> String {
+        components
+            .map { isArabic ? $0.nameAr : $0.nameEn }
+            .joined(separator: " + ")
+    }
+}
+
+struct APIBundlesResponse: Decodable {
+    struct DataWrapper: Decodable { let bundles: [APIBundle] }
+    let success: Bool
+    let data: DataWrapper?
+}
+
+// Non-bundle packages for admin picker
+struct AdminPackageItem: Codable, Identifiable {
+    let id: String
+    let emoji: String
+    let nameEn: String
+    let nameAr: String
+    let priceDisplay: String
+    let priceAmount: Double
+    let categorySlug: String
+    let categoryName: String
+}
+
+struct AdminNonBundlePackagesResponse: Decodable {
+    struct DataWrapper: Decodable { let packages: [AdminPackageItem] }
+    let success: Bool
+    let data: DataWrapper?
+}
+
+struct AdminBundlesResponse: Decodable {
+    struct DataWrapper: Decodable { let bundles: [APIBundle] }
+    let success: Bool
+    let data: DataWrapper?
+}
+
 // MARK: - APICategory UI Helpers
 extension APICategory {
     var color: Color     { Color(hex: colorHex) }
@@ -266,6 +334,133 @@ extension APIUser {
             phone:   phone    ?? "",
             address: address  ?? ""
         )
+    }
+}
+
+// MARK: - Reward Tier
+
+struct RewardTier: Identifiable {
+    let id = UUID()
+    let points: Int
+    let reward: String
+    let rewardAR: String
+    let icon: String
+    let detail: String
+    let detailAR: String
+}
+
+let rewardTiers: [RewardTier] = [
+    RewardTier(points: 50,   reward: "1 kg Laundry Free",        rewardAR: "١ كغ غسيل مجاني",
+               icon: "🧺", detail: "Wash & Fold · 1 kg",               detailAR: "غسيل وطي · ١ كغ"),
+    RewardTier(points: 100,  reward: "2 kg Laundry Free",        rewardAR: "٢ كغ غسيل مجاني",
+               icon: "🧺", detail: "Wash & Fold · 2 kg",               detailAR: "غسيل وطي · ٢ كغ"),
+    RewardTier(points: 300,  reward: "Exterior Wash + 2 kg",     rewardAR: "غسيل خارجي + ٢ كغ",
+               icon: "🚿", detail: "Car exterior wash + 2 kg laundry",  detailAR: "غسيل خارجي للسيارة + ٢ كغ غسيل"),
+    RewardTier(points: 500,  reward: "Interior & Exterior Wash", rewardAR: "غسيل داخلي وخارجي",
+               icon: "✨", detail: "Full interior + exterior car wash",  detailAR: "غسيل كامل داخلي وخارجي للسيارة"),
+    RewardTier(points: 1000, reward: "Full Detail",              rewardAR: "تلميع كامل",
+               icon: "🏆", detail: "Complete car detailing package",     detailAR: "باقة تلميع شاملة للسيارة"),
+]
+
+// MARK: - Saved Address
+
+struct SavedAddress: Identifiable, Codable, Equatable {
+    let id: UUID
+    var label: AddressLabel
+    var address: String
+    var isDefault: Bool
+
+    enum AddressLabel: String, Codable, CaseIterable {
+        case home  = "home"
+        case work  = "work"
+        case other = "other"
+
+        var icon: String {
+            switch self {
+            case .home:  return "house.fill"
+            case .work:  return "briefcase.fill"
+            case .other: return "mappin.circle.fill"
+            }
+        }
+        var title: String {
+            switch self {
+            case .home:  return "Home"
+            case .work:  return "Work"
+            case .other: return "Other"
+            }
+        }
+        var titleAR: String {
+            switch self {
+            case .home:  return "المنزل"
+            case .work:  return "العمل"
+            case .other: return "أخرى"
+            }
+        }
+        var color: Color {
+            switch self {
+            case .home:  return .shineCoral
+            case .work:  return .shineTeal
+            case .other: return .shineAmber
+            }
+        }
+    }
+
+    init(id: UUID = UUID(), label: AddressLabel, address: String, isDefault: Bool = false) {
+        self.id        = id
+        self.label     = label
+        self.address   = address
+        self.isDefault = isDefault
+    }
+}
+
+// MARK: - Address Store
+
+class AddressStore: ObservableObject {
+    static let shared = AddressStore()
+
+    @Published var addresses: [SavedAddress] = []
+
+    private let udKey = "shine_saved_addresses"
+
+    init() { load() }
+
+    var defaultAddress: SavedAddress? {
+        addresses.first { $0.isDefault } ?? addresses.first
+    }
+
+    func add(_ address: SavedAddress) {
+        var a = address
+        if addresses.isEmpty { a.isDefault = true }
+        addresses.append(a)
+        save()
+    }
+
+    func remove(_ address: SavedAddress) {
+        let wasDefault = address.isDefault
+        addresses.removeAll { $0.id == address.id }
+        if wasDefault, !addresses.isEmpty {
+            addresses[0].isDefault = true
+        }
+        save()
+    }
+
+    func setDefault(_ address: SavedAddress) {
+        for i in addresses.indices {
+            addresses[i].isDefault = (addresses[i].id == address.id)
+        }
+        save()
+    }
+
+    private func save() {
+        guard let data = try? JSONEncoder().encode(addresses) else { return }
+        UserDefaults.standard.set(data, forKey: udKey)
+    }
+
+    private func load() {
+        guard let data = UserDefaults.standard.data(forKey: udKey),
+              let decoded = try? JSONDecoder().decode([SavedAddress].self, from: data)
+        else { return }
+        addresses = decoded
     }
 }
 

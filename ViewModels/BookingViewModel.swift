@@ -46,10 +46,8 @@ class BookingViewModel: ObservableObject {
 
     // MARK: Create booking via API
     func createBooking(package pkg: ServicePackage) async {
+        let deliveryAddress = address.trimmingCharacters(in: .whitespaces)
         await MainActor.run { isSubmitting = true; errorMsg = nil }
-
-        // Fallback address
-        let deliveryAddress = address.isEmpty ? "Al Olaya, Riyadh" : address
 
         do {
             // Need apiId; if nil (sample data), create a local booking

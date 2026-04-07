@@ -65,7 +65,24 @@
       "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -f /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/src/database/user_device_tokens_migration.sql)",
       "Bash(/usr/local/Cellar/postgresql@16/16.13/bin/psql postgresql://macbookpro@localhost:5432/shinearabia -f /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/src/database/user_device_tokens_migration.sql)",
       "Bash(xcodebuild -resolvePackageDependencies -project /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-iOS/ShineArabia-iOS.xcodeproj)",
-      "Bash(find /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-iOS -not -path */.* -type d)"
+      "Bash(find /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-iOS -not -path */.* -type d)",
+      "Bash(convert --version)",
+      "Bash(curl -s \"https://www.shine-arabia.com/api/services/categories\")",
+      "Bash(find /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia -name *.js -o -name *.ts -o -name *.tsx -o -name package.json)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"\\\\d users\")",
+      "Read(//Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/**)",
+      "Bash(arch -x86_64 /usr/local/bin/node server.js)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -f /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/src/database/social_auth_migration.sql)",
+      "Read(//Applications/Postgres.app/Contents/Versions/latest/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Read(//usr/**)",
+      "Bash(/usr/local/Cellar/postgresql@16/16.13/bin/psql postgresql://macbookpro@localhost:5432/shinearabia -f /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/src/database/social_auth_migration.sql)",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(pkill -f \"nodemon server.js\")",
+      "Bash(pkill -f \"node.*index\")",
+      "Bash(npm start:*)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

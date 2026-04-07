@@ -3,7 +3,7 @@ import Foundation
 // MARK: - API Configuration
 enum APIConfig {
     #if DEBUG
-    static let baseURL = "https://www.shine-arabia.com/api"
+    static let baseURL = "http://192.168.100.172:3000/api"
     #else
     static let baseURL = "https://www.shine-arabia.com/api"
     #endif
@@ -111,7 +111,15 @@ class APIClient {
         }
 
         if http.statusCode == 401 {
-            // Try token refresh once
+            // Auth endpoints (login/register/social) are not authenticated requests —
+            // a 401 here means wrong credentials, not an expired session.
+            if endpoint.hasPrefix("/auth/login") || endpoint.hasPrefix("/auth/register")
+                || endpoint.hasPrefix("/auth/apple") || endpoint.hasPrefix("/auth/google")
+                || endpoint.hasPrefix("/auth/facebook") {
+                let msg = extractMessage(from: data) ?? "Invalid credentials"
+                throw APIError.serverError(401, msg)
+            }
+            // For authenticated endpoints, try token refresh once
             let refreshed = try? await refreshAccessToken()
             if refreshed == true {
                 return try await request(endpoint, method: method, body: body)
@@ -171,7 +179,19 @@ extension JSONDecoder {
     static var api: JSONDecoder {
         let d = JSONDecoder()
         d.keyDecodingStrategy  = .convertFromSnakeCase
-        d.dateDecodingStrategy = .iso8601
+        d.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let str = try container.decode(String.self)
+            // Try with fractional seconds (Postgres default: 2024-01-01T12:00:00.000Z)
+            let withMs = ISO8601DateFormatter()
+            withMs.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = withMs.date(from: str) { return date }
+            // Fallback: without fractional seconds
+            let plain = ISO8601DateFormatter()
+            plain.formatOptions = [.withInternetDateTime]
+            if let date = plain.date(from: str) { return date }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot parse date: \(str)")
+        }
         return d
     }
 }

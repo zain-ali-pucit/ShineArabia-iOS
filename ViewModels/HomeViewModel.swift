@@ -1,8 +1,6 @@
 import SwiftUI
-import Combine
 
 class HomeViewModel: ObservableObject {
-    @Published var searchText: String               = ""
     @Published var selectedService: ServiceCategory? = nil
     @Published var showServiceSheet: Bool           = false
     @Published var selectedPackage: ServicePackage? = nil
@@ -14,51 +12,34 @@ class HomeViewModel: ObservableObject {
 
     // Data
     @Published var categories: [APICategory]        = []
+    @Published var bundles: [APIBundle]             = []
     @Published var packages: [ServicePackage]       = []
-    @Published var popularItems: [PopularItem]      = SampleData.popularItems
-    @Published var searchResults: [ServicePackage]  = []
+    @Published var popularItems: [PopularItem]      = []
+
+    /// The first active bundle — drives the home promo banner
+    var featuredBundle: APIBundle? { bundles.first }
 
     // Loading flags (only true when no cache exists yet)
-    @Published var isSearching: Bool                = false
     @Published var isLoadingCategories: Bool        = false
     @Published var isLoadingPackages: Bool          = false
+    @Published var isLoadingPopular: Bool           = false
 
     private let serviceAPI = ServiceAPIService.shared
     private let cache      = LocalCacheService.shared
-    private var cancellables = Set<AnyCancellable>()
 
-    init() {
-        setupSearch()
-    }
+    // MARK: - Bundles  (cache-first → background refresh)
 
-    // MARK: - Search (debounced)
-
-    private func setupSearch() {
-        $searchText
-            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .removeDuplicates()
-            .sink { [weak self] query in
-                guard let self else { return }
-                let trimmed = query.trimmingCharacters(in: .whitespaces)
-                guard trimmed.count >= 2 else {
-                    self.searchResults = []
-                    self.isSearching   = false
-                    return
-                }
-                self.isSearching = true
-                Task {
-                    do {
-                        let results = try await self.serviceAPI.search(trimmed)
-                        await MainActor.run {
-                            self.searchResults = results.map { ServicePackage(from: $0) }
-                            self.isSearching   = false
-                        }
-                    } catch {
-                        await MainActor.run { self.isSearching = false }
-                    }
-                }
+    func loadBundles() async {
+        if let cached = cache.loadBundles() {
+            await MainActor.run { bundles = cached }
+        }
+        do {
+            let fresh   = try await serviceAPI.fetchBundles()
+            let changed = cache.updateBundlesIfChanged(fresh)
+            if changed || bundles.isEmpty {
+                await MainActor.run { bundles = fresh }
             }
-            .store(in: &cancellables)
+        } catch { /* keep cached */ }
     }
 
     // MARK: - Categories  (cache-first → background refresh)
@@ -67,7 +48,7 @@ class HomeViewModel: ObservableObject {
         // 1. Show cached data instantly — no spinner if cache exists
         if let cached = cache.loadCategories() {
             await MainActor.run {
-                categories          = cached.sorted { $0.sortOrder < $1.sortOrder }
+                categories          = cached.filter { $0.slug != "bundle" }.sorted { $0.sortOrder < $1.sortOrder }
                 isLoadingCategories = false
             }
         } else {
@@ -80,7 +61,7 @@ class HomeViewModel: ObservableObject {
             let changed = cache.updateCategoriesIfChanged(fresh)
             if changed || categories.isEmpty {
                 await MainActor.run {
-                    categories = fresh.sorted { $0.sortOrder < $1.sortOrder }
+                    categories = fresh.filter { $0.slug != "bundle" }.sorted { $0.sortOrder < $1.sortOrder }
                 }
             }
         } catch { /* server unreachable — cached data is already shown */ }
@@ -89,16 +70,19 @@ class HomeViewModel: ObservableObject {
     }
 
     // MARK: - Popular items  (cache-first → background refresh)
+    // Driven by most-ordered packages. Empty = section hidden in UI.
 
     func loadPopular() async {
-        // 1. Load from cache
-        if let cached = cache.loadPopularItems() {
+        // 1. Show cached data instantly
+        if let cached = cache.loadPopularItems(), !cached.isEmpty {
             await MainActor.run {
                 popularItems = cached.map { PopularItem(from: $0) }
             }
+        } else {
+            await MainActor.run { isLoadingPopular = true }
         }
 
-        // 2. Background refresh
+        // 2. Fetch fresh from server
         do {
             let fresh   = try await serviceAPI.fetchPopular()
             let changed = cache.updatePopularItemsIfChanged(fresh)
@@ -108,6 +92,8 @@ class HomeViewModel: ObservableObject {
                 }
             }
         } catch { /* keep cached */ }
+
+        await MainActor.run { isLoadingPopular = false }
     }
 
     // MARK: - Open service sheet — from backend category card
@@ -119,7 +105,7 @@ class HomeViewModel: ObservableObject {
         loadPackages(slug: apiCategory.slug)
     }
 
-    // MARK: - Open service sheet — from popular items, search results, or bundle promo
+    // MARK: - Open service sheet — from popular items or bundle promo
 
     func openService(_ category: ServiceCategory) {
         selectedService  = category

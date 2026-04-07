@@ -1,4 +1,12 @@
 import SwiftUI
+import UIKit
+
+// MARK: - Keyboard Dismissal
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
 
 // MARK: - Language Toggle (EN / عر)
 struct LanguageToggle: View {
@@ -37,10 +45,14 @@ struct LanguageToggle: View {
 
 // MARK: - Notification Button
 struct NotificationButton: View {
-    @State private var hasNotification = true
+    @EnvironmentObject var appState: AppState
+    @State private var showSheet = false
 
     var body: some View {
-        Button {} label: {
+        Button {
+            appState.requestNotificationPermission()
+            showSheet = true
+        } label: {
             ZStack(alignment: .topTrailing) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
@@ -51,7 +63,7 @@ struct NotificationButton: View {
                         .font(.system(size: 17))
                         .foregroundColor(.shineInk)
                 }
-                if hasNotification {
+                if appState.unreadCount > 0 {
                     Circle()
                         .fill(Color.shineCoral)
                         .frame(width: 8, height: 8)
@@ -60,6 +72,132 @@ struct NotificationButton: View {
                 }
             }
         }
+        .sheet(isPresented: $showSheet) {
+            NotificationsSheet()
+                .environmentObject(appState)
+        }
+    }
+}
+
+// MARK: - Notifications Sheet
+struct NotificationsSheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        ZStack {
+            Color.shineBG.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text(appState.isArabic ? "الإشعارات" : "Notifications")
+                        .font(ShineFont.displayBold(22))
+                        .foregroundColor(.shineInk)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.shineSurface2)
+                                .frame(width: 34, height: 34)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.shineInk2)
+                        }
+                    }
+                }
+                .padding(.horizontal, ShineSpacing.lg)
+                .padding(.top, ShineSpacing.lg)
+                .padding(.bottom, ShineSpacing.md)
+
+                Divider()
+
+                if appState.notifications.isEmpty {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Text("🔔")
+                            .font(.system(size: 48))
+                        Text(appState.isArabic ? "لا توجد إشعارات" : "No notifications yet")
+                            .font(ShineFont.displayBold(18))
+                            .foregroundColor(.shineInk)
+                        Text(appState.isArabic
+                             ? "ستظهر هنا إشعارات طلباتك"
+                             : "Your booking updates will appear here")
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk3)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(ShineSpacing.xl)
+                    Spacer()
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 10) {
+                            ForEach(appState.notifications) { note in
+                                NotificationRow(notification: note)
+                            }
+                        }
+                        .padding(ShineSpacing.lg)
+                    }
+                }
+            }
+        }
+        .onAppear { appState.markAllNotificationsRead() }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(32)
+    }
+}
+
+// MARK: - Notification Row
+private struct NotificationRow: View {
+    let notification: AppNotification
+
+    private var timeAgo: String {
+        let secs = Int(Date().timeIntervalSince(notification.date))
+        if secs < 60  { return "Just now" }
+        if secs < 3600 { return "\(secs / 60)m ago" }
+        if secs < 86400 { return "\(secs / 3600)h ago" }
+        return "\(secs / 86400)d ago"
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.shineCoralLight)
+                    .frame(width: 44, height: 44)
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.shineCoral)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(notification.title)
+                    .font(ShineFont.body(14, weight: .semibold))
+                    .foregroundColor(.shineInk)
+                Text(notification.body)
+                    .font(ShineFont.body(13))
+                    .foregroundColor(.shineInk3)
+                    .lineLimit(2)
+                Text(timeAgo)
+                    .font(ShineFont.body(11))
+                    .foregroundColor(.shineInk3.opacity(0.7))
+                    .padding(.top, 2)
+            }
+
+            Spacer()
+
+            if !notification.isRead {
+                Circle()
+                    .fill(Color.shineCoral)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 6)
+            }
+        }
+        .padding(14)
+        .background(notification.isRead ? Color.shineSurface : Color.shineCoralLight.opacity(0.3))
+        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+        .shineShadowXS()
     }
 }
 

@@ -65,12 +65,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
     }
 
-    // MARK: - Foreground notification display
+        // MARK: - Foreground notification display
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        let content = notification.request.content
+        NotificationCenter.default.post(
+            name: .pushNotificationReceived,
+            object: nil,
+            userInfo: ["title": content.title, "body": content.body]
+        )
         completionHandler([.banner, .sound, .badge])
     }
 
@@ -80,15 +86,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let userInfo = response.notification.request.content.userInfo
-        // Broadcast tap so views can navigate (e.g. open the Orders tab)
-        NotificationCenter.default.post(name: .pushNotificationTapped, object: userInfo)
+        let content = response.notification.request.content
+        NotificationCenter.default.post(
+            name: .pushNotificationReceived,
+            object: nil,
+            userInfo: ["title": content.title, "body": content.body]
+        )
+        NotificationCenter.default.post(name: .pushNotificationTapped, object: content.userInfo)
         completionHandler()
     }
 }
 
 // MARK: - Notification name helpers
 extension Notification.Name {
-    static let fcmTokenReceived       = Notification.Name("fcmTokenReceived")
-    static let pushNotificationTapped = Notification.Name("pushNotificationTapped")
+    static let fcmTokenReceived        = Notification.Name("fcmTokenReceived")
+    static let pushNotificationTapped  = Notification.Name("pushNotificationTapped")
+    static let pushNotificationReceived = Notification.Name("pushNotificationReceived")
 }

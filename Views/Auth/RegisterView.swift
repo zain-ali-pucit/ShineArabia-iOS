@@ -10,6 +10,7 @@ struct RegisterView: View {
     var body: some View {
         ZStack {
             Color.shineBG.ignoresSafeArea()
+                .onTapGesture { hideKeyboard() }
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -97,12 +98,7 @@ struct RegisterView: View {
                         } label: {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.shineCoral, Color(hex: "D45A43")],
-                                            startPoint: .leading, endPoint: .trailing
-                                        )
-                                    )
+                                    .fill(Color.shineCoral)
                                 if vm.isLoading {
                                     ProgressView().tint(.white)
                                 } else {

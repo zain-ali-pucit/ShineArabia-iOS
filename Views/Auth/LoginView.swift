@@ -10,6 +10,7 @@ struct LoginView: View {
     var body: some View {
         ZStack {
             Color.shineBG.ignoresSafeArea()
+                .onTapGesture { hideKeyboard() }
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -101,34 +102,47 @@ struct LoginView: View {
                     .padding(.top, 24)
 
                     // ── Social Sign-In ────────────────────────────────────
-                    VStack(spacing: 12) {
-                        SignInWithAppleButton(.signIn, onRequest: { request in
-                            request.requestedScopes = [.fullName, .email]
-                        }, onCompletion: { result in
-                            Task { await vm.handleAppleSignIn(result: result) }
-                        })
-                        .signInWithAppleButtonStyle(.black)
-                        .frame(height: 52)
-                        .cornerRadius(16)
+                    HStack(spacing: 12) {
+                        // Apple
+                        ZStack {
+                            AppleIcon()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color.shineSurface)
+                                .cornerRadius(14)
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.shineBorder, lineWidth: 1))
+                                .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
 
-                        SocialSignInButton(
-                            label: appState.isArabic ? "المتابعة مع Google" : "Continue with Google",
-                            badgeText: "G",
-                            badgeColor: Color(red: 0.96, green: 0.26, blue: 0.21),
-                            backgroundColor: Color.shineSurface,
-                            foregroundColor: Color.shineInk
-                        ) {
-                            Task { await vm.loginWithGoogle() }
+                            SignInWithAppleButton(.signIn, onRequest: { request in
+                                request.requestedScopes = [.fullName, .email]
+                            }, onCompletion: { result in
+                                Task { await vm.handleAppleSignIn(result: result) }
+                            })
+                            .frame(height: 52)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .opacity(0.011)
                         }
 
-                        SocialSignInButton(
-                            label: appState.isArabic ? "المتابعة مع Facebook" : "Continue with Facebook",
-                            badgeText: "f",
-                            badgeColor: Color(red: 0.26, green: 0.4, blue: 0.7),
-                            backgroundColor: Color.shineSurface,
-                            foregroundColor: Color.shineInk
-                        ) {
-                            Task { await vm.loginWithFacebook() }
+                        // Google
+                        Button { Task { await vm.loginWithGoogle() } } label: {
+                            GoogleIcon()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color.shineSurface)
+                                .cornerRadius(14)
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.shineBorder, lineWidth: 1))
+                                .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+                        }
+
+                        // Facebook
+                        Button { Task { await vm.loginWithFacebook() } } label: {
+                            FacebookIcon()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color.shineSurface)
+                                .cornerRadius(14)
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.shineBorder, lineWidth: 1))
+                                .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -168,40 +182,47 @@ struct LoginView: View {
     }
 }
 
-// MARK: - Reusable Form Fields
-// MARK: - Social Sign-In Button
-struct SocialSignInButton: View {
-    let label: String
-    let badgeText: String
-    let badgeColor: Color
-    let backgroundColor: Color
-    let foregroundColor: Color
-    let action: () -> Void
-
+// MARK: - Brand Icons
+struct AppleIcon: View {
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(badgeText)
-                    .font(.custom("Outfit-Bold", size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 28, height: 28)
-                    .background(badgeColor)
-                    .clipShape(Circle())
+        Image(systemName: "apple.logo")
+            .font(.system(size: 22, weight: .medium))
+            .foregroundColor(.shineInk)
+    }
+}
 
-                Text(label)
-                    .font(.custom("Outfit-SemiBold", size: 15))
-                    .foregroundColor(foregroundColor)
+struct GoogleIcon: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(red: 0.96, green: 0.96, blue: 0.96))
+                .frame(width: 34, height: 34)
+            Text("G")
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.26, green: 0.52, blue: 0.96),
+                            Color(red: 0.96, green: 0.26, blue: 0.21)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+    }
+}
 
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
-            .background(backgroundColor)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.shineBorder, lineWidth: 1)
-            )
+struct FacebookIcon: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(red: 0.23, green: 0.35, blue: 0.60))
+                .frame(width: 34, height: 34)
+            Text("f")
+                .font(.system(size: 19, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .offset(x: 1, y: 0)
         }
     }
 }

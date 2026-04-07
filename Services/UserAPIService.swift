@@ -6,6 +6,7 @@ struct APIUserStats: Decodable {
     let totalSpent: Double
     let welcomePromoEligible: Bool
     let welcomePromoUsed: Bool
+    let points: Int
 }
 
 struct APIStatsResponse: Decodable {

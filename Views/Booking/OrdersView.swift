@@ -74,6 +74,14 @@ struct OrdersView: View {
         .refreshable {
             await bookingVM.loadBookings()
         }
+        .alert("Error", isPresented: Binding(
+            get: { bookingVM.errorMsg != nil },
+            set: { if !$0 { bookingVM.errorMsg = nil } }
+        )) {
+            Button("OK") { bookingVM.errorMsg = nil }
+        } message: {
+            Text(bookingVM.errorMsg ?? "")
+        }
     }
 }
 
@@ -84,6 +92,7 @@ struct BookingCard: View {
     @EnvironmentObject var bookingVM: BookingViewModel
 
     @State private var showReschedule = false
+    @State private var showCancelConfirm = false
     @State private var newDate: Date = Date()
 
     var categoryIcon: String {
@@ -142,21 +151,45 @@ struct BookingCard: View {
             }
 
             if canReschedule {
-                Button {
-                    newDate = max(booking.scheduledDate, Date().addingTimeInterval(60))
-                    showReschedule = true
-                } label: {
-                    Label(isArabic ? "إعادة الجدولة" : "Reschedule", systemImage: "calendar.badge.clock")
-                        .font(ShineFont.body(13, weight: .medium))
-                        .foregroundColor(.shineCoral)
-                }
-                .sheet(isPresented: $showReschedule) {
-                    RescheduleSheet(
-                        booking: booking,
-                        newDate: $newDate,
-                        isArabic: isArabic
+                HStack(spacing: 16) {
+                    Button {
+                        newDate = max(booking.scheduledDate, Date().addingTimeInterval(60))
+                        showReschedule = true
+                    } label: {
+                        Label(isArabic ? "إعادة الجدولة" : "Reschedule", systemImage: "calendar.badge.clock")
+                            .font(ShineFont.body(13, weight: .medium))
+                            .foregroundColor(.shineCoral)
+                    }
+                    .sheet(isPresented: $showReschedule) {
+                        RescheduleSheet(
+                            booking: booking,
+                            newDate: $newDate,
+                            isArabic: isArabic
+                        ) {
+                            Task { await bookingVM.rescheduleBooking(id: booking.id, newDate: newDate) }
+                        }
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showCancelConfirm = true
+                    } label: {
+                        Label(isArabic ? "إلغاء" : "Cancel", systemImage: "xmark.circle")
+                            .font(ShineFont.body(13, weight: .medium))
+                            .foregroundColor(.shineInk3)
+                    }
+                    .confirmationDialog(
+                        isArabic ? "إلغاء الحجز" : "Cancel Booking",
+                        isPresented: $showCancelConfirm,
+                        titleVisibility: .visible
                     ) {
-                        Task { await bookingVM.rescheduleBooking(id: booking.id, newDate: newDate) }
+                        Button(isArabic ? "تأكيد الإلغاء" : "Confirm Cancellation", role: .destructive) {
+                            bookingVM.cancelBooking(id: booking.id)
+                        }
+                        Button(isArabic ? "تراجع" : "Keep Booking", role: .cancel) {}
+                    } message: {
+                        Text(isArabic ? "هل أنت متأكد أنك تريد إلغاء هذا الحجز؟" : "Are you sure you want to cancel this booking?")
                     }
                 }
             }
@@ -169,6 +202,7 @@ struct BookingCard: View {
 }
 
 // MARK: - Reschedule Sheet
+
 struct RescheduleSheet: View {
     let booking: Booking
     @Binding var newDate: Date
@@ -179,61 +213,146 @@ struct RescheduleSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(isArabic ? "الخدمة" : "Service")
-                        .font(ShineFont.body(11, weight: .semibold))
-                        .foregroundColor(.shineInk3)
-                        .textCase(.uppercase)
-                        .kerning(0.5)
-                    Text(booking.packageName)
-                        .font(ShineFont.body(16, weight: .semibold))
-                        .foregroundColor(.shineInk)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            ZStack {
+                Color.shineBG.ignoresSafeArea()
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(isArabic ? "التاريخ والوقت الجديد" : "New Date & Time")
-                        .font(ShineFont.body(11, weight: .semibold))
-                        .foregroundColor(.shineInk3)
-                        .textCase(.uppercase)
-                        .kerning(0.5)
-                    DatePicker(
-                        "",
-                        selection: $newDate,
-                        in: Date()...,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                    .datePickerStyle(.graphical)
-                    .labelsHidden()
-                    .tint(.shineCoral)
-                    .environment(\.locale, isArabic ? Locale(identifier: "ar") : Locale(identifier: "en"))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(spacing: ShineSpacing.lg) {
 
-                Spacer()
+                    // Service info card
+                    HStack(spacing: 14) {
+                        let icon = ServiceCategory(rawValue: booking.serviceCategory)?.icon ?? "✨"
+                        let soft  = ServiceCategory(rawValue: booking.serviceCategory)?.softColor ?? Color.shineCoralLight
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(soft)
+                                .frame(width: 48, height: 48)
+                            Text(icon).font(.system(size: 22))
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(isArabic ? "الخدمة" : "Service")
+                                .font(ShineFont.body(11, weight: .semibold))
+                                .foregroundColor(.shineInk3)
+                                .textCase(.uppercase)
+                                .kerning(0.5)
+                            Text(booking.packageName)
+                                .font(ShineFont.body(15, weight: .semibold))
+                                .foregroundColor(.shineInk)
+                        }
+                        Spacer()
+                    }
+                    .padding(16)
+                    .background(Color.shineSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                    .shineShadowXS()
 
-                Button {
-                    onConfirm()
-                    dismiss()
-                } label: {
-                    Text(isArabic ? "تأكيد إعادة الجدولة" : "Confirm Reschedule")
-                        .font(ShineFont.body(16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(Color.shineCoral)
-                        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                    // Date & Time pickers
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(isArabic ? "التاريخ والوقت الجديد" : "New Date & Time")
+                            .font(ShineFont.body(11, weight: .semibold))
+                            .foregroundColor(.shineInk3)
+                            .textCase(.uppercase)
+                            .kerning(0.5)
+
+                        HStack(spacing: 12) {
+                            // Date
+                            HStack(spacing: 8) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.shineCoral)
+                                DatePicker("",
+                                           selection: $newDate,
+                                           in: Date()...,
+                                           displayedComponents: .date)
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .tint(.shineCoral)
+                                    .environment(\.locale,
+                                                 isArabic ? Locale(identifier: "ar") : Locale(identifier: "en"))
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 13)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.shineSurface)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.shineBorder, lineWidth: 1))
+                            .shineShadowXS()
+
+                            // Time
+                            HStack(spacing: 8) {
+                                Image(systemName: "clock")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.shineTeal)
+                                DatePicker("",
+                                           selection: $newDate,
+                                           in: Date()...,
+                                           displayedComponents: .hourAndMinute)
+                                    .datePickerStyle(.compact)
+                                    .labelsHidden()
+                                    .tint(.shineTeal)
+                                    .environment(\.locale,
+                                                 isArabic ? Locale(identifier: "ar") : Locale(identifier: "en"))
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 13)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.shineSurface)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.shineBorder, lineWidth: 1))
+                            .shineShadowXS()
+                        }
+                    }
+
+                    // Selected date summary
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.shineAmber)
+                        Text(formattedSelection)
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk2)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.shineAmberLight)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    Spacer()
+
+                    // Confirm button
+                    Button {
+                        onConfirm()
+                        dismiss()
+                    } label: {
+                        Text(isArabic ? "تأكيد إعادة الجدولة" : "Confirm Reschedule")
+                            .font(ShineFont.body(16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(Color.shineCoral)
+                            .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                            .shadow(color: Color.shineCoral.opacity(0.3), radius: 12, x: 0, y: 6)
+                    }
                 }
+                .padding(ShineSpacing.lg)
             }
-            .padding(ShineSpacing.lg)
             .navigationTitle(isArabic ? "إعادة الجدولة" : "Reschedule")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(isArabic ? "إلغاء" : "Cancel") { dismiss() }
+                        .foregroundColor(.shineCoral)
                 }
             }
         }
+    }
+
+    private var formattedSelection: String {
+        let df = DateFormatter()
+        df.dateStyle = .full
+        df.timeStyle = .short
+        df.locale = isArabic ? Locale(identifier: "ar") : Locale(identifier: "en")
+        return df.string(from: newDate)
     }
 }

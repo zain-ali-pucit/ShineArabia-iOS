@@ -13,55 +13,41 @@ struct SplashView: View {
             Color.shineBG
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
-
-                // MARK: Logo
-                VStack(spacing: 20) {
-                    Image("ShineArabiaLogo")
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFit()
-                        .frame(width: 180, height: 180)
-                        .clipShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
-                        .shineShadowMD()
-
-                    Text("Premium Home Services")
-                        .font(ShineFont.body(13, weight: .medium))
-                        .foregroundColor(.shineInk3)
-                        .tracking(2)
-                        .textCase(.uppercase)
-                }
+            // MARK: Logo — true center
+            Image("ShineArabiaFullLogo")
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .padding(.horizontal, 40)
                 .scaleEffect(logoScale)
                 .opacity(logoOpacity)
 
+            // MARK: Progress bar — pinned to bottom
+            VStack {
                 Spacer()
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.shineBorder)
+                            .frame(height: 3)
 
-                // MARK: Progress bar
-                VStack(spacing: 12) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Color.shineBorder)
-                                .frame(height: 3)
-
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.shineCoral, .shineTeal],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.shineCoral, .shineTeal],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
-                                .frame(width: geo.size.width * progress, height: 3)
-                        }
+                            )
+                            .frame(width: geo.size.width * progress, height: 3)
                     }
-                    .frame(height: 3)
-                    .padding(.horizontal, 48)
                 }
-                .opacity(progressOpacity)
+                .frame(height: 3)
+                .padding(.horizontal, 48)
                 .padding(.bottom, 64)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .opacity(progressOpacity)
         }
         .onAppear(perform: startAnimation)
     }

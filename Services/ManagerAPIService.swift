@@ -68,6 +68,52 @@ class ManagerAPIService {
         )
     }
 
+    // GET /api/admin/bundles
+    func fetchBundles() async throws -> [APIBundle] {
+        let res: AdminBundlesResponse = try await client.request("/admin/bundles")
+        return res.data?.bundles ?? []
+    }
+
+    // GET /api/admin/services/packages/non-bundle — all non-bundle packages for picker
+    func fetchNonBundlePackages() async throws -> [AdminPackageItem] {
+        let res: AdminNonBundlePackagesResponse = try await client.request("/admin/services/packages/non-bundle")
+        return res.data?.packages ?? []
+    }
+
+    // POST /api/admin/bundles — assign component packages to a bundle
+    func saveBundle(bundlePackageId: String, componentIds: [String]) async throws -> APIBundle {
+        let body: [String: Any] = [
+            "bundle_package_id": bundlePackageId,
+            "component_ids": componentIds
+        ]
+        struct Wrapper: Decodable {
+            struct D: Decodable { let bundle: APIBundle }
+            let success: Bool; let data: D?
+        }
+        let res: Wrapper = try await client.request("/admin/bundles", method: "POST", body: body)
+        guard let bundle = res.data?.bundle else { throw APIError.noData }
+        return bundle
+    }
+
+    // PUT /api/admin/bundles/:id — update components (and optionally price)
+    func updateBundle(bundlePackageId: String, componentIds: [String], priceAmount: Double? = nil, priceDisplay: String? = nil) async throws -> APIBundle {
+        var body: [String: Any] = ["component_ids": componentIds]
+        if let p = priceAmount  { body["price_amount"]  = p }
+        if let d = priceDisplay { body["price_display"] = d }
+        struct Wrapper: Decodable {
+            struct D: Decodable { let bundle: APIBundle }
+            let success: Bool; let data: D?
+        }
+        let res: Wrapper = try await client.request("/admin/bundles/\(bundlePackageId)", method: "PUT", body: body)
+        guard let bundle = res.data?.bundle else { throw APIError.noData }
+        return bundle
+    }
+
+    // DELETE /api/admin/bundles/:id — clear bundle component linkages
+    func clearBundle(bundlePackageId: String) async throws {
+        let _: APIResponse<EmptyData> = try await client.request("/admin/bundles/\(bundlePackageId)", method: "DELETE", body: nil)
+    }
+
     // POST /api/admin/devices  — stores APNs device token
     func registerDeviceToken(_ token: String) async throws {
         let body: [String: Any] = ["token": token, "platform": "ios"]

@@ -4,6 +4,7 @@ struct MainTabView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var homeVM    = HomeViewModel()
     @StateObject private var bookingVM = BookingViewModel()
+    @State private var pendingTab: TabItem? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -13,17 +14,34 @@ struct MainTabView: View {
                 case .home:    HomeView().environmentObject(homeVM).environmentObject(bookingVM)
                 case .explore: ExploreView().environmentObject(homeVM).environmentObject(bookingVM)
                 case .orders:  OrdersView().environmentObject(bookingVM)
+                case .rewards: RewardsView()
                 case .profile: ProfileView()
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 96)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Floating pill tab bar
-            ShineTabBar()
+            ShineTabBar(onAuthRequired: { tab in pendingTab = tab })
                 .padding(.bottom, 24)
         }
         .ignoresSafeArea(edges: .bottom)
         .background(Color.shineBG)
+        .sheet(isPresented: Binding(
+            get: { pendingTab != nil },
+            set: { if !$0 { pendingTab = nil } }
+        )) {
+            LoginView().environmentObject(appState)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { _ in
+            guard let destination = pendingTab else { return }
+            pendingTab = nil
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                appState.selectedTab = destination
+            }
+        }
     }
 }
 
@@ -31,6 +49,9 @@ struct MainTabView: View {
 struct ShineTabBar: View {
     @EnvironmentObject var appState: AppState
     @Namespace private var tabAnimation
+    let onAuthRequired: (TabItem) -> Void
+
+    private let authProtectedTabs: Set<TabItem> = [.profile, .orders, .rewards]
 
     var body: some View {
         HStack(spacing: 0) {
@@ -42,8 +63,12 @@ struct ShineTabBar: View {
                     showBadge: tab == .orders,
                     namespace: tabAnimation
                 ) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                        appState.selectedTab = tab
+                    if authProtectedTabs.contains(tab) && !appState.isAuthenticated {
+                        onAuthRequired(tab)
+                    } else {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            appState.selectedTab = tab
+                        }
                     }
                 }
             }

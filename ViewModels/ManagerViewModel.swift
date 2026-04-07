@@ -12,6 +12,15 @@ class ManagerViewModel: ObservableObject {
     @Published var selectedFilter: String?      = nil   // nil = All
     @Published var hasNewBooking                = false // drives notification bell badge
 
+    // MARK: - Bundle management
+    @Published var bundles: [APIBundle]                = []
+    @Published var availablePackages: [AdminPackageItem] = []  // non-bundle packages for picker
+    @Published var isBundleLoading                     = false
+    @Published var bundleError: String?                = nil
+    @Published var showBundleEditor                    = false
+    @Published var editingBundle: APIBundle?           = nil    // nil = creating new
+    @Published var selectedComponentIds: Set<String>   = []
+
     // MARK: - Private
     private var pollingTask: Task<Void, Never>?
     private var lastKnownCount = -1  // -1 means first load (don't notify on first fetch)
@@ -106,6 +115,95 @@ class ManagerViewModel: ObservableObject {
             Task {
                 try? await ManagerAPIService.shared.registerDeviceToken(token)
             }
+        }
+    }
+
+    // MARK: - Bundle CRUD
+
+    func loadBundles() async {
+        isBundleLoading = true
+        bundleError = nil
+        do {
+            bundles = try await ManagerAPIService.shared.fetchBundles()
+        } catch {
+            bundleError = error.localizedDescription
+        }
+        isBundleLoading = false
+    }
+
+    func loadAvailablePackages() async {
+        do {
+            availablePackages = try await ManagerAPIService.shared.fetchNonBundlePackages()
+        } catch {}
+    }
+
+    /// Open the editor for an existing bundle
+    func startEditing(_ bundle: APIBundle) {
+        editingBundle        = bundle
+        selectedComponentIds = Set(bundle.components.map { $0.id })
+        showBundleEditor     = true
+    }
+
+    /// Open the editor to configure components for a new bundle package
+    func startCreating(_ bundlePackage: APIBundle) {
+        editingBundle        = bundlePackage
+        selectedComponentIds = []
+        showBundleEditor     = true
+    }
+
+    func toggleComponent(_ id: String) {
+        if selectedComponentIds.contains(id) {
+            selectedComponentIds.remove(id)
+        } else {
+            selectedComponentIds.insert(id)
+        }
+    }
+
+    /// Auto-calculated discount for the current selection
+    func calculatedDiscount(bundlePrice: Double) -> Int {
+        let total = availablePackages
+            .filter { selectedComponentIds.contains($0.id) }
+            .reduce(0.0) { $0 + $1.priceAmount }
+        guard total > 0 else { return 0 }
+        return max(0, Int(((total - bundlePrice) / total * 100).rounded()))
+    }
+
+    func saveBundle(bundlePackageId: String, priceAmount: Double?, priceDisplay: String?) async {
+        guard !selectedComponentIds.isEmpty else {
+            bundleError = "Select at least one component package."
+            return
+        }
+        isBundleLoading = true
+        bundleError = nil
+        do {
+            let ids = Array(selectedComponentIds)
+            if editingBundle?.components.isEmpty == false {
+                _ = try await ManagerAPIService.shared.updateBundle(
+                    bundlePackageId: bundlePackageId,
+                    componentIds: ids,
+                    priceAmount: priceAmount,
+                    priceDisplay: priceDisplay
+                )
+            } else {
+                _ = try await ManagerAPIService.shared.saveBundle(
+                    bundlePackageId: bundlePackageId,
+                    componentIds: ids
+                )
+            }
+            showBundleEditor = false
+            await loadBundles()
+        } catch {
+            bundleError = error.localizedDescription
+        }
+        isBundleLoading = false
+    }
+
+    func clearBundle(bundlePackageId: String) async {
+        do {
+            try await ManagerAPIService.shared.clearBundle(bundlePackageId: bundlePackageId)
+            await loadBundles()
+        } catch {
+            bundleError = error.localizedDescription
         }
     }
 
