@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 struct APIUserStats: Decodable {
     let totalOrders: Int
@@ -25,6 +26,44 @@ struct APIProfileResponse: Decodable {
 class UserAPIService {
     static let shared = UserAPIService()
     private let client = APIClient.shared
+
+    // MARK: - Avatar Upload (multipart/form-data)
+    func uploadAvatar(imageData: Data) async throws -> APIUser {
+        guard let url = URL(string: APIConfig.baseURL + "/users/avatar") else {
+            throw APIError.invalidURL
+        }
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"avatar\"; filename=\"avatar.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token = TokenStore.accessToken {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        req.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse else { throw APIError.noData }
+        guard (200...299).contains(http.statusCode) else {
+            let msg = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["message"] as? String
+                ?? "Avatar upload failed (\(http.statusCode))"
+            throw APIError.serverError(http.statusCode, msg)
+        }
+
+        let res = try JSONDecoder.api.decode(APIProfileResponse.self, from: data)
+        guard let user = res.data?.user else {
+            throw APIError.serverError(400, res.message ?? "Avatar upload failed")
+        }
+        return user
+    }
 
     func updateProfile(name: String?, phone: String?, address: String?, language: String?) async throws -> APIUser {
         var body: [String: Any] = [:]

@@ -139,6 +139,20 @@ struct HomeHeaderView: View {
     @EnvironmentObject var appState: AppState
     @State private var showLogin = false
 
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let base: String
+        if appState.isArabic {
+            base = hour < 12 ? "صباح الخير" : (hour < 18 ? "مساء الخير" : "مساء الخير")
+        } else {
+            base = hour < 12 ? "Good Morning" : (hour < 18 ? "Good Afternoon" : "Good Evening")
+        }
+        if let name = appState.currentUser?.name, appState.isAuthenticated {
+            return "\(base), \(name) 👋"
+        }
+        return "\(base) 👋"
+    }
+
     var body: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
@@ -170,7 +184,7 @@ struct HomeHeaderView: View {
         // Greeting + Hero
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(Loc.string("home.greeting", isArabic: appState.isArabic))
+                Text(greeting)
                     .font(ShineFont.body(13))
                     .foregroundColor(.shineInk3)
 

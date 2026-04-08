@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		526FA2892F86FEC6007E714D /* AppTourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA2872F86FEC6007E714D /* AppTourView.swift */; };
+		526FA28D2F8705A1007E714D /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28C2F8705A1007E714D /* EditProfileView.swift */; };
+		526FA28E2F8705A1007E714D /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28F2F8705A1007E714D /* ChangePasswordView.swift */; };
 		5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5276C62C2F845E1B003AD0D8 /* LocationService.swift */; };
 		528B82632F81218800CE7E84 /* ManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82612F81218800CE7E84 /* ManagerView.swift */; };
 		528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82642F8121B800CE7E84 /* ManagerViewModel.swift */; };
@@ -52,6 +54,8 @@
 /* Begin PBXFileReference section */
 		521F0CFA2F7EAF96000C1AD0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		526FA2872F86FEC6007E714D /* AppTourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTourView.swift; sourceTree = "<group>"; };
+		526FA28C2F8705A1007E714D /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		526FA28F2F8705A1007E714D /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		5276C62C2F845E1B003AD0D8 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		528B82612F81218800CE7E84 /* ManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerView.swift; sourceTree = "<group>"; };
 		528B82642F8121B800CE7E84 /* ManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerViewModel.swift; sourceTree = "<group>"; };
@@ -228,6 +232,8 @@
 		AA0000000000000000000108 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				526FA28C2F8705A1007E714D /* EditProfileView.swift */,
+				526FA28F2F8705A1007E714D /* ChangePasswordView.swift */,
 				AA000000000000000000020B /* ProfileView.swift */,
 				DD000000000000000000001A /* AddressesView.swift */,
 			);
@@ -385,6 +391,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				526FA28D2F8705A1007E714D /* EditProfileView.swift in Sources */,
+				526FA28E2F8705A1007E714D /* ChangePasswordView.swift in Sources */,
 				AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */,
 				AA0000000000000000000301 /* RootView.swift in Sources */,
 				AA0000000000000000000302 /* AppState.swift in Sources */,

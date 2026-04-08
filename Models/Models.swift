@@ -7,6 +7,7 @@ struct User: Identifiable, Codable {
     var email: String
     var phone: String
     var address: String
+    var avatarUrl: String?
     var avatarInitials: String { String(name.prefix(2)).uppercased() }
 }
 
@@ -165,7 +166,7 @@ struct PopularItem: Identifiable {
         self.name     = api.nameEn
         self.nameAR   = api.nameAr
         self.rating   = api.rating
-        self.reviews  = "\(api.reviewCount) orders"
+        self.reviews  = "\(api.reviewCount) \(api.reviewCount == 1 ? "order" : "orders")"
         self.reviewsAR = "\(api.reviewCount) طلب"
         self.price    = api.priceDisplay
         self.unit     = api.priceUnitEn
@@ -328,11 +329,12 @@ extension APICategory {
 extension APIUser {
     func toUser() -> User {
         User(
-            id:      UUID(uuidString: id) ?? UUID(),
-            name:    name,
-            email:   email,
-            phone:   phone    ?? "",
-            address: address  ?? ""
+            id:        UUID(uuidString: id) ?? UUID(),
+            name:      name,
+            email:     email,
+            phone:     phone     ?? "",
+            address:   address   ?? "",
+            avatarUrl: avatarUrl
         )
     }
 }

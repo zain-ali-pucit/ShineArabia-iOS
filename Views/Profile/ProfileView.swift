@@ -15,6 +15,8 @@ struct ProfileView: View {
 
     // Navigation
     @State private var showAddresses = false
+    @State private var showEditProfile = false
+    @State private var showChangePassword = false
 
     // ── Computed helpers ────────────────────────────────────────────────
     private var displayUser: (initials: String, name: String, phone: String) {
@@ -46,6 +48,14 @@ struct ProfileView: View {
         .sheet(isPresented: $showAddresses) {
             AddressesView().environmentObject(appState)
         }
+        .sheet(isPresented: $showEditProfile) {
+            if let user = appState.currentUser {
+                EditProfileView(user: user).environmentObject(appState)
+            }
+        }
+        .sheet(isPresented: $showChangePassword) {
+            ChangePasswordView()
+        }
     }
 
     // MARK: - Authenticated profile
@@ -55,38 +65,45 @@ struct ProfileView: View {
             VStack(spacing: ShineSpacing.lg) {
 
                 // ── Avatar card ──────────────────────────────────────────
-                VStack(spacing: ShineSpacing.md) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.shineCoral, .shineAmber],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 84, height: 84)
-                            .shadow(color: Color.shineCoral.opacity(0.3), radius: 14, x: 0, y: 6)
-                        Text(displayUser.initials)
-                            .font(ShineFont.displayBold(30))
-                            .foregroundColor(.white)
-                    }
-                    VStack(spacing: 4) {
-                        Text(displayUser.name)
-                            .font(ShineFont.displayBold(24))
-                            .foregroundColor(.shineInk)
-                        if !displayUser.phone.isEmpty {
-                            Text(displayUser.phone)
-                                .font(ShineFont.body(14))
-                                .foregroundColor(.shineInk3)
+                Button { showEditProfile = true } label: {
+                    VStack(spacing: ShineSpacing.md) {
+                        ZStack(alignment: .bottomTrailing) {
+                            ProfileAvatarView(user: appState.currentUser, size: 84)
+
+                            ZStack {
+                                Circle()
+                                    .fill(Color.shineCoral)
+                                    .frame(width: 26, height: 26)
+                                    .shadow(color: Color.black.opacity(0.12), radius: 3, x: 0, y: 1)
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            .offset(x: 4, y: 4)
+                        }
+
+                        VStack(spacing: 4) {
+                            Text(displayUser.name)
+                                .font(ShineFont.displayBold(24))
+                                .foregroundColor(.shineInk)
+                            if !displayUser.phone.isEmpty {
+                                Text(displayUser.phone)
+                                    .font(ShineFont.body(14))
+                                    .foregroundColor(.shineInk3)
+                            }
+                            Text("Tap to edit profile")
+                                .font(ShineFont.body(11))
+                                .foregroundColor(.shineCoral.opacity(0.8))
+                                .padding(.top, 2)
                         }
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, ShineSpacing.xl)
+                    .background(Color.shineSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.lg))
+                    .shineShadowSM()
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, ShineSpacing.xl)
-                .background(Color.shineSurface)
-                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.lg))
-                .shineShadowSM()
+                .buttonStyle(.plain)
                 .padding(.horizontal, ShineSpacing.lg)
                 .padding(.top, ShineSpacing.lg)
 
@@ -196,14 +213,24 @@ struct ProfileView: View {
                     title: Loc.string("profile.account", isArabic: appState.isArabic)
                 ) {
                     VStack(spacing: 0) {
-                        ProfileLinkRow(icon: "person.fill",
-                                       iconColor: .shineLavender,
-                                       title: Loc.string("profile.edit", isArabic: appState.isArabic))
+                        Button { showEditProfile = true } label: {
+                            ProfileLinkRow(icon: "person.fill",
+                                           iconColor: .shineLavender,
+                                           title: Loc.string("profile.edit", isArabic: appState.isArabic))
+                        }
+                        .buttonStyle(.plain)
                         Divider().padding(.leading, 52)
                         Button { showAddresses = true } label: {
                             ProfileLinkRow(icon: "location.fill",
                                            iconColor: .shineTeal,
                                            title: Loc.string("profile.addresses", isArabic: appState.isArabic))
+                        }
+                        .buttonStyle(.plain)
+                        Divider().padding(.leading, 52)
+                        Button { showChangePassword = true } label: {
+                            ProfileLinkRow(icon: "lock.fill",
+                                           iconColor: .shineCoral,
+                                           title: appState.isArabic ? "تغيير كلمة المرور" : "Change Password")
                         }
                         .buttonStyle(.plain)
                         Divider().padding(.leading, 52)
@@ -559,6 +586,46 @@ struct ProfileActionRow: View {
             .padding(.vertical, 13)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Profile Avatar View (image or initials fallback)
+
+struct ProfileAvatarView: View {
+    let user: User?
+    let size: CGFloat
+
+    var body: some View {
+        if let urlStr = user?.avatarUrl, let url = URL(string: urlStr) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                        .frame(width: size, height: size)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.shineSurface, lineWidth: 3))
+                        .shadow(color: Color.shineCoral.opacity(0.25), radius: 14, x: 0, y: 6)
+                default:
+                    initialsCircle
+                }
+            }
+        } else {
+            initialsCircle
+        }
+    }
+
+    private var initialsCircle: some View {
+        ZStack {
+            Circle()
+                .fill(LinearGradient(colors: [.shineCoral, .shineAmber],
+                                     startPoint: .topLeading,
+                                     endPoint: .bottomTrailing))
+                .frame(width: size, height: size)
+                .shadow(color: Color.shineCoral.opacity(0.3), radius: 14, x: 0, y: 6)
+            Text(user?.avatarInitials ?? "SA")
+                .font(ShineFont.displayBold(size * 0.36))
+                .foregroundColor(.white)
+        }
     }
 }
 

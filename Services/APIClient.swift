@@ -3,7 +3,7 @@ import Foundation
 // MARK: - API Configuration
 enum APIConfig {
     #if DEBUG
-    static let baseURL = "http://192.168.100.179:3000/api"
+    static let baseURL = "http://192.168.100.188:3000/api"
 //    static let baseURL = "https://www.shine-arabia.com/api"
     #else
     static let baseURL = "https://www.shine-arabia.com/api"

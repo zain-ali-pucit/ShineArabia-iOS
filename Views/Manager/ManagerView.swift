@@ -243,25 +243,52 @@ private struct ManagerBookingCard: View {
             .padding(.horizontal, ShineSpacing.md)
             .padding(.vertical, 10)
 
-            // Customer contact (email / phone)
-            if let email = booking.customerEmail {
-                HStack(spacing: 6) {
-                    Image(systemName: "envelope")
-                        .font(.system(size: 11))
-                        .foregroundColor(.shineInk3)
-                    Text(email)
-                        .font(ShineFont.body(12))
-                        .foregroundColor(.shineInk3)
-                        .lineLimit(1)
+            // Customer contact (email / phone + WhatsApp)
+            if booking.customerEmail != nil || booking.customerPhone != nil {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let email = booking.customerEmail {
+                            HStack(spacing: 5) {
+                                Image(systemName: "envelope")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.shineInk3)
+                                Text(email)
+                                    .font(ShineFont.body(12))
+                                    .foregroundColor(.shineInk3)
+                                    .lineLimit(1)
+                            }
+                        }
+                        if let phone = booking.customerPhone {
+                            HStack(spacing: 5) {
+                                Image(systemName: "phone.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.shineTeal)
+                                Text(phone)
+                                    .font(ShineFont.body(12, weight: .semibold))
+                                    .foregroundColor(.shineInk)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
                     if let phone = booking.customerPhone {
-                        Text("·")
-                            .foregroundColor(.shineInk3)
-                        Image(systemName: "phone")
-                            .font(.system(size: 11))
-                            .foregroundColor(.shineInk3)
-                        Text(phone)
-                            .font(ShineFont.body(12))
-                            .foregroundColor(.shineInk3)
+                        let digits = phone.filter { $0.isNumber }
+                        if let url = URL(string: "https://wa.me/\(digits)") {
+                            Link(destination: url) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "message.fill")
+                                        .font(.system(size: 12))
+                                    Text("WhatsApp")
+                                        .font(ShineFont.body(12, weight: .semibold))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(Color(hex: "25D366"))
+                                .clipShape(Capsule())
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, ShineSpacing.md)

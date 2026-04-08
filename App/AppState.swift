@@ -71,7 +71,7 @@ class AppState: ObservableObject {
     var unreadCount: Int { notifications.filter { !$0.isRead }.count }
 
     var isArabic: Bool  { language == .arabic }
-    var isManager: Bool { userRole == "admin" }
+    var isManager: Bool { userRole == "admin" || userRole == "manager" }
 
     init() {
         NotificationCenter.default.addObserver(
