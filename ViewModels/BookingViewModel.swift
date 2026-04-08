@@ -5,6 +5,8 @@ class BookingViewModel: ObservableObject {
     @Published var bookings: [Booking]  = []
     @Published var selectedDate: Date   = BookingViewModel.defaultBookingDate()
     @Published var address: String      = ""
+    @Published var latitude: Double?    = nil
+    @Published var longitude: Double?   = nil
     @Published var notes: String        = ""
     @Published var promoCode: String         = ""
     @Published var promoDiscount: Double      = 0
@@ -58,7 +60,9 @@ class BookingViewModel: ObservableObject {
                     scheduledDate: selectedDate,
                     address:       deliveryAddress,
                     notes:         notes.isEmpty ? nil : notes,
-                    promoCode:     promoCode.isEmpty ? nil : promoCode
+                    promoCode:     promoCode.isEmpty ? nil : promoCode,
+                    latitude:      latitude,
+                    longitude:     longitude
                 )
                 await MainActor.run {
                     let newBookings = apiBookings.map { Booking(from: $0) }

@@ -250,6 +250,7 @@ struct AddAddressView: View {
     @State private var searchText: String = ""
     @State private var searchResults: [MKMapItem] = []
     @State private var selectedAddress: String = ""
+    @State private var selectedCoordinate: CLLocationCoordinate2D? = nil
     @State private var mapPosition: MapCameraPosition = .automatic
     @State private var isLoadingLocation = false
     @State private var showLabelPicker = false
@@ -599,7 +600,12 @@ struct AddAddressView: View {
             .padding(.horizontal, ShineSpacing.md)
 
             Button {
-                let saved = SavedAddress(label: selectedLabel, address: selectedAddress)
+                let saved = SavedAddress(
+                    label: selectedLabel,
+                    address: selectedAddress,
+                    latitude: selectedCoordinate.map { $0.latitude },
+                    longitude: selectedCoordinate.map { $0.longitude }
+                )
                 onSave(saved)
                 showLabelPicker = false
                 dismiss()
@@ -638,6 +644,7 @@ struct AddAddressView: View {
             .compactMap { $0 }
             .filter { !$0.isEmpty }
         selectedAddress = parts.joined(separator: ", ")
+        selectedCoordinate = item.placemark.coordinate
         searchText = ""
         searchResults = []
         searchFocused = false
@@ -653,14 +660,25 @@ struct AddAddressView: View {
 
     private func useCurrentLocation() async {
         await MainActor.run { isLoadingLocation = true }
-        let addr = await locationService.getCurrentAddress()
+        async let addrTask  = locationService.getCurrentAddress()
+        async let locTask   = locationService.getCurrentLocation()
+        let (addr, location) = await (addrTask, locTask)
         await MainActor.run {
             isLoadingLocation = false
             guard !addr.isEmpty else { return }
-            selectedAddress = addr
-            searchText = ""
-            searchResults = []
-            searchFocused = false
+            selectedAddress    = addr
+            selectedCoordinate = location?.coordinate
+            searchText         = ""
+            searchResults      = []
+            searchFocused      = false
+            if let coord = location?.coordinate {
+                withAnimation {
+                    mapPosition = .region(MKCoordinateRegion(
+                        center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))
+                }
+            }
         }
     }
 }

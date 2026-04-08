@@ -5,6 +5,8 @@ struct MainTabView: View {
     @StateObject private var homeVM    = HomeViewModel()
     @StateObject private var bookingVM = BookingViewModel()
     @State private var pendingTab: TabItem? = nil
+    @State private var tabFrames: [TabItem: CGRect] = [:]
+    @State private var showTour = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -29,6 +31,24 @@ struct MainTabView: View {
         }
         .ignoresSafeArea(edges: .bottom)
         .background(Color.shineBG)
+        .onPreferenceChange(TabFrameKey.self) { tabFrames = $0 }
+        .overlay {
+            if showTour {
+                AppTourView(tabFrames: tabFrames) {
+                    withAnimation(.easeInOut(duration: 0.3)) { showTour = false }
+                    appState.hasCompletedAppTour = true
+                }
+                .environmentObject(appState)
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: showTour)
+        .onAppear {
+            guard !appState.hasCompletedAppTour else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                showTour = true
+            }
+        }
         .sheet(isPresented: Binding(
             get: { pendingTab != nil },
             set: { if !$0 { pendingTab = nil } }
@@ -130,6 +150,14 @@ struct ShineTabItem: View {
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
+            .background(
+                GeometryReader { geo in
+                    Color.clear.preference(
+                        key: TabFrameKey.self,
+                        value: [tab: geo.frame(in: .global)]
+                    )
+                }
+            )
         }
         .buttonStyle(.plain)
     }

@@ -176,6 +176,8 @@ struct ServiceBottomSheet: View {
                             AddressInputSection(
                                 isArabic: isArabic,
                                 address: $bookingVM.address,
+                                latitude: $bookingVM.latitude,
+                                longitude: $bookingVM.longitude,
                                 locationService: locationService
                             )
 
@@ -328,6 +330,8 @@ private struct DateTimePickerSection: View {
 private struct AddressInputSection: View {
     let isArabic: Bool
     @Binding var address: String
+    @Binding var latitude: Double?
+    @Binding var longitude: Double?
     @ObservedObject var locationService: LocationService
     @ObservedObject private var store = AddressStore.shared
     @EnvironmentObject private var appState: AppState
@@ -350,7 +354,9 @@ private struct AddressInputSection: View {
                         ForEach(store.addresses) { saved in
                             let isSelected = address == saved.address
                             Button {
-                                address = saved.address
+                                address   = saved.address
+                                latitude  = saved.latitude
+                                longitude = saved.longitude
                                 fieldFocused = false
                             } label: {
                                 HStack(spacing: 5) {
@@ -423,12 +429,16 @@ private struct AddressInputSection: View {
         .padding(.bottom, ShineSpacing.md)
         .onAppear {
             if address.isEmpty, let def = store.defaultAddress {
-                address = def.address
+                address   = def.address
+                latitude  = def.latitude
+                longitude = def.longitude
             }
         }
         .sheet(isPresented: $showPicker) {
             AddressesView(onSelect: { saved in
-                address = saved.address
+                address   = saved.address
+                latitude  = saved.latitude
+                longitude = saved.longitude
             })
             .environmentObject(appState)
         }

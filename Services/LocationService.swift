@@ -69,6 +69,22 @@ class LocationService: NSObject, ObservableObject {
         }
     }
 
+    /// Request permission if needed, then fetch current raw location.
+    /// Returns nil on failure or denied permission.
+    func getCurrentLocation() async -> CLLocation? {
+        if isNotDetermined { requestPermission() }
+        guard isAuthorized else { return nil }
+
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.main.async {
+                self.locationCompletion = { location in
+                    continuation.resume(returning: location)
+                }
+                self.manager.requestLocation()
+            }
+        }
+    }
+
     // MARK: - Private
 
     private func reverseGeocode(_ location: CLLocation) async -> String {

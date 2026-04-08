@@ -215,7 +215,10 @@ struct ProfileView: View {
 
                 // ── Sign out ─────────────────────────────────────────────
                 Button {
-                    Task { await appState.signOut() }
+                    Task {
+                        await appState.signOut()
+                        await MainActor.run { appState.selectedTab = .home }
+                    }
                 } label: {
                     Text(Loc.string("profile.signout", isArabic: appState.isArabic))
                         .font(ShineFont.body(15, weight: .medium))

@@ -369,6 +369,8 @@ struct SavedAddress: Identifiable, Codable, Equatable {
     var label: AddressLabel
     var address: String
     var isDefault: Bool
+    var latitude: Double?
+    var longitude: Double?
 
     enum AddressLabel: String, Codable, CaseIterable {
         case home  = "home"
@@ -405,11 +407,13 @@ struct SavedAddress: Identifiable, Codable, Equatable {
         }
     }
 
-    init(id: UUID = UUID(), label: AddressLabel, address: String, isDefault: Bool = false) {
+    init(id: UUID = UUID(), label: AddressLabel, address: String, isDefault: Bool = false, latitude: Double? = nil, longitude: Double? = nil) {
         self.id        = id
         self.label     = label
         self.address   = address
         self.isDefault = isDefault
+        self.latitude  = latitude
+        self.longitude = longitude
     }
 }
 

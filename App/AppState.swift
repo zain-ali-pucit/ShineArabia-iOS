@@ -23,7 +23,7 @@ enum AppLanguage: String, CaseIterable {
 // MARK: - Tab Items
 enum TabItem: String, CaseIterable {
     case home    = "house.fill"
-    case explore = "magnifyingglass"
+    case explore = "square.grid.2x2.fill"
     case orders  = "list.bullet.clipboard.fill"
     case rewards = "star.fill"
     case profile = "person.fill"
@@ -31,7 +31,7 @@ enum TabItem: String, CaseIterable {
     var title: String {
         switch self {
         case .home:    return "Home"
-        case .explore: return "Explore"
+        case .explore: return "Services"
         case .orders:  return "Orders"
         case .rewards: return "Rewards"
         case .profile: return "Profile"
@@ -52,6 +52,9 @@ enum TabItem: String, CaseIterable {
 class AppState: ObservableObject {
     @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
         didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
+    }
+    @Published var hasCompletedAppTour: Bool = UserDefaults.standard.bool(forKey: "hasCompletedAppTour") {
+        didSet { UserDefaults.standard.set(hasCompletedAppTour, forKey: "hasCompletedAppTour") }
     }
     @Published var language: AppLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .english {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: "appLanguage") }

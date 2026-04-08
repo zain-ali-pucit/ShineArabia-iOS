@@ -137,6 +137,7 @@ struct HomeView: View {
 // MARK: - Header
 struct HomeHeaderView: View {
     @EnvironmentObject var appState: AppState
+    @State private var showLogin = false
 
     var body: some View {
         HStack(alignment: .top) {
@@ -200,11 +201,32 @@ struct HomeHeaderView: View {
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(Color.shineAmber.opacity(0.3), lineWidth: 1))
                 .padding(.bottom, 4)
+            } else {
+                Button { showLogin = true } label: {
+                    HStack(spacing: 5) {
+                        Text(appState.isArabic ? "تسجيل الدخول" : "Sign In")
+                            .font(ShineFont.body(13, weight: .semibold))
+                            .foregroundColor(.shineCoral)
+                        Image(systemName: appState.isArabic ? "arrow.left" : "arrow.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.shineCoral)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.shineCoral.opacity(0.1))
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(Color.shineCoral.opacity(0.25), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 4)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, ShineSpacing.lg)
         .padding(.top, ShineSpacing.md)
+        .sheet(isPresented: $showLogin) {
+            LoginView().environmentObject(appState)
+        }
     }
 }
 
@@ -536,14 +558,9 @@ struct PopularCard: View {
                 Spacer()
 
                 // Price
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(item.price)
-                        .font(ShineFont.displayBold(20))
-                        .foregroundColor(.shineInk)
-                    Text(appState.isArabic ? item.unitAR : item.unit)
-                        .font(ShineFont.body(11))
-                        .foregroundColor(.shineInk3)
-                }
+                Text(item.price)
+                    .font(ShineFont.displayBold(20))
+                    .foregroundColor(.shineInk)
             }
             .padding(16)
             .background(Color.shineSurface)

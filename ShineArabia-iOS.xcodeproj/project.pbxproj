@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		526FA2892F86FEC6007E714D /* AppTourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA2872F86FEC6007E714D /* AppTourView.swift */; };
 		5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5276C62C2F845E1B003AD0D8 /* LocationService.swift */; };
 		528B82632F81218800CE7E84 /* ManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82612F81218800CE7E84 /* ManagerView.swift */; };
 		528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82642F8121B800CE7E84 /* ManagerViewModel.swift */; };
@@ -50,6 +51,7 @@
 
 /* Begin PBXFileReference section */
 		521F0CFA2F7EAF96000C1AD0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		526FA2872F86FEC6007E714D /* AppTourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTourView.swift; sourceTree = "<group>"; };
 		5276C62C2F845E1B003AD0D8 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		528B82612F81218800CE7E84 /* ManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerView.swift; sourceTree = "<group>"; };
 		528B82642F8121B800CE7E84 /* ManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerViewModel.swift; sourceTree = "<group>"; };
@@ -104,6 +106,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		526FA2882F86FEC6007E714D /* Tour */ = {
+			isa = PBXGroup;
+			children = (
+				526FA2872F86FEC6007E714D /* AppTourView.swift */,
+			);
+			path = Tour;
+			sourceTree = "<group>";
+		};
 		528B82622F81218800CE7E84 /* Manager */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,6 +177,7 @@
 		AA0000000000000000000103 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				526FA2882F86FEC6007E714D /* Tour */,
 				528B82622F81218800CE7E84 /* Manager */,
 				BB0000000000000000000201 /* Auth */,
 				AA000000000000000000010C /* Splash */,
@@ -404,6 +415,7 @@
 				BB0000000000000000000106 /* AuthViewModel.swift in Sources */,
 				BB0000000000000000000107 /* LoginView.swift in Sources */,
 				528B82632F81218800CE7E84 /* ManagerView.swift in Sources */,
+				526FA2892F86FEC6007E714D /* AppTourView.swift in Sources */,
 				BB0000000000000000000108 /* RegisterView.swift in Sources */,
 				CC0000000000000000000001 /* RewardsView.swift in Sources */,
 			);

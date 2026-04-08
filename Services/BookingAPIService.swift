@@ -64,7 +64,7 @@ class BookingAPIService {
     static let shared = BookingAPIService()
     private let client = APIClient.shared
 
-    func createBooking(packageId: String, scheduledDate: Date, address: String, notes: String?, promoCode: String?) async throws -> APIBooking {
+    func createBooking(packageId: String, scheduledDate: Date, address: String, notes: String?, promoCode: String?, latitude: Double? = nil, longitude: Double? = nil) async throws -> APIBooking {
         var body: [String: Any] = [
             "packageId":     packageId,
             "scheduledDate": ISO8601DateFormatter().string(from: scheduledDate),
@@ -72,6 +72,8 @@ class BookingAPIService {
         ]
         if let notes = notes, !notes.isEmpty { body["notes"] = notes }
         if let promo = promoCode, !promo.isEmpty { body["promoCode"] = promo }
+        if let lat = latitude  { body["latitude"]  = lat }
+        if let lng = longitude { body["longitude"] = lng }
 
         let res: APISingleBookingResponse = try await client.request("/bookings", method: "POST", body: body)
         guard let booking = res.data?.booking else {
@@ -106,7 +108,7 @@ class BookingAPIService {
         return booking
     }
 
-    func createMultiBooking(packageIds: [String], scheduledDate: Date, address: String, notes: String?, promoCode: String?) async throws -> [APIBooking] {
+    func createMultiBooking(packageIds: [String], scheduledDate: Date, address: String, notes: String?, promoCode: String?, latitude: Double? = nil, longitude: Double? = nil) async throws -> [APIBooking] {
         var body: [String: Any] = [
             "packageIds":    packageIds,
             "scheduledDate": ISO8601DateFormatter().string(from: scheduledDate),
@@ -114,6 +116,8 @@ class BookingAPIService {
         ]
         if let notes = notes, !notes.isEmpty { body["notes"] = notes }
         if let promo = promoCode, !promo.isEmpty { body["promoCode"] = promo }
+        if let lat = latitude  { body["latitude"]  = lat }
+        if let lng = longitude { body["longitude"] = lng }
 
         let res: APIMultiBookingResponse = try await client.request("/bookings/multi", method: "POST", body: body)
         guard let bookings = res.data?.bookings else {

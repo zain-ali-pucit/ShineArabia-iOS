@@ -62,7 +62,7 @@ struct RegisterView: View {
 
                         ShineTextField(
                             icon: "phone",
-                            placeholder: appState.isArabic ? "رقم الجوال (اختياري)" : "Phone number (optional)",
+                            placeholder: appState.isArabic ? "رقم الجوال" : "Phone number",
                             text: $vm.phone,
                             keyboardType: .phonePad
                         )

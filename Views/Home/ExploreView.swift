@@ -193,38 +193,43 @@ struct PricingPillsRow: View {
     let onSelect: (ServiceCategory) -> Void
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(Array(items.prefix(5).enumerated()), id: \.offset) { i, item in
-                    Button {
-                        withAnimation(.spring(response: 0.3)) { selected = i }
-                        onSelect(item.category)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Text(item.emoji).font(.system(size: 15))
-                            Text(appState.isArabic ? item.nameAR : item.name)
-                                .font(ShineFont.body(13, weight: .medium))
-                                .foregroundColor(selected == i ? .white : .shineInk)
-                            Text(item.price)
-                                .font(ShineFont.body(13, weight: .semibold))
-                                .foregroundColor(selected == i ? .white.opacity(0.8) : .shineCoral)
+        VStack(spacing: 10) {
+            ForEach(Array(items.prefix(5).enumerated()), id: \.offset) { i, item in
+                Button {
+                    withAnimation(.spring(response: 0.3)) { selected = i }
+                    onSelect(item.category)
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(item.category.softColor)
+                                .frame(width: 40, height: 40)
+                            Text(item.emoji).font(.system(size: 19))
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(selected == i ? Color.shineInk : Color.shineSurface)
-                        .clipShape(Capsule())
-                        .shineShadowXS()
-                        .overlay(
-                            Capsule().stroke(
-                                selected == i ? Color.clear : Color.shineBorder,
-                                lineWidth: 1
-                            )
-                        )
+                        Text(appState.isArabic ? item.nameAR : item.name)
+                            .font(ShineFont.body(14, weight: .medium))
+                            .foregroundColor(selected == i ? .white : .shineInk)
+                        Spacer()
+                        Text(item.price)
+                            .font(ShineFont.displayBold(16))
+                            .foregroundColor(selected == i ? .white : .shineCoral)
+                        Image(systemName: appState.isArabic ? "arrow.left" : "arrow.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(selected == i ? .white.opacity(0.7) : .shineCoral)
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(selected == i ? Color.shineInk : Color.shineSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                    .shineShadowXS()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ShineRadius.md)
+                            .stroke(selected == i ? Color.clear : Color.shineBorder, lineWidth: 1)
+                    )
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, ShineSpacing.lg)
         }
+        .padding(.horizontal, ShineSpacing.lg)
     }
 }

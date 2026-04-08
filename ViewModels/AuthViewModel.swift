@@ -58,6 +58,7 @@ class AuthViewModel: ObservableObject {
     func register() async {
         guard !name.isEmpty else { await setError("Name is required"); return }
         guard !email.isEmpty else { await setError("Email is required"); return }
+        guard !phone.isEmpty else { await setError("Phone number is required"); return }
         guard password.count >= 8 else { await setError("Password must be at least 8 characters"); return }
         guard password == confirmPassword else { await setError("Passwords do not match"); return }
 
@@ -67,7 +68,7 @@ class AuthViewModel: ObservableObject {
                 name: name.trimmingCharacters(in: .whitespaces),
                 email: email.lowercased().trimmingCharacters(in: .whitespaces),
                 password: password,
-                phone: phone.isEmpty ? nil : phone
+                phone: phone.trimmingCharacters(in: .whitespaces)
             )
             await MainActor.run {
                 NotificationCenter.default.post(name: .userDidSignIn, object: user)

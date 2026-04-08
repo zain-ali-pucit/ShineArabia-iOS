@@ -91,7 +91,16 @@
       "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"2026-04-09T10:00:00.000Z\",\"address\":\"\"}')",
       "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"2026-04-07T10:00:00.000Z\",\"address\":\"Test St\"}')",
       "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"__CMDSUB_OUTPUT__\",\"address\":\"Test St\"}')",
-      "Bash(node server.js)"
+      "Bash(node server.js)",
+      "Bash(grep -h \"CREATE TABLE IF NOT EXISTS\" /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/src/database/*_migration.sql)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"\\\\dt user_device_tokens\")",
+      "Bash(node -e ':*)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const { query } = require\\('./src/config/database'\\); Promise.all\\([query\\(\\\\\"SELECT to_regclass\\('public.user_device_tokens'\\) AS t\\\\\"\\),query\\(\\\\\"SELECT to_regclass\\('public.admin_device_tokens'\\) AS t\\\\\"\\),query\\(\\\\\"SELECT to_regclass\\('public.app_config'\\) AS t\\\\\"\\)]\\).then\\(\\([a,b,c]\\)=>{console.log\\('user_device_tokens:',a.rows[0].t\\);console.log\\('admin_device_tokens:',b.rows[0].t\\);console.log\\('app_config:',c.rows[0].t\\);process.exit\\(0\\)}\\).catch\\(e=>{console.error\\(e.message\\);process.exit\\(1\\)}\\)\")",
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c ':*)",
+      "Bash(/usr/local/bin/psql --version)",
+      "Bash(/opt/homebrew/bin/psql --version)",
+      "Bash(/usr/local/Cellar/postgresql@16/16.13/bin/psql postgresql://macbookpro@localhost:5432/shinearabia -c ':*)"
     ]
   }
 }
