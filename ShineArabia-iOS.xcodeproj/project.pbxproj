@@ -22,8 +22,6 @@
 		AA0000000000000000000309 /* OrdersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000209 /* OrdersView.swift */; };
 		AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020A /* ServiceBottomSheet.swift */; };
 		AA000000000000000000030B /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020B /* ProfileView.swift */; };
-		DD000000000000000000001B /* AddressesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* AddressesView.swift */; };
-		CC0000000000000000000001 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000002 /* RewardsView.swift */; };
 		AA000000000000000000030C /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020C /* MainTabView.swift */; };
 		AA000000000000000000030D /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020D /* SharedComponents.swift */; };
 		AA000000000000000000030E /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000020E /* DesignSystem.swift */; };
@@ -41,8 +39,10 @@
 		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
 		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
 		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
+		CC0000000000000000000001 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000002 /* RewardsView.swift */; };
 		CC0000000000000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000007 /* GoogleSignIn */; };
 		CC0000000000000000000006 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000005 /* FacebookLogin */; };
+		DD000000000000000000001B /* AddressesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* AddressesView.swift */; };
 		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
 		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
 		FF0000000000000000000006 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */; };
@@ -67,8 +67,6 @@
 		AA0000000000000000000209 /* OrdersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020A /* ServiceBottomSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceBottomSheet.swift; sourceTree = "<group>"; };
 		AA000000000000000000020B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		DD000000000000000000001A /* AddressesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressesView.swift; sourceTree = "<group>"; };
-		CC0000000000000000000002 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020C /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		AA000000000000000000020D /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		AA000000000000000000020E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -87,6 +85,8 @@
 		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
+		CC0000000000000000000002 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
+		DD000000000000000000001A /* AddressesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -179,14 +179,6 @@
 				CC0000000000000000000009 /* Rewards */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		CC0000000000000000000009 /* Rewards */ = {
-			isa = PBXGroup;
-			children = (
-				CC0000000000000000000002 /* RewardsView.swift */,
-			);
-			path = Rewards;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000104 /* Onboarding */ = {
@@ -289,6 +281,14 @@
 				BB0000000000000000000008 /* RegisterView.swift */,
 			);
 			path = Auth;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000009 /* Rewards */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000000000000000000002 /* RewardsView.swift */,
+			);
+			path = Rewards;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -547,7 +547,7 @@
 				DEVELOPMENT_TEAM = DK2W9Z27GC;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -575,7 +575,7 @@
 				DEVELOPMENT_TEAM = DK2W9Z27GC;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -617,20 +617,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.0.0;
-			};
-		};
 		CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 17.0.0;
+			};
+		};
+		CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
 			};
 		};
 		FF0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
@@ -644,15 +644,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CC0000000000000000000007 /* GoogleSignIn */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignIn;
-		};
 		CC0000000000000000000005 /* FacebookLogin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CC0000000000000000000004 /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */;
 			productName = FacebookLogin;
+		};
+		CC0000000000000000000007 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC0000000000000000000008 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 		FF0000000000000000000002 /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;

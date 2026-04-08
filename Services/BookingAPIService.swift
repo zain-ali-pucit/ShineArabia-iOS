@@ -32,6 +32,13 @@ struct APISingleBookingResponse: Decodable {
     let message: String?
 }
 
+struct APIMultiBookingResponse: Decodable {
+    struct DataWrapper: Decodable { let bookings: [APIBooking] }
+    let success: Bool
+    let data: DataWrapper?
+    let message: String?
+}
+
 struct APIPagination: Decodable {
     let total: Int
     let page: Int
@@ -97,6 +104,22 @@ class BookingAPIService {
             throw APIError.serverError(400, res.message ?? "Cancel failed")
         }
         return booking
+    }
+
+    func createMultiBooking(packageIds: [String], scheduledDate: Date, address: String, notes: String?, promoCode: String?) async throws -> [APIBooking] {
+        var body: [String: Any] = [
+            "packageIds":    packageIds,
+            "scheduledDate": ISO8601DateFormatter().string(from: scheduledDate),
+            "address":       address,
+        ]
+        if let notes = notes, !notes.isEmpty { body["notes"] = notes }
+        if let promo = promoCode, !promo.isEmpty { body["promoCode"] = promo }
+
+        let res: APIMultiBookingResponse = try await client.request("/bookings/multi", method: "POST", body: body)
+        guard let bookings = res.data?.bookings else {
+            throw APIError.serverError(400, res.message ?? "Booking failed")
+        }
+        return bookings
     }
 
     func validatePromo(code: String, packageId: String) async throws -> PromoValidateResponse.DataWrapper {

@@ -169,8 +169,13 @@ class APIClient {
     }
 
     private func extractMessage(from data: Data) -> String? {
-        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        return json?["message"] as? String
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        if let msg = json["message"] as? String { return msg }
+        // express-validator returns { errors: [{ msg: "..." }] }
+        if let errors = json["errors"] as? [[String: Any]],
+           let first = errors.first,
+           let msg = first["msg"] as? String { return msg }
+        return nil
     }
 }
 

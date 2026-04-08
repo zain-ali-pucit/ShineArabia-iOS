@@ -90,20 +90,20 @@ struct ExploreView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
-                    selectedPackage: $vm.selectedPackage,
+                    selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
                     isLoading: vm.isLoadingPackages
                 ) {
-                    guard let pkg = vm.selectedPackage else { return }
+                    guard !vm.selectedPackages.isEmpty else { return }
                     if appState.isAuthenticated {
                         Task { @MainActor in
-                            await bookingVM.createBooking(package: pkg)
+                            await bookingVM.createMultiBooking(packages: vm.selectedPackages)
                             if bookingVM.errorMsg == nil {
                                 vm.confirmBooking()
                             }
                         }
                     } else {
-                        vm.pendingPackageForAuth = pkg
+                        vm.pendingPackagesForAuth = vm.selectedPackages
                         vm.showServiceSheet = false
                         vm.showAuthPrompt = true
                     }
@@ -121,11 +121,12 @@ struct ExploreView: View {
         }
         // After login, resume the pending booking
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { _ in
-            guard let pkg = vm.pendingPackageForAuth else { return }
+            guard !vm.pendingPackagesForAuth.isEmpty else { return }
+            let pkgs = vm.pendingPackagesForAuth
             vm.showAuthPrompt = false
-            vm.pendingPackageForAuth = nil
+            vm.pendingPackagesForAuth = []
             Task { @MainActor in
-                await bookingVM.createBooking(package: pkg)
+                await bookingVM.createMultiBooking(packages: pkgs)
                 if bookingVM.errorMsg == nil {
                     vm.confirmBooking()
                 }

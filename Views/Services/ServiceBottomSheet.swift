@@ -3,7 +3,7 @@ import SwiftUI
 struct ServiceBottomSheet: View {
     let category: ServiceCategory
     let packages: [ServicePackage]
-    @Binding var selectedPackage: ServicePackage?
+    @Binding var selectedPackages: [ServicePackage]
     let isArabic: Bool
     let isLoading: Bool
     let onBook: () -> Void
@@ -132,7 +132,7 @@ struct ServiceBottomSheet: View {
                     .padding(.bottom, ShineSpacing.md)
                 }
 
-                // ── Package list ─────────────────────────────────────────
+                // ── Scrollable: packages + date/time + address ───────────
                 if isLoading {
                     VStack(spacing: 10) {
                         ProgressView()
@@ -144,48 +144,63 @@ struct ServiceBottomSheet: View {
                     .padding(.vertical, 40)
                 } else {
                     ScrollView(showsIndicators: false) {
-                        VStack(spacing: 10) {
-                            ForEach(packages) { pkg in
-                                PackageRow(
-                                    package: pkg,
-                                    isSelected: selectedPackage?.id == pkg.id,
-                                    isArabic: isArabic
-                                ) {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        selectedPackage = pkg
+                        VStack(spacing: 0) {
+                            // Package list
+                            VStack(spacing: 10) {
+                                ForEach(packages) { pkg in
+                                    PackageRow(
+                                        package: pkg,
+                                        isSelected: selectedPackages.contains(where: { $0.id == pkg.id }),
+                                        isArabic: isArabic
+                                    ) {
+                                        withAnimation(.spring(response: 0.3)) {
+                                            if let idx = selectedPackages.firstIndex(where: { $0.id == pkg.id }) {
+                                                selectedPackages.remove(at: idx)
+                                            } else {
+                                                selectedPackages.append(pkg)
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.bottom, ShineSpacing.md)
+
+                            // Date & Time
+                            DateTimePickerSection(
+                                isArabic: isArabic,
+                                selectedDate: $bookingVM.selectedDate
+                            )
+
+                            // Location / Address
+                            AddressInputSection(
+                                isArabic: isArabic,
+                                address: $bookingVM.address,
+                                locationService: locationService
+                            )
+
+                            // Promo code
+                            PromoCodeField(
+                                isArabic: isArabic,
+                                promoInput: $promoInput,
+                                promoMsg: $promoMsg,
+                                promoIsValid: $promoIsValid,
+                                isValidating: $isValidating,
+                                selectedPackages: selectedPackages
+                            )
+                            .environmentObject(bookingVM)
                         }
-                        .padding(.horizontal, ShineSpacing.lg)
                     }
                 }
 
-                // ── Date & Time ──────────────────────────────────────────
-                DateTimePickerSection(
-                    isArabic: isArabic,
-                    selectedDate: $bookingVM.selectedDate
-                )
-
-                // ── Location / Address ───────────────────────────────────
-                AddressInputSection(
-                    isArabic: isArabic,
-                    address: $bookingVM.address,
-                    locationService: locationService
-                )
-
-                // ── Footer (promo + book button) ─────────────────────────
+                // ── Sticky footer (price summary + book button) ──────────
                 VStack(spacing: 0) {
                     Divider().padding(.bottom, ShineSpacing.md)
 
-                    // Promo code
-                    PromoCodeField(
+                    // Price summary
+                    PriceSummarySection(
                         isArabic: isArabic,
-                        promoInput: $promoInput,
-                        promoMsg: $promoMsg,
-                        promoIsValid: $promoIsValid,
-                        isValidating: $isValidating,
-                        selectedPackage: selectedPackage
+                        selectedPackages: selectedPackages
                     )
                     .environmentObject(bookingVM)
 
@@ -204,7 +219,9 @@ struct ServiceBottomSheet: View {
                     }
 
                     // Book button
-                    let canBook = selectedPackage != nil && !bookingVM.isSubmitting
+                    let canBook = !selectedPackages.isEmpty
+                        && !bookingVM.address.trimmingCharacters(in: .whitespaces).isEmpty
+                        && !bookingVM.isSubmitting
                     Button(action: onBook) {
                         ZStack {
                             HStack(spacing: 8) {
@@ -228,7 +245,6 @@ struct ServiceBottomSheet: View {
                         .shadow(color: Color.shineCoral.opacity(canBook ? 0.3 : 0),
                                 radius: 12, x: 0, y: 6)
                     }
-//                    .disabled(!canBook)
                     .animation(.easeInOut(duration: 0.2), value: canBook)
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.top, ShineSpacing.md)
@@ -313,6 +329,10 @@ private struct AddressInputSection: View {
     let isArabic: Bool
     @Binding var address: String
     @ObservedObject var locationService: LocationService
+    @ObservedObject private var store = AddressStore.shared
+    @EnvironmentObject private var appState: AppState
+    @FocusState private var fieldFocused: Bool
+    @State private var showPicker = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -323,6 +343,39 @@ private struct AddressInputSection: View {
                 .textCase(.uppercase)
                 .padding(.horizontal, ShineSpacing.lg)
 
+            // Saved address chips
+            if !store.addresses.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(store.addresses) { saved in
+                            let isSelected = address == saved.address
+                            Button {
+                                address = saved.address
+                                fieldFocused = false
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: saved.label.icon)
+                                        .font(.system(size: 11))
+                                    Text(isArabic ? saved.label.titleAR : saved.label.title)
+                                        .font(ShineFont.body(13, weight: .medium))
+                                }
+                                .foregroundColor(isSelected ? .white : saved.label.color)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(isSelected ? saved.label.color : saved.label.color.opacity(0.1))
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule().stroke(saved.label.color.opacity(isSelected ? 0 : 0.3), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, ShineSpacing.lg)
+                }
+            }
+
+            // Text field + picker button
             HStack(spacing: 10) {
                 Image(systemName: "location.fill")
                     .font(.system(size: 15))
@@ -334,29 +387,28 @@ private struct AddressInputSection: View {
                 )
                 .font(ShineFont.body(14))
                 .foregroundColor(.shineInk)
+                .focused($fieldFocused)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button(isArabic ? "تم" : "Done") {
+                            fieldFocused = false
+                        }
+                        .font(ShineFont.body(15, weight: .semibold))
+                        .foregroundColor(.shineCoral)
+                    }
+                }
 
                 Spacer()
 
-                // Auto-detect button
-                if locationService.isResolving {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                        .frame(width: 30, height: 30)
-                } else {
-                    Button {
-                        Task {
-                            let detected = await locationService.getCurrentAddress()
-                            if !detected.isEmpty {
-                                address = detected
-                            }
-                        }
-                    } label: {
-                        Image(systemName: locationService.isAuthorized
-                              ? "location.circle.fill"
-                              : "location.circle")
-                            .font(.system(size: 26))
-                            .foregroundColor(.shineCoral)
-                    }
+                // Open address picker
+                Button {
+                    fieldFocused = false
+                    showPicker = true
+                } label: {
+                    Image(systemName: "list.bullet.circle.fill")
+                        .font(.system(size: 26))
+                        .foregroundColor(.shineCoral)
                 }
             }
             .padding(.horizontal, 14)
@@ -369,6 +421,100 @@ private struct AddressInputSection: View {
             .padding(.horizontal, ShineSpacing.lg)
         }
         .padding(.bottom, ShineSpacing.md)
+        .onAppear {
+            if address.isEmpty, let def = store.defaultAddress {
+                address = def.address
+            }
+        }
+        .sheet(isPresented: $showPicker) {
+            AddressesView(onSelect: { saved in
+                address = saved.address
+            })
+            .environmentObject(appState)
+        }
+    }
+}
+
+// MARK: - Price Summary Section
+
+private struct PriceSummarySection: View {
+    let isArabic: Bool
+    let selectedPackages: [ServicePackage]
+    @EnvironmentObject var bookingVM: BookingViewModel
+
+    /// Most expensive is full price; all others get 5% off their individual price.
+    private var sortedPackages: [ServicePackage] {
+        selectedPackages.sorted { $0.priceAmount > $1.priceAmount }
+    }
+    private var subtotal: Double {
+        selectedPackages.reduce(0) { $0 + $1.priceAmount }
+    }
+    private var multiItemDiscount: Double {
+        guard selectedPackages.count > 1 else { return 0 }
+        return sortedPackages.dropFirst().reduce(0) { $0 + $1.priceAmount * 0.05 }
+    }
+    private var promoDiscount: Double { bookingVM.promoDiscount }
+    private var total: Double         { max(0, subtotal - multiItemDiscount - promoDiscount) }
+
+    var body: some View {
+        if !selectedPackages.isEmpty && subtotal > 0 {
+            VStack(spacing: 6) {
+                // Subtotal row (only needed when there are multiple items or discounts)
+                if selectedPackages.count > 1 || promoDiscount > 0 {
+                    HStack {
+                        Text(isArabic ? "المجموع الجزئي" : "Subtotal")
+                            .font(ShineFont.body(12))
+                            .foregroundColor(.shineInk3)
+                        Spacer()
+                        Text("QAR \(Int(subtotal))")
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk2)
+                    }
+                }
+                // Multi-item 5% discount
+                if multiItemDiscount > 0 {
+                    HStack {
+                        Text(isArabic
+                             ? "خصم الخدمات المتعددة (٥٪)"
+                             : "Multi-service discount (5% off \(selectedPackages.count - 1) item\(selectedPackages.count > 2 ? "s" : ""))")
+                            .font(ShineFont.body(12))
+                            .foregroundColor(.shineTeal)
+                        Spacer()
+                        Text("- QAR \(String(format: "%.0f", multiItemDiscount))")
+                            .font(ShineFont.body(13, weight: .semibold))
+                            .foregroundColor(.shineTeal)
+                    }
+                }
+                // Promo code discount
+                if promoDiscount > 0 {
+                    HStack {
+                        Text(isArabic ? "خصم كود الترويج" : "Promo discount")
+                            .font(ShineFont.body(12))
+                            .foregroundColor(.green)
+                        Spacer()
+                        Text("- QAR \(String(format: "%.0f", promoDiscount))")
+                            .font(ShineFont.body(13, weight: .semibold))
+                            .foregroundColor(.green)
+                    }
+                }
+                Divider()
+                HStack {
+                    Text(isArabic ? "الإجمالي" : "Total")
+                        .font(ShineFont.body(14, weight: .semibold))
+                        .foregroundColor(.shineInk)
+                    Spacer()
+                    Text("QAR \(Int(total))")
+                        .font(ShineFont.displayBold(22))
+                        .foregroundColor(.shineCoral)
+                }
+            }
+            .padding(.horizontal, ShineSpacing.lg)
+            .padding(.vertical, ShineSpacing.sm)
+            .background(Color.shineSurface)
+            .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+            .padding(.horizontal, ShineSpacing.lg)
+            .padding(.bottom, ShineSpacing.md)
+        }
     }
 }
 
@@ -380,7 +526,7 @@ private struct PromoCodeField: View {
     @Binding var promoMsg: String?
     @Binding var promoIsValid: Bool
     @Binding var isValidating: Bool
-    let selectedPackage: ServicePackage?
+    let selectedPackages: [ServicePackage]
 
     @EnvironmentObject var bookingVM: BookingViewModel
 
@@ -410,7 +556,7 @@ private struct PromoCodeField: View {
                     Button(isArabic ? "تطبيق" : "Apply") { applyPromo() }
                         .font(ShineFont.body(13, weight: .semibold))
                         .foregroundColor(promoInput.isEmpty ? .shineInk3 : .shineCoral)
-                        .disabled(promoInput.isEmpty || selectedPackage == nil)
+                        .disabled(promoInput.isEmpty || selectedPackages.isEmpty)
                 }
             }
             .padding(.horizontal, 14)
@@ -435,42 +581,31 @@ private struct PromoCodeField: View {
                 .foregroundColor(promoIsValid ? .green : .red)
                 .padding(.leading, 4)
             }
-
-            if promoIsValid, bookingVM.promoDiscount > 0 {
-                HStack {
-                    Text(isArabic ? "الخصم المطبق" : "Discount applied")
-                        .font(ShineFont.body(12))
-                        .foregroundColor(.shineInk3)
-                    Spacer()
-                    Text("- QAR \(String(format: "%.2f", bookingVM.promoDiscount))")
-                        .font(ShineFont.body(13, weight: .semibold))
-                        .foregroundColor(.green)
-                }
-                .padding(.horizontal, 4)
-            }
         }
         .padding(.horizontal, ShineSpacing.lg)
         .padding(.bottom, ShineSpacing.md)
     }
 
     private func applyPromo() {
-        guard let pkg = selectedPackage, let apiId = pkg.apiId else {
+        let apiIds = selectedPackages.compactMap { $0.apiId }
+        guard let firstId = apiIds.first else {
             promoMsg = isArabic ? "اختر خدمة أولاً" : "Select a package first"
             return
         }
+        let total = selectedPackages.reduce(0) { $0 + $1.priceAmount }
         isValidating = true
         promoMsg = nil
         bookingVM.promoCode = promoInput.trimmingCharacters(in: .whitespaces).uppercased()
 
         Task {
-            await bookingVM.validatePromo(packageId: apiId)
+            await bookingVM.validatePromo(packageId: firstId, totalAmount: total)
             await MainActor.run {
                 isValidating = false
                 if bookingVM.promoDiscount > 0 {
                     promoIsValid = true
                     promoMsg = isArabic
                         ? "تم تطبيق الخصم بنجاح 🎉"
-                        : "Code applied! You save QAR \(String(format: "%.2f", bookingVM.promoDiscount))"
+                        : "Code applied! You save QAR \(String(format: "%.0f", bookingVM.promoDiscount))"
                 } else {
                     promoIsValid = false
                     bookingVM.promoCode = ""
@@ -520,6 +655,20 @@ struct PackageRow: View {
                     Text(package.price)
                         .font(ShineFont.displayBold(20))
                         .foregroundColor(isSelected ? .shineCoral : .shineInk)
+                }
+
+                ZStack {
+                    Circle()
+                        .strokeBorder(isSelected ? Color.shineCoral : Color.shineBorder, lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if isSelected {
+                        Circle()
+                            .fill(Color.shineCoral)
+                            .frame(width: 22, height: 22)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
             }
             .padding(16)

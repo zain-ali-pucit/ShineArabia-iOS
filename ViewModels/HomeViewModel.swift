@@ -3,10 +3,10 @@ import SwiftUI
 class HomeViewModel: ObservableObject {
     @Published var selectedService: ServiceCategory? = nil
     @Published var showServiceSheet: Bool           = false
-    @Published var selectedPackage: ServicePackage? = nil
-    @Published var showBookingConfirmed: Bool       = false
-    @Published var showAuthPrompt: Bool             = false
-    @Published var pendingPackageForAuth: ServicePackage? = nil
+    @Published var selectedPackages: [ServicePackage] = []
+    @Published var showBookingConfirmed: Bool          = false
+    @Published var showAuthPrompt: Bool                = false
+    @Published var pendingPackagesForAuth: [ServicePackage] = []
     @Published var isLoading: Bool                  = false
     @Published var errorMsg: String?                = nil
 
@@ -100,7 +100,7 @@ class HomeViewModel: ObservableObject {
 
     func openService(_ apiCategory: APICategory) {
         selectedService  = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
-        selectedPackage  = nil
+        selectedPackages = []
         showServiceSheet = true
         loadPackages(slug: apiCategory.slug)
     }
@@ -109,7 +109,7 @@ class HomeViewModel: ObservableObject {
 
     func openService(_ category: ServiceCategory) {
         selectedService  = category
-        selectedPackage  = nil
+        selectedPackages = []
         showServiceSheet = true
         loadPackages(slug: category.rawValue)
     }
@@ -149,8 +149,12 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Booking helpers
 
-    func selectPackage(_ pkg: ServicePackage) {
-        selectedPackage = pkg
+    func togglePackage(_ pkg: ServicePackage) {
+        if let idx = selectedPackages.firstIndex(where: { $0.id == pkg.id }) {
+            selectedPackages.remove(at: idx)
+        } else {
+            selectedPackages.append(pkg)
+        }
     }
 
     func confirmBooking() {

@@ -37,6 +37,8 @@ struct RootView: View {
                 appState.isAuthenticated = true
                 appState.userRole        = apiUser.role
             }
+            // FCM token may have arrived before the user authenticated — register it now
+            Task { await UserAPIService.shared.registerPendingDeviceToken() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignOut)) { _ in
             appState.currentUser     = nil
@@ -50,6 +52,7 @@ struct RootView: View {
                 appState.currentUser     = user.toUser()
                 appState.isAuthenticated = true
                 appState.userRole        = user.role
+                await UserAPIService.shared.registerPendingDeviceToken()
             } catch {
                 TokenStore.clear()
                 appState.isAuthenticated = false

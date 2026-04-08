@@ -82,7 +82,16 @@
       "Bash(pkill -f \"node.*index\")",
       "Bash(npm start:*)",
       "Bash(lsof -ti:3000)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -H 'Authorization: Bearer __TRACKED_VAR__' http://localhost:3000/api/users/stats)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlYjcyYmQ4OS0zZmUyLTQ3NWEtYTIzMy01NjA0NzNjYWU0OGMiLCJpYXQiOjE3NzU2NDc0NTEsImV4cCI6MTc3NTY1MTA1MX0.Q8kGZiOJCPFnanccLt8WrFaFAwQqSMPtZrJMlIc0VMs' http://localhost:3000/api/bookings)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlYjcyYmQ4OS0zZmUyLTQ3NWEtYTIzMy01NjA0NzNjYWU0OGMiLCJpYXQiOjE3NzU2NDc0NTEsImV4cCI6MTc3NTY1MTA1MX0.Q8kGZiOJCPFnanccLt8WrFaFAwQqSMPtZrJMlIc0VMs' http://localhost:3000/api/users/stats)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' http://localhost:3000/api/bookings)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' http://localhost:3000/api/users/stats)",
+      "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"2026-04-09T10:00:00.000Z\",\"address\":\"\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"2026-04-07T10:00:00.000Z\",\"address\":\"Test St\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/bookings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsImVtYWlsIjoidGVzdEBzaGluZWFyYWJpYS5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwiaWF0IjoxNzc1NjQ3NTIxLCJleHAiOjE3NzU2NTExMjF9.l4Hbng33_vf9MkQ8Elg7RHGG-Il6PcyoszDzj2jj18E' -H 'Content-Type: application/json' -d '{\"packageId\":\"abc\",\"scheduledDate\":\"__CMDSUB_OUTPUT__\",\"address\":\"Test St\"}')",
+      "Bash(node server.js)"
     ]
   }
 }

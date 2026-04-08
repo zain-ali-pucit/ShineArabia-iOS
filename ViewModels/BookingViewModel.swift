@@ -3,7 +3,7 @@ import Combine
 
 class BookingViewModel: ObservableObject {
     @Published var bookings: [Booking]  = []
-    @Published var selectedDate: Date   = Date()
+    @Published var selectedDate: Date   = BookingViewModel.defaultBookingDate()
     @Published var address: String      = ""
     @Published var notes: String        = ""
     @Published var promoCode: String         = ""
@@ -44,40 +44,44 @@ class BookingViewModel: ObservableObject {
         }
     }
 
-    // MARK: Create booking via API
-    func createBooking(package pkg: ServicePackage) async {
+    // MARK: Create multi-package booking via API
+    func createMultiBooking(packages: [ServicePackage]) async {
         let deliveryAddress = address.trimmingCharacters(in: .whitespaces)
         await MainActor.run { isSubmitting = true; errorMsg = nil }
 
+        let apiIds = packages.compactMap { $0.apiId }
+
         do {
-            // Need apiId; if nil (sample data), create a local booking
-            if let apiId = pkg.apiId {
-                let apiBooking = try await bookingAPI.createBooking(
-                    packageId:     apiId,
+            if !apiIds.isEmpty {
+                let apiBookings = try await bookingAPI.createMultiBooking(
+                    packageIds:    apiIds,
                     scheduledDate: selectedDate,
                     address:       deliveryAddress,
                     notes:         notes.isEmpty ? nil : notes,
                     promoCode:     promoCode.isEmpty ? nil : promoCode
                 )
                 await MainActor.run {
-                    bookings.insert(Booking(from: apiBooking), at: 0)
-                    welcomePromoApplied  = apiBooking.welcomePromoApplied == true
+                    let newBookings = apiBookings.map { Booking(from: $0) }
+                    bookings.insert(contentsOf: newBookings, at: 0)
+                    welcomePromoApplied  = apiBookings.first?.welcomePromoApplied == true
                     welcomePromoEligible = false
                     isSubmitting         = false
                     bookingSuccess       = true
                 }
             } else {
-                // Offline / sample data fallback
-                let booking = Booking(
-                    serviceCategory: pkg.category.rawValue,
-                    packageName:     pkg.name,
-                    scheduledDate:   selectedDate,
-                    address:         deliveryAddress,
-                    status:          .confirmed,
-                    price:           pkg.price
-                )
+                // Offline / sample data fallback — create one local booking per package
+                let newBookings = packages.map { pkg in
+                    Booking(
+                        serviceCategory: pkg.category.rawValue,
+                        packageName:     pkg.name,
+                        scheduledDate:   selectedDate,
+                        address:         deliveryAddress,
+                        status:          .confirmed,
+                        price:           pkg.price
+                    )
+                }
                 await MainActor.run {
-                    bookings.insert(booking, at: 0)
+                    bookings.insert(contentsOf: newBookings, at: 0)
                     isSubmitting   = false
                     bookingSuccess = true
                 }
@@ -142,17 +146,34 @@ class BookingViewModel: ObservableObject {
     }
 
     // MARK: Validate promo code
-    func validatePromo(packageId: String) async {
+    // totalAmount: sum of all selected packages. Discount is applied to this total.
+    func validatePromo(packageId: String, totalAmount: Double) async {
         guard !promoCode.isEmpty else {
             await MainActor.run { promoDiscount = 0 }
             return
         }
         do {
             let result = try await bookingAPI.validatePromo(code: promoCode, packageId: packageId)
-            await MainActor.run { promoDiscount = result.discountAmount }
+            let discount: Double
+            if result.discountType == "percentage" {
+                discount = totalAmount * (result.discountValue / 100)
+            } else {
+                discount = min(result.discountValue, totalAmount)
+            }
+            await MainActor.run { promoDiscount = discount }
         } catch {
             await MainActor.run { promoDiscount = 0 }
         }
+    }
+
+    // MARK: Helpers
+    static func defaultBookingDate() -> Date {
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        comps.day! += 1
+        comps.hour   = 10
+        comps.minute = 0
+        comps.second = 0
+        return Calendar.current.date(from: comps) ?? Date().addingTimeInterval(86400)
     }
 
     // MARK: Computed

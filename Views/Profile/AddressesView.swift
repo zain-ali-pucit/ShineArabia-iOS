@@ -9,6 +9,11 @@ struct AddressesView: View {
     @ObservedObject private var store = AddressStore.shared
     @State private var showAddAddress = false
 
+    /// When non-nil the view is in selection mode: tapping an address calls this and dismisses.
+    var onSelect: ((SavedAddress) -> Void)? = nil
+
+    var isSelectionMode: Bool { onSelect != nil }
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -19,7 +24,9 @@ struct AddressesView: View {
                     addressList
                 }
             }
-            .navigationTitle(appState.isArabic ? "عناويني" : "My Addresses")
+            .navigationTitle(appState.isArabic
+                ? (isSelectionMode ? "اختر العنوان" : "عناويني")
+                : (isSelectionMode ? "Select Address" : "My Addresses"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -29,17 +36,23 @@ struct AddressesView: View {
                             .foregroundColor(.shineInk)
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showAddAddress = true } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.shineCoral)
+                if !isSelectionMode {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button { showAddAddress = true } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.shineCoral)
+                        }
                     }
                 }
             }
             .sheet(isPresented: $showAddAddress) {
-                AddAddressView { saved in store.add(saved) }
-                    .environmentObject(appState)
+                if #available(iOS 17.0, *) {
+                    AddAddressView { saved in store.add(saved) }
+                        .environmentObject(appState)
+                } else {
+                    // Fallback on earlier versions
+                }
             }
         }
     }
@@ -87,40 +100,59 @@ struct AddressesView: View {
 
     // MARK: Address list
 
+    @State private var selectedId: UUID? = nil
+
     private var addressList: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 12) {
                 ForEach(store.addresses) { addr in
-                    AddressCard(address: addr, isArabic: appState.isArabic) {
-                        store.setDefault(addr)
-                    } onDelete: {
-                        store.remove(addr)
+                    if isSelectionMode {
+                        Button {
+                            selectedId = addr.id
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                onSelect?(addr)
+                                dismiss()
+                            }
+                        } label: {
+                            AddressCard(address: addr, isArabic: appState.isArabic,
+                                        isSelected: selectedId == addr.id,
+                                        onSetDefault: nil, onDelete: nil)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        AddressCard(address: addr, isArabic: appState.isArabic) {
+                            store.setDefault(addr)
+                        } onDelete: {
+                            store.remove(addr)
+                        }
                     }
                 }
 
-                Button {
-                    showAddAddress = true
-                } label: {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.shineCoralLight)
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .semibold))
+                if !isSelectionMode {
+                    Button {
+                        showAddAddress = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.shineCoralLight)
+                                    .frame(width: 36, height: 36)
+                                Image(systemName: "plus")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.shineCoral)
+                            }
+                            Text(appState.isArabic ? "إضافة عنوان جديد" : "Add new address")
+                                .font(ShineFont.body(15))
                                 .foregroundColor(.shineCoral)
+                            Spacer()
                         }
-                        Text(appState.isArabic ? "إضافة عنوان جديد" : "Add new address")
-                            .font(ShineFont.body(15))
-                            .foregroundColor(.shineCoral)
-                        Spacer()
+                        .padding(ShineSpacing.md)
+                        .background(Color.shineSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
+                        .shineShadowXS()
                     }
-                    .padding(ShineSpacing.md)
-                    .background(Color.shineSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
-                    .shineShadowXS()
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .padding(ShineSpacing.lg)
             .padding(.top, 4)
@@ -133,8 +165,9 @@ struct AddressesView: View {
 struct AddressCard: View {
     let address: SavedAddress
     let isArabic: Bool
-    let onSetDefault: () -> Void
-    let onDelete: () -> Void
+    var isSelected: Bool = false
+    var onSetDefault: (() -> Void)?
+    var onDelete: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 14) {
@@ -170,34 +203,44 @@ struct AddressCard: View {
 
             Spacer()
 
-            VStack(spacing: 10) {
-                if !address.isDefault {
-                    Button(action: onSetDefault) {
-                        Image(systemName: "checkmark.circle")
-                            .font(.system(size: 20))
-                            .foregroundColor(.shineTeal)
+            if onSetDefault != nil || onDelete != nil {
+                VStack(spacing: 10) {
+                    if !address.isDefault, let onSetDefault {
+                        Button(action: onSetDefault) {
+                            Image(systemName: "checkmark.circle")
+                                .font(.system(size: 20))
+                                .foregroundColor(.shineTeal)
+                        }
                     }
-                }
-                Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 17))
-                        .foregroundColor(.shineCoral.opacity(0.7))
+                    if let onDelete {
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 17))
+                                .foregroundColor(.shineCoral.opacity(0.7))
+                        }
+                    }
                 }
             }
         }
         .padding(ShineSpacing.md)
-        .background(Color.shineSurface)
+        .background(isSelected ? Color.shineCoralLight : Color.shineSurface)
         .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
         .overlay(
             RoundedRectangle(cornerRadius: ShineRadius.sm)
-                .stroke(address.isDefault ? Color.shineTeal.opacity(0.35) : Color.clear, lineWidth: 1.5)
+                .stroke(
+                    isSelected ? Color.shineCoral :
+                    (address.isDefault ? Color.shineTeal.opacity(0.35) : Color.clear),
+                    lineWidth: isSelected ? 2 : 1.5
+                )
         )
         .shineShadowXS()
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
 
 // MARK: - Add Address View
 
+@available(iOS 17.0, *)
 struct AddAddressView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
