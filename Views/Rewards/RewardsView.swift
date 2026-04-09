@@ -392,15 +392,14 @@ struct RewardBookingSheet: View {
 
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var locationService = LocationService.shared
 
     @State private var address: String = ""
+    @State private var latitude: Double? = nil
+    @State private var longitude: Double? = nil
     @State private var note: String = ""
     @State private var isSubmitting = false
     @State private var isConfirmed = false
-
-    private var userAddress: String {
-        appState.currentUser?.address ?? ""
-    }
 
     var body: some View {
         ZStack {
@@ -411,9 +410,6 @@ struct RewardBookingSheet: View {
             } else {
                 bookingForm
             }
-        }
-        .onAppear {
-            if address.isEmpty { address = userAddress }
         }
     }
 
@@ -463,31 +459,14 @@ struct RewardBookingSheet: View {
                     .shineShadowXS()
 
                     // Address field
-                    VStack(alignment: .leading, spacing: ShineSpacing.sm) {
-                        Text(isArabic ? "عنوان الخدمة" : "SERVICE ADDRESS")
-                            .font(ShineFont.body(11, weight: .semibold))
-                            .foregroundColor(.shineInk3)
-                            .kerning(0.8)
-
-                        HStack(spacing: 10) {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.shineCoral)
-                            TextField(
-                                isArabic ? "أدخل العنوان" : "Enter your address",
-                                text: $address
-                            )
-                            .font(ShineFont.body(14))
-                            .foregroundColor(.shineInk)
-                        }
-                        .padding(ShineSpacing.md)
-                        .background(Color.shineSurface)
-                        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: ShineRadius.sm)
-                                .strokeBorder(Color.shineBorder, lineWidth: 1)
-                        )
-                    }
+                    AddressInputSection(
+                        isArabic: isArabic,
+                        address: $address,
+                        latitude: $latitude,
+                        longitude: $longitude,
+                        locationService: locationService
+                    )
+                    .environmentObject(appState)
 
                     // Note field
                     VStack(alignment: .leading, spacing: ShineSpacing.sm) {

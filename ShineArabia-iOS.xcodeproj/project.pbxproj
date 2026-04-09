@@ -49,6 +49,7 @@
 		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
 		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
 		FF0000000000000000000006 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */; };
+		EE0000000000000000000002 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000001 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,6 +79,7 @@
 		AA000000000000000000020E /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		AA000000000000000000020F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		AA0000000000000000000210 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		EE0000000000000000000001 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA0000000000000000000211 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA0000000000000000000214 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA0000000000000000000215 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 				AA0000000000000000000210 /* Info.plist */,
 				AA0000000000000000000211 /* Assets.xcassets */,
 				AA0000000000000000000212 /* Localizable.strings */,
+				EE0000000000000000000001 /* LaunchScreen.storyboard */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -381,6 +384,7 @@
 				AA0000000000000000000310 /* Assets.xcassets in Resources */,
 				AA0000000000000000000311 /* Localizable.strings in Resources */,
 				FF0000000000000000000006 /* GoogleService-Info.plist in Resources */,
+				EE0000000000000000000002 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

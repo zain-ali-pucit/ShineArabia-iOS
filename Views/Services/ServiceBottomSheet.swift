@@ -202,7 +202,8 @@ struct ServiceBottomSheet: View {
                     // Price summary
                     PriceSummarySection(
                         isArabic: isArabic,
-                        selectedPackages: selectedPackages
+                        selectedPackages: selectedPackages,
+                        category: category
                     )
                     .environmentObject(bookingVM)
 
@@ -450,27 +451,33 @@ struct AddressInputSection: View {
 private struct PriceSummarySection: View {
     let isArabic: Bool
     let selectedPackages: [ServicePackage]
+    let category: ServiceCategory
     @EnvironmentObject var bookingVM: BookingViewModel
 
     /// Most expensive is full price; all others get 5% off their individual price.
     private var sortedPackages: [ServicePackage] {
         selectedPackages.sorted { $0.priceAmount > $1.priceAmount }
     }
+    /// Subtotal always uses the original (pre-discount) price.
     private var subtotal: Double {
         selectedPackages.reduce(0) { $0 + $1.priceAmount }
     }
+    private var bundleDiscount: Double {
+        guard category == .bundle else { return 0 }
+        return subtotal * 0.30
+    }
     private var multiItemDiscount: Double {
-        guard selectedPackages.count > 1 else { return 0 }
+        guard category != .bundle, selectedPackages.count > 1 else { return 0 }
         return sortedPackages.dropFirst().reduce(0) { $0 + $1.priceAmount * 0.05 }
     }
     private var promoDiscount: Double { bookingVM.promoDiscount }
-    private var total: Double         { max(0, subtotal - multiItemDiscount - promoDiscount) }
+    private var total: Double         { max(0, subtotal - bundleDiscount - multiItemDiscount - promoDiscount) }
 
     var body: some View {
         if !selectedPackages.isEmpty && subtotal > 0 {
             VStack(spacing: 6) {
-                // Subtotal row (only needed when there are multiple items or discounts)
-                if selectedPackages.count > 1 || promoDiscount > 0 {
+                // Subtotal row — always show for bundles; otherwise show when multiple items or promo applied
+                if category == .bundle || selectedPackages.count > 1 || promoDiscount > 0 {
                     HStack {
                         Text(isArabic ? "المجموع الجزئي" : "Subtotal")
                             .font(ShineFont.body(12))
@@ -481,7 +488,19 @@ private struct PriceSummarySection: View {
                             .foregroundColor(.shineInk2)
                     }
                 }
-                // Multi-item 5% discount
+                // Bundle 30% discount
+                if bundleDiscount > 0 {
+                    HStack {
+                        Text(isArabic ? "خصم الباقة (٣٠٪)" : "Bundle discount (30% off)")
+                            .font(ShineFont.body(12))
+                            .foregroundColor(.shineTeal)
+                        Spacer()
+                        Text("- QAR \(String(format: "%.0f", bundleDiscount))")
+                            .font(ShineFont.body(13, weight: .semibold))
+                            .foregroundColor(.shineTeal)
+                    }
+                }
+                // Multi-item 5% discount (non-bundle only)
                 if multiItemDiscount > 0 {
                     HStack {
                         Text(isArabic
