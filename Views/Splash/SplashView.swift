@@ -58,7 +58,7 @@ struct SplashView: View {
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, 120)
                     .overlay(shimmerOverlay)
 
                 // Reserved space keeps logo position stable whether tagline is
