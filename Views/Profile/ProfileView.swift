@@ -17,6 +17,7 @@ struct ProfileView: View {
     @State private var showAddresses = false
     @State private var showEditProfile = false
     @State private var showChangePassword = false
+    @State private var showSignOutConfirm = false
 
     // ── Computed helpers ────────────────────────────────────────────────
     private var displayUser: (initials: String, name: String, phone: String) {
@@ -55,6 +56,21 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showChangePassword) {
             ChangePasswordView()
+        }
+        .confirmationDialog(
+            appState.isArabic ? "تسجيل الخروج" : "Sign Out",
+            isPresented: $showSignOutConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(appState.isArabic ? "تسجيل الخروج" : "Sign Out", role: .destructive) {
+                Task {
+                    await appState.signOut()
+                    await MainActor.run { appState.selectedTab = .home }
+                }
+            }
+            Button(appState.isArabic ? "إلغاء" : "Cancel", role: .cancel) {}
+        } message: {
+            Text(appState.isArabic ? "هل أنت متأكد أنك تريد تسجيل الخروج؟" : "Are you sure you want to sign out?")
         }
     }
 
@@ -242,10 +258,7 @@ struct ProfileView: View {
 
                 // ── Sign out ─────────────────────────────────────────────
                 Button {
-                    Task {
-                        await appState.signOut()
-                        await MainActor.run { appState.selectedTab = .home }
-                    }
+                    showSignOutConfirm = true
                 } label: {
                     Text(Loc.string("profile.signout", isArabic: appState.isArabic))
                         .font(ShineFont.body(15, weight: .medium))

@@ -104,7 +104,30 @@
       "Bash(arch -x86_64 /usr/local/bin/npm install multer)",
       "Bash(curl -s -X PUT http://192.168.100.188:3000/api/users/profile -H 'Content-Type: application/json' -d '{\"name\":\"Test\"}')",
       "Bash(kill 12352)",
-      "Bash(echo \"PID: $!\")"
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin@shinearabia.com\",\"password\":\"admin123\"}')",
+      "Bash(arch -x86_64 /usr/local/bin/node -e ':*)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"SELECT id, email, role FROM users WHERE role IN \\('admin','manager'\\) LIMIT 5;\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"manager@shinearabia.com\",\"password\":\"manager123\"}')",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"SELECT password_hash FROM users WHERE email = 'manager@shinearabia.com';\")",
+      "Bash(arch -x86_64 /usr/local/bin/node -e 'require\\('\\\\''dotenv'\\\\''\\).config\\(\\); const b=require\\('\\\\''bcryptjs'\\\\''\\); const h='\\\\''$2a$12$ae3KQcw29qJP86G3ZFOFIOvXojhA0qZyMW/R0fms3N08UZUpgzSkO'\\\\''; ['\\\\''manager123'\\\\'','\\\\''Manager123'\\\\'','\\\\''password'\\\\'','\\\\''123456'\\\\'','\\\\''admin123'\\\\'','\\\\''shinearabia'\\\\'','\\\\''manager'\\\\'','\\\\''admin'\\\\''].forEach\\(p=>{b.compare\\(p,h\\).then\\(ok=>ok&&console.log\\('\\\\''PASSWORD:'\\\\'',p\\)\\)}\\); setTimeout\\(\\(\\)=>process.exit\\(\\),5000\\);')",
+      "Bash(arch -x86_64 /usr/local/bin/node)",
+      "Bash(arch -x86_64 /usr/local/bin/node -e 'process.chdir\\('\\\\''/Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend'\\\\''\\); require\\('\\\\''dotenv'\\\\''\\).config\\(\\); const b=require\\('\\\\''bcryptjs'\\\\''\\); const h='\\\\''$2a$12$ae3KQcw29qJP86G3ZFOFIOvXojhA0qZyMW/R0fms3N08UZUpgzSkO'\\\\''; Promise.all\\(['\\\\''manager123'\\\\'','\\\\''admin123'\\\\'','\\\\''manager'\\\\'','\\\\''admin'\\\\'','\\\\''password'\\\\'','\\\\''123456'\\\\''].map\\(p=>b.compare\\(p,h\\).then\\(ok=>ok?console.log\\('\\\\''PASS:'\\\\'',p\\):null\\)\\)\\).then\\(\\(\\)=>process.exit\\(\\)\\);')",
+      "Bash(curl -s \"http://localhost:3000/api/admin/bookings?page=1&limit=5\" -H \"Authorization: Bearer faketoken\")",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"\\\\d bookings\")",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"SELECT COUNT\\(*\\) FROM bookings WHERE deleted_at IS NULL;\")",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"SELECT b.id, b.service_category, b.scheduled_date, b.address, b.price_amount, b.updated_at, u.name FROM bookings b JOIN users u ON u.id = b.user_id WHERE b.deleted_at IS NULL LIMIT 2;\")",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"SELECT refresh_token FROM refresh_tokens rt JOIN users u ON u.id = rt.user_id WHERE u.role IN \\('admin','manager'\\) AND rt.expires_at > NOW\\(\\) LIMIT 1;\")",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"\\\\dt\")",
+      "Bash(curl -s 'http://localhost:3000/api/admin/bookings?page=1&limit=5' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImViNzJiZDg5LTNmZTItNDc1YS1hMjMzLTU2MDQ3M2NhZTQ4YyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTcyODA0MCwiZXhwIjoxNzc1NzMxNjQwfQ.mephmVSxdofMiG1n_p6SCfROp-PYZ2RnQad3S6XFsiM')",
+      "Bash(arch -x86_64 /usr/local/bin/node /Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/server.js)",
+      "Bash(NODE_PATH=/Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/node_modules arch -x86_64 /usr/local/bin/node -e \"const jwt=require\\('/Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/node_modules/jsonwebtoken'\\); console.log\\(jwt.sign\\({id:'eb72bd89-3fe2-475a-a233-560473cae48c',role:'admin'},'your_super_secret_jwt_key_change_this_in_production',{expiresIn:'1h'}\\)\\)\")",
+      "Bash(curl -s 'http://localhost:3000/api/admin/bookings?page=1&limit=2' -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(arch -x86_64 /usr/local/bin/node -e \"const jwt=require\\('/Users/macbookpro/Desktop/Mobile-Apps/ShineArabia/ShineArabia-Backend/node_modules/jsonwebtoken'\\); console.log\\(jwt.sign\\({id:'eb72bd89-3fe2-475a-a233-560473cae48c',role:'admin'},'your_super_secret_jwt_key_change_this_in_production',{expiresIn:'1h'}\\)\\)\")",
+      "Bash(curl -s 'http://localhost:3000/api/admin/bookings?page=1&limit=1' -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"DELETE FROM bookings;\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://192.168.100.188:3000/api)",
+      "Bash(psql postgresql://macbookpro@localhost:5432/shinearabia -c \"UPDATE users SET points = 0;\")"
     ]
   }
 }

@@ -123,7 +123,7 @@ struct ShineTabItem: View {
                 VStack(spacing: 4) {
                     Image(systemName: tab.rawValue)
                         .font(.system(size: 19, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk3)
+                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk2)
                         .frame(width: 50, height: 36)
                         .background {
                             if isSelected {
@@ -135,8 +135,7 @@ struct ShineTabItem: View {
 
                     Text(isArabic ? tab.titleAR : tab.title)
                         .font(ShineFont.body(10, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk3)
-                        .opacity(isSelected ? 1 : 0.7)
+                        .foregroundStyle(isSelected ? Color.shineCoral : Color.shineInk2)
                 }
 
                 // Badge dot

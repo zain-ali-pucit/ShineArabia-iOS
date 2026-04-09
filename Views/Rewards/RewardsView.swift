@@ -283,7 +283,7 @@ private struct RewardServiceCard: View {
                     Text(isArabic ? tier.rewardAR : tier.reward)
                         .font(ShineFont.body(15, weight: unlocked ? .semibold : .regular))
                         .foregroundColor(unlocked ? .shineInk : .shineInk3)
-                    if isCurrent {
+                    if unlocked {
                         Text(isArabic ? "مفعّل" : "Active")
                             .font(ShineFont.body(9, weight: .bold))
                             .foregroundColor(Color(hex: "1C1917"))
@@ -617,13 +617,23 @@ struct RewardBookingSheet: View {
 
     private func confirmBooking() {
         isSubmitting = true
-        // Simulate network delay then show confirmation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            isSubmitting = false
-            withAnimation(.spring(response: 0.4)) {
-                isConfirmed = true
-                // Deduct points locally
-                appState.userPoints = max(0, appState.userPoints - tier.points)
+        Task {
+            do {
+                let remaining = try await UserAPIService.shared.redeemReward(
+                    points: tier.points,
+                    rewardName: tier.reward,
+                    address: address,
+                    notes: note.isEmpty ? nil : note
+                )
+                await MainActor.run {
+                    isSubmitting = false
+                    withAnimation(.spring(response: 0.4)) {
+                        isConfirmed = true
+                        appState.userPoints = remaining
+                    }
+                }
+            } catch {
+                await MainActor.run { isSubmitting = false }
             }
         }
     }

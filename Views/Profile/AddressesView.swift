@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 
 // MARK: - Addresses List View
 
@@ -253,6 +254,7 @@ struct AddAddressView: View {
     @State private var selectedCoordinate: CLLocationCoordinate2D? = nil
     @State private var mapPosition: MapCameraPosition = .automatic
     @State private var isLoadingLocation = false
+    @State private var isDragging = false
     @State private var showLabelPicker = false
     @State private var selectedLabel: SavedAddress.AddressLabel = .home
     @FocusState private var searchFocused: Bool
@@ -284,6 +286,7 @@ struct AddAddressView: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .ignoresSafeArea(edges: .top)
+        .task { await autoZoomToCurrentLocation() }
         .onChange(of: searchText) { _, new in searchAddress(query: new) }
         .sheet(isPresented: $showLabelPicker) {
             labelPickerSheet
@@ -294,12 +297,49 @@ struct AddAddressView: View {
 
     private var mapSection: some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(position: $mapPosition) {
-                if !selectedAddress.isEmpty {
-                    UserAnnotation()
+            Map(position: $mapPosition)
+                .frame(height: UIScreen.main.bounds.height * 0.42)
+                .onMapCameraChange(frequency: .continuous) { _ in
+                    isDragging = true
                 }
+                .onMapCameraChange(frequency: .onEnd) { context in
+                    isDragging = false
+                    let center = context.region.center
+                    selectedCoordinate = center
+                    reverseGeocodeCenter(center)
+                }
+
+            // Fixed center pin — always at the map's focal point
+            ZStack {
+                // Drop pin: circle head + triangle tail
+                VStack(spacing: 0) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.shineCoral)
+                            .frame(width: 40, height: 40)
+                            .shadow(color: Color.shineCoral.opacity(0.4), radius: 6, x: 0, y: 3)
+                        Image(systemName: "mappin.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.shineCoral)
+                        .offset(y: -3)
+                }
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                // Lift the whole pin so its tail tip sits at map center
+                .offset(y: isDragging ? -42 : -30)
+                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: isDragging)
+
+                // Shadow dot at map center
+                Ellipse()
+                    .fill(Color.black.opacity(0.18))
+                    .frame(width: 16, height: 6)
+                    .scaleEffect(isDragging ? 0.5 : 1.0)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: isDragging)
             }
-            .frame(height: UIScreen.main.bounds.height * 0.42)
+            .frame(maxWidth: .infinity, maxHeight: UIScreen.main.bounds.height * 0.42)
             .allowsHitTesting(false)
 
             // Current location button
@@ -628,6 +668,36 @@ struct AddAddressView: View {
 
     // MARK: - Actions
 
+    /// On first appear, silently zoom the map to the user's current location.
+    private func autoZoomToCurrentLocation() async {
+        guard locationService.isAuthorized else { return }
+        guard let location = await locationService.getCurrentLocation() else { return }
+        let coord = location.coordinate
+        await MainActor.run {
+            selectedCoordinate = coord
+            mapPosition = .region(MKCoordinateRegion(
+                center: coord,
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            ))
+        }
+        reverseGeocodeCenter(coord)
+    }
+
+    /// Reverse-geocode a coordinate and update selectedAddress.
+    private func reverseGeocodeCenter(_ coordinate: CLLocationCoordinate2D) {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ in
+            DispatchQueue.main.async {
+                guard let place = placemarks?.first else {
+                    self.selectedAddress = String(format: "%.4f, %.4f",
+                                                  coordinate.latitude, coordinate.longitude)
+                    return
+                }
+                self.selectedAddress = place.fullAddress(fallback: coordinate)
+            }
+        }
+    }
+
     private func searchAddress(query: String) {
         guard !query.isEmpty else { searchResults = []; return }
         let request = MKLocalSearch.Request()
@@ -660,26 +730,25 @@ struct AddAddressView: View {
 
     private func useCurrentLocation() async {
         await MainActor.run { isLoadingLocation = true }
-        async let addrTask  = locationService.getCurrentAddress()
-        async let locTask   = locationService.getCurrentLocation()
-        let (addr, location) = await (addrTask, locTask)
+        guard let location = await locationService.getCurrentLocation() else {
+            await MainActor.run { isLoadingLocation = false }
+            return
+        }
+        let coord = location.coordinate
         await MainActor.run {
-            isLoadingLocation = false
-            guard !addr.isEmpty else { return }
-            selectedAddress    = addr
-            selectedCoordinate = location?.coordinate
+            isLoadingLocation  = false
+            selectedCoordinate = coord
             searchText         = ""
             searchResults      = []
             searchFocused      = false
-            if let coord = location?.coordinate {
-                withAnimation {
-                    mapPosition = .region(MKCoordinateRegion(
-                        center: coord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    ))
-                }
+            withAnimation {
+                mapPosition = .region(MKCoordinateRegion(
+                    center: coord,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                ))
             }
         }
+        reverseGeocodeCenter(coord)
     }
 }
 

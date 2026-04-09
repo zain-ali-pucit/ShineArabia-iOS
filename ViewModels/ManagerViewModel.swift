@@ -24,6 +24,7 @@ class ManagerViewModel: ObservableObject {
     // MARK: - Private
     private var pollingTask: Task<Void, Never>?
     private var lastKnownCount = -1  // -1 means first load (don't notify on first fetch)
+    private var notificationObservers: [NSObjectProtocol] = []
 
     // MARK: - Filter options (nil = All)
     let filters: [(label: String, value: String?)] = [
@@ -62,6 +63,16 @@ class ManagerViewModel: ObservableObject {
         isLoading = false
     }
 
+    // MARK: - Reschedule
+    func rescheduleBooking(bookingId: String, date: Date) async {
+        do {
+            try await ManagerAPIService.shared.rescheduleBooking(id: bookingId, scheduledDate: date)
+            await fetchBookings()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Update Status
     func updateStatus(bookingId: String, newStatus: Booking.BookingStatus) async {
         do {
@@ -88,10 +99,15 @@ class ManagerViewModel: ObservableObject {
     func stopPolling() {
         pollingTask?.cancel()
         pollingTask = nil
+        notificationObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        notificationObservers.removeAll()
     }
 
     // MARK: - Push notification permission
     func requestNotificationPermission() {
+        // Guard against duplicate observer registration on re-appear
+        guard notificationObservers.isEmpty else { return }
+
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             guard granted else { return }
             Task { @MainActor in
@@ -105,8 +121,8 @@ class ManagerViewModel: ObservableObject {
             }
         }
 
-        // Also listen for FCM token refreshes while this view is active
-        NotificationCenter.default.addObserver(
+        // Listen for FCM token refreshes while this view is active
+        let fcmObserver = NotificationCenter.default.addObserver(
             forName: .fcmTokenReceived,
             object: nil,
             queue: .main
@@ -116,6 +132,19 @@ class ManagerViewModel: ObservableObject {
                 try? await ManagerAPIService.shared.registerDeviceToken(token)
             }
         }
+
+        // Refresh booking list when a push notification arrives (new booking, status change, etc.)
+        let pushObserver = NotificationCenter.default.addObserver(
+            forName: .pushNotificationReceived,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { [weak self] in
+                await self?.fetchBookings()
+            }
+        }
+
+        notificationObservers = [fcmObserver, pushObserver]
     }
 
     // MARK: - Bundle CRUD

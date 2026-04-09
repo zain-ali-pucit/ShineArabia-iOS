@@ -327,7 +327,7 @@ private struct DateTimePickerSection: View {
 
 // MARK: - Address Input Section
 
-private struct AddressInputSection: View {
+struct AddressInputSection: View {
     let isArabic: Bool
     @Binding var address: String
     @Binding var latitude: Double?

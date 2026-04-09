@@ -14,7 +14,7 @@ class LocationService: NSObject, ObservableObject {
     @Published var isResolving: Bool = false
 
     private let manager = CLLocationManager()
-    private var locationCompletion: ((CLLocation?) -> Void)?
+    private var locationCompletions: [(CLLocation?) -> Void] = []
 
     override init() {
         super.init()
@@ -49,8 +49,8 @@ class LocationService: NSObject, ObservableObject {
 
         return await withCheckedContinuation { continuation in
             DispatchQueue.main.async {
-                self.isResolving = true
-                self.locationCompletion = { location in
+                let isFirstRequest = self.locationCompletions.isEmpty
+                self.locationCompletions.append { location in
                     guard let location else {
                         continuation.resume(returning: "")
                         return
@@ -64,7 +64,10 @@ class LocationService: NSObject, ObservableObject {
                         continuation.resume(returning: address)
                     }
                 }
-                self.manager.requestLocation()
+                if isFirstRequest {
+                    self.isResolving = true
+                    self.manager.requestLocation()
+                }
             }
         }
     }
@@ -77,10 +80,13 @@ class LocationService: NSObject, ObservableObject {
 
         return await withCheckedContinuation { continuation in
             DispatchQueue.main.async {
-                self.locationCompletion = { location in
+                let isFirstRequest = self.locationCompletions.isEmpty
+                self.locationCompletions.append { location in
                     continuation.resume(returning: location)
                 }
-                self.manager.requestLocation()
+                if isFirstRequest {
+                    self.manager.requestLocation()
+                }
             }
         }
     }
@@ -96,16 +102,48 @@ class LocationService: NSObject, ObservableObject {
                                                          location.coordinate.longitude))
                     return
                 }
-                var parts: [String] = []
-                if let name = place.name,
-                   !name.contains(","),
-                   !(name.first?.isNumber ?? false) { parts.append(name) }
-                if let sub = place.subLocality  { parts.append(sub) }
-                if let city = place.locality    { parts.append(city) }
-                if parts.isEmpty, let city = place.locality { parts.append(city) }
-                continuation.resume(returning: parts.joined(separator: ", "))
+                continuation.resume(returning: place.fullAddress(fallback: location.coordinate))
             }
         }
+    }
+}
+
+// MARK: - CLPlacemark full address helper
+
+extension CLPlacemark {
+    /// Builds a complete, human-readable address string from a placemark.
+    /// Falls back to coordinate string if nothing useful is found.
+    func fullAddress(fallback coordinate: CLLocationCoordinate2D) -> String {
+        var parts: [String] = []
+
+        // Street: "12 King Fahd Road"
+        if let number = subThoroughfare, let street = thoroughfare {
+            parts.append("\(number) \(street)")
+        } else if let street = thoroughfare {
+            parts.append(street)
+        } else if let name = name,
+                  !name.contains(","),
+                  !(name.first?.isNumber ?? false) {
+            // Named place (shop, landmark) when no street info
+            parts.append(name)
+        }
+
+        // District / neighbourhood
+        if let district = subLocality { parts.append(district) }
+
+        // City
+        if let city = locality { parts.append(city) }
+
+        // State / province (skip if same as city to avoid duplication)
+        if let state = administrativeArea, state != locality { parts.append(state) }
+
+        // Country
+        if let country = country { parts.append(country) }
+
+        if parts.isEmpty {
+            return String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+        }
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -116,18 +154,18 @@ extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager,
                          didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        let completion = locationCompletion
-        locationCompletion = nil
-        completion?(location)
+        let completions = locationCompletions
+        locationCompletions = []
+        completions.forEach { $0(location) }
     }
 
     func locationManager(_ manager: CLLocationManager,
                          didFailWithError error: Error) {
         DispatchQueue.main.async {
             self.isResolving = false
-            let completion = self.locationCompletion
-            self.locationCompletion = nil
-            completion?(nil)
+            let completions = self.locationCompletions
+            self.locationCompletions = []
+            completions.forEach { $0(nil) }
         }
     }
 

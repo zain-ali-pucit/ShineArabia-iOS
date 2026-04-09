@@ -92,6 +92,24 @@ class UserAPIService {
         let _: APIResponse<EmptyData> = try await client.request("/users/password", method: "PUT", body: body)
     }
 
+    struct RedeemResponse: Decodable {
+        let remainingPoints: Int
+    }
+
+    func redeemReward(points: Int, rewardName: String, address: String, notes: String?) async throws -> Int {
+        let body: [String: Any] = [
+            "points": points,
+            "rewardName": rewardName,
+            "address": address,
+            "notes": notes ?? ""
+        ]
+        let res: APIResponse<RedeemResponse> = try await client.request("/users/rewards/redeem", method: "POST", body: body)
+        guard let data = res.data else {
+            throw APIError.serverError(500, "Redeem failed")
+        }
+        return data.remainingPoints
+    }
+
     // POST /api/users/device-token — registers FCM token for push notifications
     func registerDeviceToken(_ token: String, platform: String = "ios") async throws {
         let body: [String: Any] = ["token": token, "platform": platform]

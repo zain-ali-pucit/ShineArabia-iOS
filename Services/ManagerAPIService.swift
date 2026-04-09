@@ -15,6 +15,8 @@ struct AdminBooking: Codable, Identifiable {
     let discountAmount: Double
     let createdAt: Date
     let updatedAt: Date?
+    let latitude: Double?
+    let longitude: Double?
     // Customer info (from JOIN with users table)
     let userId: String?
     let customerName: String?
@@ -58,6 +60,16 @@ class ManagerAPIService {
         if let s = status { endpoint += "&status=\(s)" }
         let res: AdminBookingsResponse = try await client.request(endpoint)
         return res.data?.bookings ?? []
+    }
+
+    // PUT /api/admin/bookings/:id/reschedule
+    func rescheduleBooking(id: String, scheduledDate: Date) async throws {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let body: [String: Any] = ["scheduledDate": formatter.string(from: scheduledDate)]
+        let _: APIResponse<EmptyData> = try await client.request(
+            "/admin/bookings/\(id)/reschedule", method: "PUT", body: body
+        )
     }
 
     // PUT /api/admin/bookings/:id/status

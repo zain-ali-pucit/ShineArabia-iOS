@@ -45,13 +45,18 @@ struct ManagerView: View {
 private struct ManagerHeaderView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var vm: ManagerViewModel
+    @State private var showSignOutConfirmation = false
+    @State private var showNotifications = false
+
+    private var hasUnread: Bool {
+        appState.unreadCount > 0 || vm.hasNewBooking
+    }
 
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Shine Arabia")
+                (Text("Shine").foregroundColor(.shineInk) + Text("Arabia").foregroundColor(Color(hex: "8D1B3D")))
                     .font(ShineFont.displayBold(22))
-                    .foregroundColor(.shineInk)
                 Text("Manager Panel")
                     .font(ShineFont.body(13, weight: .medium))
                     .foregroundColor(.shineInk3)
@@ -59,9 +64,11 @@ private struct ManagerHeaderView: View {
 
             Spacer()
 
-            // Notification bell — badge appears when a new booking arrives
+            // Notification bell — badge appears when unread notifications exist
             Button {
                 vm.hasNewBooking = false
+                appState.markAllNotificationsRead()
+                showNotifications = true
             } label: {
                 ZStack(alignment: .topTrailing) {
                     ZStack {
@@ -73,7 +80,7 @@ private struct ManagerHeaderView: View {
                             .font(.system(size: 17))
                             .foregroundColor(.shineInk)
                     }
-                    if vm.hasNewBooking {
+                    if hasUnread {
                         Circle()
                             .fill(Color.shineCoral)
                             .frame(width: 8, height: 8)
@@ -83,10 +90,13 @@ private struct ManagerHeaderView: View {
                 }
             }
             .padding(.trailing, 8)
+            .sheet(isPresented: $showNotifications) {
+                NotificationListSheet(notifications: appState.notifications)
+            }
 
             // Sign-out
             Button {
-                Task { await appState.signOut() }
+                showSignOutConfirmation = true
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -100,11 +110,92 @@ private struct ManagerHeaderView: View {
                 .background(Color.shineCoralLight)
                 .clipShape(Capsule())
             }
+            .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation, titleVisibility: .visible) {
+                Button("Sign Out", role: .destructive) {
+                    Task {
+                        await appState.signOut()
+                        await MainActor.run { appState.selectedTab = .home }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to sign out?")
+            }
         }
         .padding(.horizontal, ShineSpacing.md)
         .padding(.top, ShineSpacing.md)
         .padding(.bottom, ShineSpacing.sm)
         .background(Color.shineBG)
+    }
+}
+
+// MARK: - Notification List Sheet
+private struct NotificationListSheet: View {
+    let notifications: [AppNotification]
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        ZStack {
+            Color.shineBG.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Notifications")
+                        .font(ShineFont.displayBold(20))
+                        .foregroundColor(.shineInk)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.shineSurface2)
+                                .frame(width: 34, height: 34)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.shineInk2)
+                        }
+                    }
+                }
+                .padding(ShineSpacing.lg)
+
+                Divider()
+
+                if notifications.isEmpty {
+                    Spacer()
+                    EmptyStateView(
+                        icon: "🔔",
+                        title: "No Notifications",
+                        subtitle: "You'll see new booking alerts here."
+                    )
+                    Spacer()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(notifications) { note in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(note.title)
+                                            .font(ShineFont.body(14, weight: .semibold))
+                                            .foregroundColor(.shineInk)
+                                        Spacer()
+                                        Text(note.date, style: .relative)
+                                            .font(ShineFont.body(11))
+                                            .foregroundColor(.shineInk3)
+                                    }
+                                    Text(note.body)
+                                        .font(ShineFont.body(13))
+                                        .foregroundColor(.shineInk2)
+                                }
+                                .padding(ShineSpacing.md)
+                                .background(note.isRead ? Color.clear : Color.shineTealLight.opacity(0.4))
+                                Divider().padding(.horizontal, ShineSpacing.md)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 
@@ -148,6 +239,24 @@ private struct BookingListView: View {
             if vm.isLoading && vm.bookings.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = vm.errorMessage, vm.bookings.isEmpty {
+                VStack(spacing: ShineSpacing.md) {
+                    EmptyStateView(
+                        icon: "⚠️",
+                        title: "Failed to Load",
+                        subtitle: error
+                    )
+                    Button("Retry") {
+                        Task { await vm.fetchBookings() }
+                    }
+                    .font(ShineFont.body(14, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(Color.shineTeal)
+                    .clipShape(Capsule())
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if vm.filteredBookings.isEmpty {
                 EmptyStateView(
                     icon: "📋",
@@ -160,12 +269,6 @@ private struct BookingListView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: ShineSpacing.sm) {
-                        if let error = vm.errorMessage {
-                            Text(error)
-                                .font(ShineFont.body(13))
-                                .foregroundColor(.shineCoral)
-                                .padding(ShineSpacing.md)
-                        }
                         ForEach(vm.filteredBookings) { booking in
                             ManagerBookingCard(booking: booking, vm: vm)
                         }
@@ -186,6 +289,9 @@ private struct BookingListView: View {
 private struct ManagerBookingCard: View {
     let booking: AdminBooking
     @ObservedObject var vm: ManagerViewModel
+    @State private var pendingStatus: Booking.BookingStatus? = nil
+    @State private var showReschedule = false
+    @State private var rescheduleDate = Date().addingTimeInterval(86400)
 
     private var categoryEmoji: String {
         switch booking.serviceCategory {
@@ -236,12 +342,45 @@ private struct ManagerBookingCard: View {
                 IconDetail(icon: "calendar", text: booking.scheduledDate.formatted(.dateTime.day().month(.abbreviated).year()))
                 IconDetail(icon: "mappin.circle", text: booking.address)
                 Spacer()
-                Text("SAR \(booking.priceAmount, specifier: "%.0f")")
+                Text("QAR \(booking.priceAmount, specifier: "%.0f")")
                     .font(ShineFont.body(14, weight: .semibold))
                     .foregroundColor(.shineTeal)
             }
             .padding(.horizontal, ShineSpacing.md)
-            .padding(.vertical, 10)
+            .padding(.top, 10)
+
+            // ── Location row ────────────────────────────────────────
+            if let lat = booking.latitude, let lon = booking.longitude {
+                HStack(spacing: 8) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.shineTeal)
+                    Text(String(format: "%.5f, %.5f", lat, lon))
+                        .font(ShineFont.body(12))
+                        .foregroundColor(.shineInk2)
+                    Spacer()
+                    Button {
+                        let url = URL(string: "maps://?ll=\(lat),\(lon)&q=\(booking.address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")")!
+                        UIApplication.shared.open(url)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 11))
+                            Text("Open Map")
+                                .font(ShineFont.body(12, weight: .semibold))
+                        }
+                        .foregroundColor(.shineTeal)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.shineTealLight)
+                        .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, ShineSpacing.md)
+                .padding(.bottom, 10)
+            } else {
+                Spacer().frame(height: 10)
+            }
 
             // Customer contact (email / phone + WhatsApp)
             if booking.customerEmail != nil || booking.customerPhone != nil {
@@ -296,7 +435,7 @@ private struct ManagerBookingCard: View {
             }
 
             // ── Status action buttons ──────────────────────────────
-            if !booking.allowedNextStatuses.isEmpty {
+            if !booking.allowedNextStatuses.isEmpty || booking.bookingStatus == .pending || booking.bookingStatus == .confirmed {
                 Divider()
                     .background(Color.shineBorder)
                     .padding(.horizontal, ShineSpacing.md)
@@ -308,12 +447,30 @@ private struct ManagerBookingCard: View {
 
                     ForEach(booking.allowedNextStatuses, id: \.self) { nextStatus in
                         StatusActionButton(status: nextStatus) {
-                            Task {
-                                await vm.updateStatus(
-                                    bookingId: booking.id,
-                                    newStatus: nextStatus
-                                )
+                            if nextStatus == .confirmed || nextStatus == .cancelled {
+                                pendingStatus = nextStatus
+                            } else {
+                                Task { await vm.updateStatus(bookingId: booking.id, newStatus: nextStatus) }
                             }
+                        }
+                    }
+
+                    if booking.bookingStatus == .pending || booking.bookingStatus == .confirmed {
+                        Button {
+                            rescheduleDate = max(booking.scheduledDate.addingTimeInterval(86400), Date().addingTimeInterval(86400))
+                            showReschedule = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar.badge.clock")
+                                    .font(.system(size: 11))
+                                Text("Reschedule")
+                                    .font(ShineFont.body(12, weight: .semibold))
+                            }
+                            .foregroundColor(.shineAmber)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.shineAmber.opacity(0.1))
+                            .clipShape(Capsule())
                         }
                     }
                 }
@@ -324,6 +481,150 @@ private struct ManagerBookingCard: View {
         .background(Color.shineSurface)
         .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
         .shineShadowSM()
+        .sheet(isPresented: $showReschedule) {
+            ManagerRescheduleSheet(
+                booking: booking,
+                date: $rescheduleDate,
+                onConfirm: {
+                    showReschedule = false
+                    Task { await vm.rescheduleBooking(bookingId: booking.id, date: rescheduleDate) }
+                },
+                onCancel: { showReschedule = false }
+            )
+        }
+        .confirmationDialog(
+            pendingStatus == .cancelled ? "Cancel Booking" : "Confirm Booking",
+            isPresented: Binding(
+                get: { pendingStatus != nil },
+                set: { if !$0 { pendingStatus = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let status = pendingStatus {
+                Button(
+                    status == .cancelled ? "Yes, Cancel Booking" : "Yes, Confirm Booking",
+                    role: status == .cancelled ? .destructive : .none
+                ) {
+                    Task { await vm.updateStatus(bookingId: booking.id, newStatus: status) }
+                }
+                Button("No, Keep It", role: .cancel) {}
+            }
+        } message: {
+            if pendingStatus == .cancelled {
+                Text("Are you sure you want to cancel \(booking.customerName ?? "this")'s booking? This cannot be undone.")
+            } else {
+                Text("Confirm booking for \(booking.customerName ?? "this customer")?")
+            }
+        }
+    }
+}
+
+// MARK: - Reschedule Sheet
+
+private struct ManagerRescheduleSheet: View {
+    let booking: AdminBooking
+    @Binding var date: Date
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.shineBG.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Reschedule Booking")
+                            .font(ShineFont.displayBold(20))
+                            .foregroundColor(.shineInk)
+                        Text(booking.customerName ?? booking.packageNameEn)
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk3)
+                    }
+                    Spacer()
+                    Button(action: onCancel) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.shineSurface2)
+                                .frame(width: 34, height: 34)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.shineInk2)
+                        }
+                    }
+                }
+                .padding(ShineSpacing.lg)
+
+                Divider()
+
+                // Current date
+                HStack {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 13))
+                        .foregroundColor(.shineInk3)
+                    Text("Current: \(booking.scheduledDate.formatted(.dateTime.day().month(.wide).year().hour().minute()))")
+                        .font(ShineFont.body(13))
+                        .foregroundColor(.shineInk3)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, ShineSpacing.lg)
+                .padding(.vertical, 14)
+                .background(Color.shineSurface)
+
+                Divider()
+
+                // Date picker
+                DatePicker(
+                    "New Date & Time",
+                    selection: $date,
+                    in: Date().addingTimeInterval(3600)...,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .datePickerStyle(.graphical)
+                .tint(Color.shineAmber)
+                .padding(.horizontal, ShineSpacing.md)
+                .padding(.top, ShineSpacing.sm)
+
+                Spacer()
+
+                // Action buttons
+                VStack(spacing: ShineSpacing.sm) {
+                    Divider()
+                    HStack(spacing: ShineSpacing.sm) {
+                        Button(action: onCancel) {
+                            Text("Cancel")
+                                .font(ShineFont.body(15, weight: .semibold))
+                                .foregroundColor(.shineInk2)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.shineSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: ShineRadius.md)
+                                        .strokeBorder(Color.shineBorder, lineWidth: 1)
+                                )
+                        }
+                        Button(action: onConfirm) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "calendar.badge.checkmark")
+                                    .font(.system(size: 14))
+                                Text("Confirm Reschedule")
+                                    .font(ShineFont.body(15, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.shineAmber)
+                            .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                        }
+                    }
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, ShineSpacing.lg)
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 
