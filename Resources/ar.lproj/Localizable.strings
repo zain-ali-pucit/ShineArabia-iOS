@@ -1,8 +1,8 @@
 // MARK: - Home
 "home.subtitle"            = "خدمات منزلية";
 "home.greeting"            = "صباح الخير، زين 👋";
-"home.hero.body"           = "ما الخدمة التي\nتحتاجها ";
-"home.hero.highlight"      = "اليوم؟";
+"home.hero.body"           = "خدمة عند باب\nمنزلك خلال ";
+"home.hero.highlight"      = "ساعتين";
 "home.services"            = "الخدمات";
 "home.see_all"             = "عرض الكل";
 "home.popular"             = "الأكثر طلباً";

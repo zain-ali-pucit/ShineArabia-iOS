@@ -111,16 +111,33 @@ struct ServicePackage: Identifiable {
 
     // Init from API response
     init(from api: APIPackage) {
+        let mappedCategory = ServiceCategory(rawValue: api.categorySlug) ?? .laundry
+        let isWeeklyBundle = mappedCategory == .bundle && api.nameEn.lowercased().contains("weekly")
+
         self.id          = UUID()
         self.apiId       = api.id
         self.emoji       = api.emoji
         self.name        = api.nameEn
         self.nameAR      = api.nameAr
-        self.detail      = api.detailEn
-        self.detailAR    = api.detailAr
+        self.detail      = isWeeklyBundle ? "Laundry + Car" : api.detailEn
+        self.detailAR    = isWeeklyBundle ? "غسيل + سيارة" : api.detailAr
         self.price       = api.priceDisplay
         self.priceAmount = api.priceAmount
-        self.category    = ServiceCategory(rawValue: api.categorySlug) ?? .laundry
+        self.category    = mappedCategory
+    }
+
+    // Init from bundle component (for custom bundle building)
+    init(from component: APIBundleComponent) {
+        self.id          = UUID()
+        self.apiId       = component.id
+        self.emoji       = component.emoji
+        self.name        = component.nameEn
+        self.nameAR      = component.nameAr
+        self.detail      = component.categoryName ?? "Bundle component"
+        self.detailAR    = component.categoryName ?? "عنصر باقة"
+        self.price       = component.priceDisplay
+        self.priceAmount = component.priceAmount
+        self.category    = ServiceCategory(rawValue: component.categorySlug) ?? .laundry
     }
 }
 
@@ -280,7 +297,10 @@ struct APIBundle: Codable, Identifiable {
 
     // Convenience: component names joined for subtitle
     func componentSubtitle(isArabic: Bool) -> String {
-        components
+        if nameEn.lowercased().contains("weekly") {
+            return isArabic ? "غسيل + سيارة" : "Laundry + Car"
+        }
+        return components
             .map { isArabic ? $0.nameAr : $0.nameEn }
             .joined(separator: " + ")
     }
@@ -498,7 +518,7 @@ struct SampleData {
             ServicePackage(emoji:"🛡️", name:"Annual Contract",   nameAR:"عقد سنوي",    detail:"Quarterly visits",              detailAR:"زيارات ربع سنوية",              price:"QAR 799/yr",category:.pest),
         ],
         .bundle: [
-            ServicePackage(emoji:"📅", name:"Weekly Bundle",    nameAR:"باقة أسبوعية",  detail:"Laundry + Clean + Car",         detailAR:"غسيل + تنظيف + سيارة",         price:"QAR 399",   category:.bundle),
+            ServicePackage(emoji:"📅", name:"Weekly Bundle",    nameAR:"باقة أسبوعية",  detail:"Laundry + Car",                 detailAR:"غسيل + سيارة",                 price:"QAR 399",   category:.bundle),
             ServicePackage(emoji:"🗓️", name:"Bi-weekly",        nameAR:"كل أسبوعين",   detail:"Every 2 weeks",                 detailAR:"مرة كل أسبوعين",               price:"QAR 449",   category:.bundle),
             ServicePackage(emoji:"📆", name:"Monthly",          nameAR:"شهرية",         detail:"Once a month",                  detailAR:"مرة في الشهر",                  price:"QAR 799",   category:.bundle),
             ServicePackage(emoji:"💎", name:"Premium Annual",   nameAR:"بريميوم سنوي",  detail:"Best value · all services",     detailAR:"أفضل قيمة",                    price:"QAR 5,999/yr",category:.bundle),

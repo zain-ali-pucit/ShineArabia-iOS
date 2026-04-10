@@ -37,6 +37,10 @@
 	<string>ShineArabia uses your location to find nearby service providers and deliver to your address.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Used to attach photos when booking a service.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>comgooglemaps</string>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>CormorantGaramond-Regular.ttf</string>

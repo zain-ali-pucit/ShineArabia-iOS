@@ -19,6 +19,15 @@ class HomeViewModel: ObservableObject {
     /// The first active bundle — drives the home promo banner
     var featuredBundle: APIBundle? { bundles.first }
 
+    /// Union of all bundle components users can combine as a custom bundle.
+    var customBundleComponents: [ServicePackage] {
+        var seen = Set<String>()
+        return bundles
+            .flatMap(\.components)
+            .filter { seen.insert($0.id).inserted }
+            .map { ServicePackage(from: $0) }
+    }
+
     // Loading flags (only true when no cache exists yet)
     @Published var isLoadingCategories: Bool        = false
     @Published var isLoadingPackages: Bool          = false
@@ -26,6 +35,7 @@ class HomeViewModel: ObservableObject {
 
     private let serviceAPI = ServiceAPIService.shared
     private let cache      = LocalCacheService.shared
+    private let disabledCategorySlugs: Set<String> = [ServiceCategory.pest.rawValue, ServiceCategory.cleaning.rawValue]
 
     // MARK: - Bundles  (cache-first → background refresh)
 
@@ -48,7 +58,7 @@ class HomeViewModel: ObservableObject {
         // 1. Show cached data instantly — no spinner if cache exists
         if let cached = cache.loadCategories() {
             await MainActor.run {
-                categories          = cached.filter { $0.slug != "bundle" }.sorted { $0.sortOrder < $1.sortOrder }
+                categories          = sortCategoriesForDisplay(cached)
                 isLoadingCategories = false
             }
         } else {
@@ -61,7 +71,7 @@ class HomeViewModel: ObservableObject {
             let changed = cache.updateCategoriesIfChanged(fresh)
             if changed || categories.isEmpty {
                 await MainActor.run {
-                    categories = fresh.filter { $0.slug != "bundle" }.sorted { $0.sortOrder < $1.sortOrder }
+                    categories = sortCategoriesForDisplay(fresh)
                 }
             }
         } catch { /* server unreachable — cached data is already shown */ }
@@ -99,6 +109,7 @@ class HomeViewModel: ObservableObject {
     // MARK: - Open service sheet — from backend category card
 
     func openService(_ apiCategory: APICategory) {
+        guard !disabledCategorySlugs.contains(apiCategory.slug) else { return }
         selectedService  = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
         selectedPackages = []
         showServiceSheet = true
@@ -108,10 +119,29 @@ class HomeViewModel: ObservableObject {
     // MARK: - Open service sheet — from popular items or bundle promo
 
     func openService(_ category: ServiceCategory) {
+        guard !disabledCategorySlugs.contains(category.rawValue) else { return }
         selectedService  = category
         selectedPackages = []
         showServiceSheet = true
         loadPackages(slug: category.rawValue)
+    }
+
+    private func sortCategoriesForDisplay(_ source: [APICategory]) -> [APICategory] {
+        let preferredOrder: [String: Int] = [
+            ServiceCategory.laundry.rawValue: 1,
+            ServiceCategory.carWash.rawValue: 2,
+            ServiceCategory.cleaning.rawValue: 3,
+            ServiceCategory.pest.rawValue: 4
+        ]
+
+        return source
+            .filter { $0.slug != ServiceCategory.bundle.rawValue }
+            .sorted { lhs, rhs in
+                let lhsRank = preferredOrder[lhs.slug] ?? 100 + lhs.sortOrder
+                let rhsRank = preferredOrder[rhs.slug] ?? 100 + rhs.sortOrder
+                if lhsRank == rhsRank { return lhs.sortOrder < rhs.sortOrder }
+                return lhsRank < rhsRank
+            }
     }
 
     // MARK: - Packages  (cache-first → background refresh)

@@ -1,8 +1,8 @@
 // MARK: - Home
 "home.subtitle"            = "Home Services";
 "home.greeting"            = "Good morning, Zain 👋";
-"home.hero.body"           = "What service do\nyou need ";
-"home.hero.highlight"      = "today?";
+"home.hero.body"           = "Service at your\ndoorstep in ";
+"home.hero.highlight"      = "2 hours";
 "home.services"            = "Services";
 "home.see_all"             = "See all";
 "home.popular"             = "Popular";

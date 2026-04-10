@@ -126,14 +126,20 @@ struct SplashView: View {
 
     /// Gold shimmer that sweeps left-to-right across the logo as a gradient overlay.
     private var shimmerOverlay: some View {
-        LinearGradient(
+        let center = min(max(shimmerProgress, 0), 1)
+        let innerLeft = max(0, center - 0.07)
+        let outerLeft = max(0, center - 0.20)
+        let innerRight = min(1, center + 0.07)
+        let outerRight = min(1, center + 0.20)
+
+        return LinearGradient(
             stops: [
                 .init(color: .clear,                             location: 0.0),
-                .init(color: .clear,                             location: max(0, shimmerProgress - 0.20)),
-                .init(color: Color.white.opacity(0.20),          location: max(0, shimmerProgress - 0.07)),
-                .init(color: Color(hex: "F4C97A").opacity(0.50), location: shimmerProgress),
-                .init(color: Color.white.opacity(0.20),          location: min(1, shimmerProgress + 0.07)),
-                .init(color: .clear,                             location: min(1, shimmerProgress + 0.20)),
+                .init(color: .clear,                             location: outerLeft),
+                .init(color: Color.white.opacity(0.20),          location: innerLeft),
+                .init(color: Color(hex: "F4C97A").opacity(0.50), location: center),
+                .init(color: Color.white.opacity(0.20),          location: innerRight),
+                .init(color: .clear,                             location: outerRight),
                 .init(color: .clear,                             location: 1.0),
             ],
             startPoint: .leading,

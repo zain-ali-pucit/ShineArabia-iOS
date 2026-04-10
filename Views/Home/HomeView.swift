@@ -85,6 +85,7 @@ struct HomeView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
+                    customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
                     isLoading: vm.isLoadingPackages
@@ -262,8 +263,24 @@ struct PromoBannerView: View {
 
     private var discountText: String { "30%" }
 
+    private var bundleBasePrice: Double? {
+        guard let b = bundle else { return nil }
+        if b.originalTotal > 0 { return b.originalTotal }
+        if b.priceAmount > 0 { return b.priceAmount }
+        return nil
+    }
+
+    private var originalPriceText: String? {
+        guard let base = bundleBasePrice else { return nil }
+        return "QAR \(Int(base.rounded()))"
+    }
+
     private var priceText: String {
         guard let b = bundle else { return "" }
+        if let base = bundleBasePrice {
+            let discounted = base * 0.70
+            return "QAR \(Int(discounted.rounded()))"
+        }
         return b.priceDisplay
     }
 
@@ -323,10 +340,20 @@ struct PromoBannerView: View {
 
                         // Price + CTA
                         HStack(spacing: 10) {
-                            if !priceText.isEmpty {
-                                Text(priceText)
-                                    .font(ShineFont.displayBold(16))
-                                    .foregroundColor(Color(hex: "F4A799"))
+                            if !priceText.isEmpty || originalPriceText != nil {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    if !priceText.isEmpty {
+                                        Text(priceText)
+                                            .font(ShineFont.displayBold(16))
+                                            .foregroundColor(Color(hex: "F4A799"))
+                                    }
+                                    if let original = originalPriceText {
+                                        Text(original)
+                                            .font(ShineFont.body(12))
+                                            .foregroundColor(.white.opacity(0.45))
+                                            .strikethrough(true, color: .white.opacity(0.45))
+                                    }
+                                }
                             }
                             HStack(spacing: 6) {
                                 Text(isArabic ? "احجز الآن" : "Book Bundle")
@@ -406,6 +433,7 @@ struct SectionHeader: View {
 
 // MARK: - Service Cards Row (horizontal scroll)
 struct ServiceCardsRow: View {
+    @EnvironmentObject var appState: AppState
     let categories: [APICategory]
     let isLoading: Bool
     let onTap: (APICategory) -> Void
@@ -422,7 +450,13 @@ struct ServiceCardsRow: View {
                     }
                 } else {
                     ForEach(Array(categories.enumerated()), id: \.element.id) { index, cat in
-                        ServiceCard(category: cat, animationDelay: Double(index) * 0.07) {
+                        let isDisabled = cat.slug == ServiceCategory.pest.rawValue || cat.slug == ServiceCategory.cleaning.rawValue
+                        ServiceCard(
+                            category: cat,
+                            isArabic: appState.isArabic,
+                            isDisabled: isDisabled,
+                            animationDelay: Double(index) * 0.07
+                        ) {
                             onTap(cat)
                         }
                     }
@@ -436,8 +470,9 @@ struct ServiceCardsRow: View {
 
 // MARK: - Service Card (148pt wide, matches HTML)
 struct ServiceCard: View {
-    @EnvironmentObject var appState: AppState
     let category: APICategory
+    let isArabic: Bool
+    let isDisabled: Bool
     let animationDelay: Double
     let onTap: () -> Void
 
@@ -464,7 +499,7 @@ struct ServiceCard: View {
                     }
                     .padding(.bottom, 14)
 
-                    Text(appState.isArabic ? category.titleAR : category.title)
+                    Text(isArabic ? category.titleAR : category.title)
                         .font(ShineFont.body(14, weight: .semibold))
                         .foregroundColor(.shineInk)
                         .lineLimit(2)
@@ -474,6 +509,17 @@ struct ServiceCard: View {
                         .foregroundColor(.shineInk3)
                         .padding(.top, 4)
 
+                    if isDisabled {
+                        Text(isArabic ? "قريباً" : "Coming Soon")
+                            .font(ShineFont.body(10, weight: .semibold))
+                            .foregroundColor(.shineCoral)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.shineCoral.opacity(0.12))
+                            .clipShape(Capsule())
+                            .padding(.top, 8)
+                    }
+
                     Spacer()
 
                     // Arrow
@@ -481,7 +527,7 @@ struct ServiceCard: View {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(category.softColor)
                             .frame(width: 28, height: 28)
-                        Image(systemName: appState.isArabic ? "arrow.left" : "arrow.right")
+                        Image(systemName: isArabic ? "arrow.left" : "arrow.right")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(category.color)
                     }
@@ -494,8 +540,10 @@ struct ServiceCard: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
         .scaleEffect(isPressed ? 0.96 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .opacity(isDisabled ? 0.6 : 1)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 16)
         .onAppear {

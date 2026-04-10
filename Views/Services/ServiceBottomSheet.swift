@@ -3,12 +3,14 @@ import SwiftUI
 struct ServiceBottomSheet: View {
     let category: ServiceCategory
     let packages: [ServicePackage]
+    let customBundleComponents: [ServicePackage]
     @Binding var selectedPackages: [ServicePackage]
     let isArabic: Bool
     let isLoading: Bool
     let onBook: () -> Void
 
     @EnvironmentObject var bookingVM: BookingViewModel
+    @EnvironmentObject private var appState: AppState
     @ObservedObject private var locationService = LocationService.shared
     @Environment(\.dismiss) var dismiss
 
@@ -16,6 +18,28 @@ struct ServiceBottomSheet: View {
     @State private var promoMsg: String?
     @State private var promoIsValid: Bool = false
     @State private var isValidating: Bool = false
+    @State private var showCustomBundleBuilder: Bool = false
+
+    private var displayedPackages: [ServicePackage] {
+        guard category == .bundle else { return packages }
+
+        let preferred = packages.first {
+            let n = $0.name.lowercased()
+            let d = $0.detail.lowercased()
+            return n.contains("weekly") || d.contains("laundry + car")
+        }
+        if let preferred { return [preferred] }
+        return packages.isEmpty ? [] : [packages[0]]
+    }
+
+    private var customBundleOptions: [ServicePackage] {
+        let backend = customBundleComponents.filter { $0.category == .laundry || $0.category == .carWash }
+        if !backend.isEmpty { return backend }
+
+        let fallbackLaundry = SampleData.packages[.laundry] ?? []
+        let fallbackCarWash = SampleData.packages[.carWash] ?? []
+        return fallbackLaundry + fallbackCarWash
+    }
 
     var body: some View {
         ZStack {
@@ -105,10 +129,10 @@ struct ServiceBottomSheet: View {
                         Text("🎁")
                             .font(.system(size: 20))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(isArabic ? "خصم ٣٠٪ على الباقات" : "30% off all bundles")
+                            Text(isArabic ? "خصم ٣٠٪ عند اكتمال الباقة" : "30% off on complete bundles")
                                 .font(ShineFont.body(13, weight: .semibold))
                                 .foregroundColor(.white)
-                            Text(isArabic ? "وفّر أكثر مع باقاتنا المميزة" : "Save more with our curated bundles")
+                            Text(isArabic ? "ينطبق على الباقة الجاهزة أو باقتك الخاصة" : "Applies to app bundle or your own complete bundle")
                                 .font(ShineFont.body(11))
                                 .foregroundColor(.white.opacity(0.85))
                         }
@@ -147,16 +171,28 @@ struct ServiceBottomSheet: View {
                         VStack(spacing: 0) {
                             // Package list
                             VStack(spacing: 10) {
-                                ForEach(packages) { pkg in
+                                ForEach(displayedPackages) { pkg in
                                     PackageRow(
                                         package: pkg,
                                         isSelected: selectedPackages.contains(where: { $0.id == pkg.id }),
-                                        isArabic: isArabic
+                                        isArabic: isArabic,
+                                        overrideName: (category == .bundle && pkg.category == .bundle) ? "Bundle" : nil,
+                                        overrideNameAR: (category == .bundle && pkg.category == .bundle) ? "الباقة" : nil,
+                                        overrideDetail: (category == .bundle && pkg.category == .bundle) ? "Laundry + Car" : nil,
+                                        overrideDetailAR: (category == .bundle && pkg.category == .bundle) ? "غسيل + سيارة" : nil
                                     ) {
                                         withAnimation(.spring(response: 0.3)) {
                                             if let idx = selectedPackages.firstIndex(where: { $0.id == pkg.id }) {
                                                 selectedPackages.remove(at: idx)
                                             } else {
+                                                if category == .bundle {
+                                                    // Keep selection mode consistent: app bundle OR own bundle.
+                                                    if pkg.category == .bundle {
+                                                        selectedPackages.removeAll { $0.category != .bundle }
+                                                    } else {
+                                                        selectedPackages.removeAll { $0.category == .bundle }
+                                                    }
+                                                }
                                                 selectedPackages.append(pkg)
                                             }
                                         }
@@ -165,6 +201,49 @@ struct ServiceBottomSheet: View {
                             }
                             .padding(.horizontal, ShineSpacing.lg)
                             .padding(.bottom, ShineSpacing.md)
+
+                            if category == .bundle {
+                                Button {
+                                    showCustomBundleBuilder = true
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.shineTealLight)
+                                                .frame(width: 44, height: 44)
+                                            Image(systemName: "slider.horizontal.3")
+                                                .font(.system(size: 18, weight: .semibold))
+                                                .foregroundColor(.shineTeal)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(isArabic ? "باقتك الخاصة" : "Custom Bundle")
+                                                .font(ShineFont.body(14, weight: .semibold))
+                                                .foregroundColor(.shineInk)
+                                            Text(isArabic ? "اختر خدمات الغسيل والسيارة بنفسك" : "Pick your own Laundry + Car services")
+                                                .font(ShineFont.body(12))
+                                                .foregroundColor(.shineInk3)
+                                        }
+
+                                        Spacer()
+
+                                        Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.shineCoral)
+                                    }
+                                    .padding(14)
+                                    .background(Color.shineSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: ShineRadius.md)
+                                            .stroke(Color.shineBorder, lineWidth: 1)
+                                    )
+                                    .shineShadowXS()
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, ShineSpacing.lg)
+                                .padding(.bottom, ShineSpacing.md)
+                            }
 
                             // Date & Time
                             DateTimePickerSection(
@@ -255,6 +334,19 @@ struct ServiceBottomSheet: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showCustomBundleBuilder) {
+            CustomBundleBuilderView(
+                isArabic: isArabic,
+                components: customBundleOptions,
+                onBook: { selected in
+                    selectedPackages = selected
+                    showCustomBundleBuilder = false
+                    dismiss()
+                    onBook()
+                    appState.selectedTab = .home
+                }
+            )
+        }
     }
 }
 
@@ -263,6 +355,22 @@ struct ServiceBottomSheet: View {
 private struct DateTimePickerSection: View {
     let isArabic: Bool
     @Binding var selectedDate: Date
+    @State private var minimumDate: Date = Date().addingTimeInterval(2 * 60 * 60)
+
+    private func computedMinimumDate(from now: Date = Date()) -> Date {
+        let calendar = Calendar.current
+        let currentHour = calendar.component(.hour, from: now)
+
+        // If it's 7 PM or later, earliest booking starts next day at 8:00 AM.
+        if currentHour >= 19 {
+            let nextDay = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 60 * 60)
+            let nextDayStart = calendar.startOfDay(for: nextDay)
+            return calendar.date(byAdding: .hour, value: 8, to: nextDayStart) ?? now.addingTimeInterval(13 * 60 * 60)
+        }
+
+        // Otherwise enforce the existing 2-hour lead time.
+        return now.addingTimeInterval(2 * 60 * 60)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -281,7 +389,7 @@ private struct DateTimePickerSection: View {
                         .foregroundColor(.shineCoral)
                     DatePicker("",
                                selection: $selectedDate,
-                               in: Date()...,
+                               in: minimumDate...,
                                displayedComponents: .date)
                         .datePickerStyle(.compact)
                         .labelsHidden()
@@ -304,7 +412,7 @@ private struct DateTimePickerSection: View {
                         .foregroundColor(.shineTeal)
                     DatePicker("",
                                selection: $selectedDate,
-                               in: Date()...,
+                               in: minimumDate...,
                                displayedComponents: .hourAndMinute)
                         .datePickerStyle(.compact)
                         .labelsHidden()
@@ -323,6 +431,18 @@ private struct DateTimePickerSection: View {
             .padding(.horizontal, ShineSpacing.lg)
         }
         .padding(.bottom, ShineSpacing.md)
+        .onAppear {
+            minimumDate = computedMinimumDate()
+            if selectedDate < minimumDate {
+                selectedDate = minimumDate
+            }
+        }
+        .onChange(of: selectedDate) { newValue in
+            minimumDate = computedMinimumDate()
+            if newValue < minimumDate {
+                selectedDate = minimumDate
+            }
+        }
     }
 }
 
@@ -347,40 +467,6 @@ struct AddressInputSection: View {
                 .kerning(0.8)
                 .textCase(.uppercase)
                 .padding(.horizontal, ShineSpacing.lg)
-
-            // Saved address chips
-            if !store.addresses.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(store.addresses) { saved in
-                            let isSelected = address == saved.address
-                            Button {
-                                address   = saved.address
-                                latitude  = saved.latitude
-                                longitude = saved.longitude
-                                fieldFocused = false
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Image(systemName: saved.label.icon)
-                                        .font(.system(size: 11))
-                                    Text(isArabic ? saved.label.titleAR : saved.label.title)
-                                        .font(ShineFont.body(13, weight: .medium))
-                                }
-                                .foregroundColor(isSelected ? .white : saved.label.color)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(isSelected ? saved.label.color : saved.label.color.opacity(0.1))
-                                .clipShape(Capsule())
-                                .overlay(
-                                    Capsule().stroke(saved.label.color.opacity(isSelected ? 0 : 0.3), lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, ShineSpacing.lg)
-                }
-            }
 
             // Text field + picker button
             HStack(spacing: 10) {
@@ -462,8 +548,14 @@ private struct PriceSummarySection: View {
     private var subtotal: Double {
         selectedPackages.reduce(0) { $0 + $1.priceAmount }
     }
+    private var selectedBundlePackages: [ServicePackage] {
+        selectedPackages.filter { $0.category == .bundle }
+    }
     private var bundleDiscount: Double {
         guard category == .bundle else { return 0 }
+        let hasAppBundle = !selectedBundlePackages.isEmpty
+        let hasCustomBundle = selectedPackages.filter { $0.category != .bundle }.count > 3
+        guard hasAppBundle || hasCustomBundle else { return 0 }
         return subtotal * 0.30
     }
     private var multiItemDiscount: Double {
@@ -651,6 +743,10 @@ struct PackageRow: View {
     let package: ServicePackage
     let isSelected: Bool
     let isArabic: Bool
+    let overrideName: String?
+    let overrideNameAR: String?
+    let overrideDetail: String?
+    let overrideDetailAR: String?
     let onTap: () -> Void
 
     var body: some View {
@@ -660,10 +756,10 @@ struct PackageRow: View {
                     .font(.system(size: 22))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(isArabic ? package.nameAR : package.name)
+                    Text(isArabic ? (overrideNameAR ?? package.nameAR) : (overrideName ?? package.name))
                         .font(ShineFont.body(14, weight: .semibold))
                         .foregroundColor(.shineInk)
-                    Text(isArabic ? package.detailAR : package.detail)
+                    Text(isArabic ? (overrideDetailAR ?? package.detailAR) : (overrideDetail ?? package.detail))
                         .font(ShineFont.body(12))
                         .foregroundColor(.shineInk3)
                 }
@@ -710,5 +806,163 @@ struct PackageRow: View {
             .shineShadowXS()
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct CustomBundleBuilderView: View {
+    let isArabic: Bool
+    let components: [ServicePackage]
+    let onBook: ([ServicePackage]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedComponents: [ServicePackage] = []
+
+    private func resolvedPrice(for item: ServicePackage) -> Double {
+        if item.priceAmount > 0 { return item.priceAmount }
+        let digits = item.price.replacingOccurrences(of: "[^0-9.]", with: "", options: .regularExpression)
+        return Double(digits) ?? 0
+    }
+
+    private var subtotal: Double {
+        selectedComponents.reduce(0) { $0 + resolvedPrice(for: $1) }
+    }
+    private var customDiscount: Double {
+        selectedComponents.count >= 3 ? subtotal * 0.30 : 0
+    }
+    private var total: Double {
+        max(0, subtotal - customDiscount)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.shineBG.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                HStack(alignment: .top, spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.shineTealLight)
+                            .frame(width: 64, height: 64)
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(.shineTeal)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(isArabic ? "باقتك الخاصة" : "Custom Bundle")
+                            .font(ShineFont.displayBold(26))
+                            .foregroundColor(.shineInk)
+                        Text(isArabic ? "اختر خدمات الغسيل والسيارة" : "Select Laundry + Car services")
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk3)
+                    }
+                    .padding(.top, 6)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.shineSurface2)
+                                .frame(width: 34, height: 34)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.shineInk2)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, ShineSpacing.lg)
+                .padding(.top, ShineSpacing.lg)
+
+                Divider()
+                    .padding(.vertical, ShineSpacing.lg)
+                    .padding(.horizontal, ShineSpacing.lg)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(components) { item in
+                            PackageRow(
+                                package: item,
+                                isSelected: selectedComponents.contains(where: { $0.id == item.id }),
+                                isArabic: isArabic,
+                                overrideName: nil,
+                                overrideNameAR: nil,
+                                overrideDetail: nil,
+                                overrideDetailAR: nil
+                            ) {
+                                withAnimation(.spring(response: 0.3)) {
+                                    if let idx = selectedComponents.firstIndex(where: { $0.id == item.id }) {
+                                        selectedComponents.remove(at: idx)
+                                    } else {
+                                        selectedComponents.append(item)
+                                    }
+                                }
+                            }                            
+                        }
+                    }
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, ShineSpacing.md)
+                }
+
+                VStack(spacing: 10) {
+                    Divider()
+
+                    VStack(spacing: 6) {
+                        HStack {
+                            Text(isArabic ? "المجموع الجزئي" : "Subtotal")
+                                .font(ShineFont.body(12))
+                                .foregroundColor(.shineInk3)
+                            Spacer()
+                            Text("QAR \(Int(subtotal.rounded()))")
+                                .font(ShineFont.body(13))
+                                .foregroundColor(.shineInk2)
+                        }
+
+                        if customDiscount > 0 {
+                            HStack {
+                                Text(isArabic ? "خصم الباقة المخصصة (٣٠٪)" : "Custom bundle discount (30% off)")
+                                    .font(ShineFont.body(12))
+                                    .foregroundColor(.shineTeal)
+                                Spacer()
+                                Text("- QAR \(Int(customDiscount.rounded()))")
+                                    .font(ShineFont.body(13, weight: .semibold))
+                                    .foregroundColor(.shineTeal)
+                            }
+                        }
+
+                        Divider()
+
+                        HStack {
+                            Text(isArabic ? "الإجمالي" : "Total")
+                                .font(ShineFont.body(14, weight: .semibold))
+                                .foregroundColor(.shineInk)
+                            Spacer()
+                            Text("QAR \(Int(total.rounded()))")
+                                .font(ShineFont.displayBold(22))
+                                .foregroundColor(.shineCoral)
+                        }
+                    }
+                    .padding(.horizontal, ShineSpacing.lg)
+
+                    Button {
+                        onBook(selectedComponents)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(isArabic ? "احجز الآن" : "Book Now")
+                                .font(ShineFont.body(16, weight: .semibold))
+                            Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(selectedComponents.isEmpty ? Color.shineInk3 : Color.shineCoral)
+                        .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                    }
+                    .disabled(selectedComponents.isEmpty)
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, 34)
+                }
+                .background(Color.shineBG)
+            }
+        }
     }
 }

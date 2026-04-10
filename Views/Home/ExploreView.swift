@@ -46,7 +46,12 @@ struct ExploreView: View {
                             }
                         } else {
                             ForEach(allServices) { svc in
-                                ExploreServiceTile(category: svc, isArabic: appState.isArabic) {
+                                let isDisabled = svc.slug == ServiceCategory.pest.rawValue || svc.slug == ServiceCategory.cleaning.rawValue
+                                ExploreServiceTile(
+                                    category: svc,
+                                    isArabic: appState.isArabic,
+                                    isDisabled: isDisabled
+                                ) {
                                     vm.openService(svc)
                                 }
                             }
@@ -90,6 +95,7 @@ struct ExploreView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
+                    customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
                     isLoading: vm.isLoadingPackages
@@ -139,6 +145,7 @@ struct ExploreView: View {
 struct ExploreServiceTile: View {
     let category: APICategory
     let isArabic: Bool
+    let isDisabled: Bool
     let onTap: () -> Void
 
     @State private var isPressed = false
@@ -156,18 +163,20 @@ struct ExploreServiceTile: View {
                     Text(isArabic ? category.titleAR : category.title)
                         .font(ShineFont.body(15, weight: .semibold))
                         .foregroundColor(.shineInk)
-                    Text(category.optionsCount)
-                        .font(ShineFont.body(12))
-                        .foregroundColor(.shineInk3)
+                    Text(isDisabled ? (isArabic ? "قريباً" : "Coming Soon") : category.optionsCount)
+                        .font(ShineFont.body(12, weight: isDisabled ? .semibold : .regular))
+                        .foregroundColor(isDisabled ? .shineCoral : .shineInk3)
                 }
                 HStack {
-                    Text(Loc.string("explore.book", isArabic: isArabic))
+                    Text(isDisabled ? (isArabic ? "قريباً" : "Coming Soon") : Loc.string("explore.book", isArabic: isArabic))
                         .font(ShineFont.body(12, weight: .semibold))
                         .foregroundColor(category.color)
                     Spacer()
-                    Image(systemName: isArabic ? "arrow.left" : "arrow.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(category.color)
+                    if !isDisabled {
+                        Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(category.color)
+                    }
                 }
             }
             .padding(16)
@@ -176,8 +185,10 @@ struct ExploreServiceTile: View {
             .shineShadowSM()
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
         .scaleEffect(isPressed ? 0.96 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .opacity(isDisabled ? 0.6 : 1)
         .onLongPressGesture(minimumDuration: 0, pressing: { pressing in
             isPressed = pressing
         }, perform: {})

@@ -312,17 +312,17 @@ private struct ManagerBookingCard: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.shineTealLight)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 48, height: 48)
                     Text(categoryEmoji)
-                        .font(.system(size: 22))
+                        .font(.system(size: 24))
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(booking.customerName ?? "Unknown Customer")
-                        .font(ShineFont.body(15, weight: .semibold))
+                        .font(ShineFont.body(16, weight: .semibold))
                         .foregroundColor(.shineInk)
                     Text(booking.packageNameEn)
-                        .font(ShineFont.body(13))
+                        .font(ShineFont.body(14))
                         .foregroundColor(.shineInk2)
                         .lineLimit(1)
                 }
@@ -339,11 +339,10 @@ private struct ManagerBookingCard: View {
 
             // ── Details row ────────────────────────────────────────
             HStack(spacing: ShineSpacing.lg) {
-                IconDetail(icon: "calendar", text: booking.scheduledDate.formatted(.dateTime.day().month(.abbreviated).year()))
-                IconDetail(icon: "mappin.circle", text: booking.address)
+                IconDetail(icon: "calendar", text: booking.scheduledDate.formatted(.dateTime.day().month(.abbreviated).year().hour().minute()))
                 Spacer()
                 Text("QAR \(booking.priceAmount, specifier: "%.0f")")
-                    .font(ShineFont.body(14, weight: .semibold))
+                    .font(ShineFont.body(15, weight: .semibold))
                     .foregroundColor(.shineTeal)
             }
             .padding(.horizontal, ShineSpacing.md)
@@ -355,25 +354,35 @@ private struct ManagerBookingCard: View {
                     Image(systemName: "location.fill")
                         .font(.system(size: 11))
                         .foregroundColor(.shineTeal)
-                    Text(String(format: "%.5f, %.5f", lat, lon))
+                    Text(booking.address)
                         .font(ShineFont.body(12))
                         .foregroundColor(.shineInk2)
+                        .lineLimit(1)
                     Spacer()
                     Button {
-                        let url = URL(string: "maps://?ll=\(lat),\(lon)&q=\(booking.address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")")!
-                        UIApplication.shared.open(url)
+                        let encodedAddress = booking.address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                        // Use coordinates for Google Maps query to pin the exact location.
+                        let googleMapsURL = URL(string: "comgooglemaps://?q=\(lat),\(lon)")
+                        let appleMapsURL = URL(string: "maps://?ll=\(lat),\(lon)&q=\(encodedAddress)")
+
+                        if let googleMapsURL, UIApplication.shared.canOpenURL(googleMapsURL) {
+                            UIApplication.shared.open(googleMapsURL)
+                        } else if let appleMapsURL {
+                            UIApplication.shared.open(appleMapsURL)
+                        }
                     } label: {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 6) {
                             Image(systemName: "map.fill")
-                                .font(.system(size: 11))
+                                .font(.system(size: 12))
                             Text("Open Map")
-                                .font(ShineFont.body(12, weight: .semibold))
+                                .font(ShineFont.body(13, weight: .semibold))
                         }
                         .foregroundColor(.shineTeal)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 9)
                         .background(Color.shineTealLight)
                         .clipShape(Capsule())
+                        .contentShape(Capsule())
                     }
                 }
                 .padding(.horizontal, ShineSpacing.md)
