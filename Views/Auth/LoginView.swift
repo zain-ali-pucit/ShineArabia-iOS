@@ -3,6 +3,7 @@ import AuthenticationServices
 
 struct LoginView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AuthViewModel()
     @State private var showRegister = false
     @State private var showPassword = false
@@ -173,10 +174,10 @@ struct LoginView: View {
                 .environmentObject(appState)
         }
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { notif in
-            if let apiUser = notif.object as? APIUser {
-                appState.currentUser = apiUser.toUser()
-                appState.isAuthenticated = true
-            }
+            guard let apiUser = notif.object as? APIUser else { return }
+            appState.currentUser = apiUser.toUser()
+            appState.isAuthenticated = true
+            dismiss()
         }
         .arabicLayout(appState.isArabic)
     }

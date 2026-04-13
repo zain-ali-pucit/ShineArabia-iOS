@@ -85,6 +85,8 @@ struct HomeView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
+                    officePackages: vm.officeCleaningPackages,
+                    shopPackages: vm.shopCleaningPackages,
                     customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
@@ -450,11 +452,10 @@ struct ServiceCardsRow: View {
                     }
                 } else {
                     ForEach(Array(categories.enumerated()), id: \.element.id) { index, cat in
-                        let isDisabled = cat.slug == ServiceCategory.pest.rawValue || cat.slug == ServiceCategory.cleaning.rawValue
                         ServiceCard(
                             category: cat,
                             isArabic: appState.isArabic,
-                            isDisabled: isDisabled,
+                            isDisabled: false,
                             animationDelay: Double(index) * 0.07
                         ) {
                             onTap(cat)

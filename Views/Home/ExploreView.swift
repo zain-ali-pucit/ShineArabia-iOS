@@ -46,7 +46,9 @@ struct ExploreView: View {
                             }
                         } else {
                             ForEach(allServices) { svc in
-                                let isDisabled = svc.slug == ServiceCategory.pest.rawValue || svc.slug == ServiceCategory.cleaning.rawValue
+                                let isDisabled = svc.slug == ServiceCategory.pest.rawValue
+                                                || svc.slug == ServiceCategory.laundry.rawValue
+                                                || svc.slug == ServiceCategory.carWash.rawValue
                                 ExploreServiceTile(
                                     category: svc,
                                     isArabic: appState.isArabic,
@@ -95,6 +97,8 @@ struct ExploreView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
+                    officePackages: vm.officeCleaningPackages,
+                    shopPackages: vm.shopCleaningPackages,
                     customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,

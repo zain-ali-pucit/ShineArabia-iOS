@@ -106,7 +106,12 @@ struct BookingCard: View {
     }
 
     var canReschedule: Bool {
-        booking.status == .pending || booking.status == .confirmed
+        booking.status == .pending
+    }
+
+    /// Cancel is only allowed before the booking is confirmed.
+    var canCancel: Bool {
+        booking.status == .pending
     }
 
     var formattedDate: String {
@@ -150,6 +155,26 @@ struct BookingCard: View {
                     .lineLimit(1)
             }
 
+            if booking.status == .cancelled, let reason = booking.cancelReason, !reason.isEmpty {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.shineCoral)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(isArabic ? "سبب الإلغاء" : "Cancellation Reason")
+                            .font(ShineFont.body(11, weight: .semibold))
+                            .foregroundColor(.shineCoral)
+                        Text(reason)
+                            .font(ShineFont.body(13))
+                            .foregroundColor(.shineInk2)
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.shineCoralLight)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
             if canReschedule {
                 HStack(spacing: 16) {
                     Button {
@@ -170,26 +195,28 @@ struct BookingCard: View {
                         }
                     }
 
-                    Spacer()
+                    if canCancel {
+                        Spacer()
 
-                    Button {
-                        showCancelConfirm = true
-                    } label: {
-                        Label(isArabic ? "إلغاء" : "Cancel", systemImage: "xmark.circle")
-                            .font(ShineFont.body(13, weight: .medium))
-                            .foregroundColor(.shineInk3)
-                    }
-                    .confirmationDialog(
-                        isArabic ? "إلغاء الحجز" : "Cancel Booking",
-                        isPresented: $showCancelConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button(isArabic ? "تأكيد الإلغاء" : "Confirm Cancellation", role: .destructive) {
-                            bookingVM.cancelBooking(id: booking.id)
+                        Button {
+                            showCancelConfirm = true
+                        } label: {
+                            Label(isArabic ? "إلغاء" : "Cancel", systemImage: "xmark.circle")
+                                .font(ShineFont.body(13, weight: .medium))
+                                .foregroundColor(.shineInk3)
                         }
-                        Button(isArabic ? "تراجع" : "Keep Booking", role: .cancel) {}
-                    } message: {
-                        Text(isArabic ? "هل أنت متأكد أنك تريد إلغاء هذا الحجز؟" : "Are you sure you want to cancel this booking?")
+                        .confirmationDialog(
+                            isArabic ? "إلغاء الحجز" : "Cancel Booking",
+                            isPresented: $showCancelConfirm,
+                            titleVisibility: .visible
+                        ) {
+                            Button(isArabic ? "تأكيد الإلغاء" : "Confirm Cancellation", role: .destructive) {
+                                bookingVM.cancelBooking(id: booking.id)
+                            }
+                            Button(isArabic ? "تراجع" : "Keep Booking", role: .cancel) {}
+                        } message: {
+                            Text(isArabic ? "هل أنت متأكد أنك تريد إلغاء هذا الحجز؟" : "Are you sure you want to cancel this booking?")
+                        }
                     }
                 }
             }

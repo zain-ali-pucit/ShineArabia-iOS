@@ -8,9 +8,9 @@ struct RootView: View {
         ZStack {
             if splashFinished {
                 Group {
-                    if appState.isManager {
-                        // Manager users see only the booking management screen
-                        ManagerView()
+                    if appState.isStaff {
+                        // Staff / admin / manager users see the staff panel
+                        StaffView()
                             .transition(.opacity)
                     } else if !appState.hasCompletedOnboarding {
                         OnboardingView()

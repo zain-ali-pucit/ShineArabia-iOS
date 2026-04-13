@@ -80,7 +80,7 @@ class BookingViewModel: ObservableObject {
                         packageName:     pkg.name,
                         scheduledDate:   selectedDate,
                         address:         deliveryAddress,
-                        status:          .confirmed,
+                        status:          .pending,
                         price:           pkg.price
                     )
                 }
@@ -171,13 +171,33 @@ class BookingViewModel: ObservableObject {
     }
 
     // MARK: Helpers
+
+    /// First bookable instant for the booking sheet (same rules as `DateTimePickerSection`).
+    /// - Before 9:00 today → today 9:00
+    /// - 19:00 or later → next calendar day 9:00
+    /// - Otherwise → now + 2 hours
+    static func earliestBookableDate(from now: Date = Date(), calendar: Calendar = .current) -> Date {
+        let hour = calendar.component(.hour, from: now)
+        let startOfToday = calendar.startOfDay(for: now)
+        guard let todayNineAM = calendar.date(byAdding: .hour, value: 9, to: startOfToday) else {
+            return now.addingTimeInterval(2 * 60 * 60)
+        }
+
+        if hour >= 19 {
+            let nextDay = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(86_400)
+            let start = calendar.startOfDay(for: nextDay)
+            return calendar.date(byAdding: .hour, value: 9, to: start) ?? todayNineAM
+        }
+
+        if hour < 9 {
+            return todayNineAM
+        }
+
+        return now.addingTimeInterval(2 * 60 * 60)
+    }
+
     static func defaultBookingDate() -> Date {
-        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        comps.day! += 1
-        comps.hour   = 10
-        comps.minute = 0
-        comps.second = 0
-        return Calendar.current.date(from: comps) ?? Date().addingTimeInterval(86400)
+        earliestBookableDate()
     }
 
     // MARK: Computed

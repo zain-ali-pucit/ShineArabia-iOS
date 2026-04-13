@@ -231,9 +231,14 @@ struct RewardsView: View {
                         title: isArabic ? "اترك تقييمًا" : "Leave a review",
                         value: isArabic ? "+٥ نقاط" : "+5 pts")
                 Divider().padding(.leading, 52)
-                EarnRow(icon: "person.2.fill", color: .shineLavender,
-                        title: isArabic ? "ادعُ صديقًا" : "Refer a friend",
-                        value: isArabic ? "+٢٥ نقطة" : "+25 pts")
+                EarnRow(
+                    icon: "person.2.fill",
+                    color: .shineLavender,
+                    title: isArabic ? "ادعُ صديقًا" : "Refer a friend",
+                    value: isArabic ? "+٢٥ نقطة" : "+25 pts",
+                    destination: APIConfig.shineArabiaReferFriendURL,
+                    isArabic: isArabic
+                )
             }
             .background(Color.shineSurface)
             .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
@@ -360,8 +365,10 @@ private struct EarnRow: View {
     let color: Color
     let title: String
     let value: String
+    var destination: URL? = nil
+    var isArabic: Bool = false
 
-    var body: some View {
+    private var rowContent: some View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
@@ -378,9 +385,25 @@ private struct EarnRow: View {
             Text(value)
                 .font(ShineFont.body(13, weight: .semibold))
                 .foregroundColor(.shineAmber)
+            if destination != nil {
+                Image(systemName: isArabic ? "arrow.left" : "arrow.up.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.shineInk3)
+            }
         }
         .padding(.horizontal, ShineSpacing.md)
         .padding(.vertical, 13)
+    }
+
+    var body: some View {
+        if let url = destination {
+            Link(destination: url) {
+                rowContent
+            }
+            .buttonStyle(.plain)
+        } else {
+            rowContent
+        }
     }
 }
 

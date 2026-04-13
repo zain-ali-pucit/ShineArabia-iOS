@@ -12,8 +12,6 @@
 		526FA28D2F8705A1007E714D /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28C2F8705A1007E714D /* EditProfileView.swift */; };
 		526FA28E2F8705A1007E714D /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28F2F8705A1007E714D /* ChangePasswordView.swift */; };
 		5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5276C62C2F845E1B003AD0D8 /* LocationService.swift */; };
-		528B82632F81218800CE7E84 /* ManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82612F81218800CE7E84 /* ManagerView.swift */; };
-		528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B82642F8121B800CE7E84 /* ManagerViewModel.swift */; };
 		AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000200 /* ShineArabiaApp.swift */; };
 		AA0000000000000000000301 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000201 /* RootView.swift */; };
 		AA0000000000000000000302 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000202 /* AppState.swift */; };
@@ -39,7 +37,9 @@
 		BB0000000000000000000104 /* ServiceAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* ServiceAPIService.swift */; };
 		BB0000000000000000000105 /* UserAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000005 /* UserAPIService.swift */; };
 		BB0000000000000000000106 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006 /* AuthViewModel.swift */; };
-		BB0000000000000000000106B /* ManagerAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006B /* ManagerAPIService.swift */; };
+		EE0000000000000000000101 /* StaffAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000001 /* StaffAPIService.swift */; };
+		EE0000000000000000000102 /* StaffViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* StaffViewModel.swift */; };
+		EE0000000000000000000103 /* StaffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000003 /* StaffView.swift */; };
 		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
 		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
 		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
@@ -59,8 +59,6 @@
 		526FA28C2F8705A1007E714D /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		526FA28F2F8705A1007E714D /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		5276C62C2F845E1B003AD0D8 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
-		528B82612F81218800CE7E84 /* ManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerView.swift; sourceTree = "<group>"; };
-		528B82642F8121B800CE7E84 /* ManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerViewModel.swift; sourceTree = "<group>"; };
 		52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA0000000000000000000005 /* ShineArabia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShineArabia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000200 /* ShineArabiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShineArabiaApp.swift; sourceTree = "<group>"; };
@@ -89,7 +87,9 @@
 		BB0000000000000000000004 /* ServiceAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000005 /* UserAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000006 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
-		BB0000000000000000000006B /* ManagerAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerAPIService.swift; sourceTree = "<group>"; };
+		EE0000000000000000000001 /* StaffAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAPIService.swift; sourceTree = "<group>"; };
+		EE0000000000000000000002 /* StaffViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffViewModel.swift; sourceTree = "<group>"; };
+		EE0000000000000000000003 /* StaffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
@@ -120,12 +120,12 @@
 			path = Tour;
 			sourceTree = "<group>";
 		};
-		528B82622F81218800CE7E84 /* Manager */ = {
+		EE0000000000000000000200 /* Staff */ = {
 			isa = PBXGroup;
 			children = (
-				528B82612F81218800CE7E84 /* ManagerView.swift */,
+				EE0000000000000000000003 /* StaffView.swift */,
 			);
-			path = Manager;
+			path = Staff;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000002 = {
@@ -172,7 +172,7 @@
 		AA0000000000000000000102 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				528B82642F8121B800CE7E84 /* ManagerViewModel.swift */,
+				EE0000000000000000000002 /* StaffViewModel.swift */,
 				AA0000000000000000000204 /* HomeViewModel.swift */,
 				AA0000000000000000000205 /* BookingViewModel.swift */,
 				BB0000000000000000000006 /* AuthViewModel.swift */,
@@ -184,7 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				526FA2882F86FEC6007E714D /* Tour */,
-				528B82622F81218800CE7E84 /* Manager */,
+				EE0000000000000000000200 /* Staff */,
 				BB0000000000000000000201 /* Auth */,
 				AA000000000000000000010C /* Splash */,
 				AA0000000000000000000104 /* Onboarding */,
@@ -282,14 +282,14 @@
 		BB0000000000000000000200 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				5276C62C2F845E1B003AD0D8 /* LocationService.swift */,
 				BB0000000000000000000001 /* APIClient.swift */,
 				BB0000000000000000000002 /* AuthService.swift */,
 				BB0000000000000000000003 /* BookingAPIService.swift */,
 				BB0000000000000000000004 /* ServiceAPIService.swift */,
 				BB0000000000000000000009 /* LocalCacheService.swift */,
 				BB0000000000000000000005 /* UserAPIService.swift */,
-				BB0000000000000000000006B /* ManagerAPIService.swift */,
+				EE0000000000000000000001 /* StaffAPIService.swift */,
+				5276C62C2F845E1B003AD0D8 /* LocationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -422,11 +422,11 @@
 				BB0000000000000000000109 /* LocalCacheService.swift in Sources */,
 				5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */,
 				BB0000000000000000000105 /* UserAPIService.swift in Sources */,
-				BB0000000000000000000106B /* ManagerAPIService.swift in Sources */,
-				528B82652F8121B800CE7E84 /* ManagerViewModel.swift in Sources */,
+				EE0000000000000000000101 /* StaffAPIService.swift in Sources */,
+				EE0000000000000000000102 /* StaffViewModel.swift in Sources */,
 				BB0000000000000000000106 /* AuthViewModel.swift in Sources */,
 				BB0000000000000000000107 /* LoginView.swift in Sources */,
-				528B82632F81218800CE7E84 /* ManagerView.swift in Sources */,
+				EE0000000000000000000103 /* StaffView.swift in Sources */,
 				526FA2892F86FEC6007E714D /* AppTourView.swift in Sources */,
 				BB0000000000000000000108 /* RegisterView.swift in Sources */,
 				CC0000000000000000000001 /* RewardsView.swift in Sources */,
@@ -569,7 +569,7 @@
 				CODE_SIGN_ENTITLEMENTS = "ShineArabia-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DK2W9Z27GC;
+				DEVELOPMENT_TEAM = 7WVTVM9MK9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
@@ -598,7 +598,7 @@
 				CODE_SIGN_ENTITLEMENTS = "ShineArabia-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DK2W9Z27GC;
+				DEVELOPMENT_TEAM = 7WVTVM9MK9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;

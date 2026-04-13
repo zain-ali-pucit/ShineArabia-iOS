@@ -305,6 +305,22 @@ struct StatusBadge: View {
 }
 
 // MARK: - Empty State
+struct IconDetail: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(.shineInk3)
+            Text(text)
+                .font(ShineFont.body(13))
+                .foregroundColor(.shineInk3)
+        }
+    }
+}
+
 struct EmptyStateView: View {
     let icon: String
     let title: String

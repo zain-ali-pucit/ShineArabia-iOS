@@ -16,6 +16,11 @@ class HomeViewModel: ObservableObject {
     @Published var packages: [ServicePackage]       = []
     @Published var popularItems: [PopularItem]      = []
 
+    // Cleaning sub-category packages (office + shop)
+    @Published var officeCleaningPackages: [ServicePackage] = []
+    @Published var shopCleaningPackages: [ServicePackage]   = []
+    @Published var isLoadingCleaningSubPackages: Bool       = false
+
     /// The first active bundle — drives the home promo banner
     var featuredBundle: APIBundle? { bundles.first }
 
@@ -35,7 +40,11 @@ class HomeViewModel: ObservableObject {
 
     private let serviceAPI = ServiceAPIService.shared
     private let cache      = LocalCacheService.shared
-    private let disabledCategorySlugs: Set<String> = [ServiceCategory.pest.rawValue, ServiceCategory.cleaning.rawValue]
+    private let disabledCategorySlugs: Set<String> = [
+        ServiceCategory.pest.rawValue,
+        ServiceCategory.laundry.rawValue,
+        ServiceCategory.carWash.rawValue
+    ]
 
     // MARK: - Bundles  (cache-first → background refresh)
 
@@ -114,6 +123,9 @@ class HomeViewModel: ObservableObject {
         selectedPackages = []
         showServiceSheet = true
         loadPackages(slug: apiCategory.slug)
+        if apiCategory.slug == ServiceCategory.cleaning.rawValue {
+            loadCleaningSubPackages()
+        }
     }
 
     // MARK: - Open service sheet — from popular items or bundle promo
@@ -124,22 +136,63 @@ class HomeViewModel: ObservableObject {
         selectedPackages = []
         showServiceSheet = true
         loadPackages(slug: category.rawValue)
+        if category == .cleaning {
+            loadCleaningSubPackages()
+        }
+    }
+
+    // MARK: - Cleaning sub-category packages (cache-first → background refresh)
+
+    func loadCleaningSubPackages() {
+        // 1. Show cached data instantly
+        if let cached = cache.loadPackages(slug: ServiceCategory.officeClean.rawValue) {
+            officeCleaningPackages = cached.map { ServicePackage(from: $0) }
+        }
+        if let cached = cache.loadPackages(slug: ServiceCategory.shopClean.rawValue) {
+            shopCleaningPackages = cached.map { ServicePackage(from: $0) }
+        }
+
+        isLoadingCleaningSubPackages = officeCleaningPackages.isEmpty || shopCleaningPackages.isEmpty
+
+        // 2. Background refresh for both slugs concurrently
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { await self.refreshSubPackages(slug: ServiceCategory.officeClean.rawValue) }
+                group.addTask { await self.refreshSubPackages(slug: ServiceCategory.shopClean.rawValue) }
+            }
+            await MainActor.run { isLoadingCleaningSubPackages = false }
+        }
+    }
+
+    private func refreshSubPackages(slug: String) async {
+        do {
+            let fresh   = try await serviceAPI.fetchPackages(for: slug)
+            let changed = cache.updatePackagesIfChanged(fresh, slug: slug)
+            let mapped  = fresh.map { ServicePackage(from: $0) }
+            await MainActor.run {
+                if slug == ServiceCategory.officeClean.rawValue {
+                    if changed || officeCleaningPackages.isEmpty { officeCleaningPackages = mapped }
+                } else if slug == ServiceCategory.shopClean.rawValue {
+                    if changed || shopCleaningPackages.isEmpty { shopCleaningPackages = mapped }
+                }
+            }
+        } catch {
+            // Backend slug not yet set up — SampleData fallback applied in ServiceBottomSheet
+        }
     }
 
     private func sortCategoriesForDisplay(_ source: [APICategory]) -> [APICategory] {
-        let preferredOrder: [String: Int] = [
-            ServiceCategory.laundry.rawValue: 1,
-            ServiceCategory.carWash.rawValue: 2,
-            ServiceCategory.cleaning.rawValue: 3,
-            ServiceCategory.pest.rawValue: 4
+        let visibleSlugs: [String: Int] = [
+            ServiceCategory.cleaning.rawValue:   1,
+            ServiceCategory.officeClean.rawValue: 2,
+            ServiceCategory.shopClean.rawValue:   3
         ]
 
         return source
-            .filter { $0.slug != ServiceCategory.bundle.rawValue }
+            .filter { visibleSlugs[$0.slug] != nil }
             .sorted { lhs, rhs in
-                let lhsRank = preferredOrder[lhs.slug] ?? 100 + lhs.sortOrder
-                let rhsRank = preferredOrder[rhs.slug] ?? 100 + rhs.sortOrder
-                if lhsRank == rhsRank { return lhs.sortOrder < rhs.sortOrder }
+                let lhsRank = visibleSlugs[lhs.slug] ?? 100
+                let rhsRank = visibleSlugs[rhs.slug] ?? 100
                 return lhsRank < rhsRank
             }
     }

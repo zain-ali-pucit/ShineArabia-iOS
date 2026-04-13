@@ -3,6 +3,8 @@ import SwiftUI
 struct ServiceBottomSheet: View {
     let category: ServiceCategory
     let packages: [ServicePackage]
+    let officePackages: [ServicePackage]
+    let shopPackages: [ServicePackage]
     let customBundleComponents: [ServicePackage]
     @Binding var selectedPackages: [ServicePackage]
     let isArabic: Bool
@@ -19,8 +21,44 @@ struct ServiceBottomSheet: View {
     @State private var promoIsValid: Bool = false
     @State private var isValidating: Bool = false
     @State private var showCustomBundleBuilder: Bool = false
+    @State private var cleaningSubType: CleaningSubType = .home
+
+    enum CleaningSubType: CaseIterable {
+        case home, office, shop
+        var title: String {
+            switch self {
+            case .home:   return "Home"
+            case .office: return "Office"
+            case .shop:   return "Shop"
+            }
+        }
+        var titleAR: String {
+            switch self {
+            case .home:   return "منزل"
+            case .office: return "مكتب"
+            case .shop:   return "محل"
+            }
+        }
+        var icon: String {
+            switch self {
+            case .home:   return "🏠"
+            case .office: return "🏢"
+            case .shop:   return "🏪"
+            }
+        }
+    }
 
     private var displayedPackages: [ServicePackage] {
+        if category == .cleaning {
+            switch cleaningSubType {
+            case .home:
+                return packages.isEmpty ? (SampleData.packages[.cleaning] ?? []) : packages
+            case .office:
+                return officePackages.isEmpty ? (SampleData.packages[.officeClean] ?? []) : officePackages
+            case .shop:
+                return shopPackages.isEmpty ? (SampleData.packages[.shopClean] ?? []) : shopPackages
+            }
+        }
         guard category == .bundle else { return packages }
 
         let preferred = packages.first {
@@ -108,6 +146,41 @@ struct ServiceBottomSheet: View {
                         LinearGradient(colors: [Color(hex: "6C5CE7"), Color(hex: "a29bfe")],
                                        startPoint: .leading, endPoint: .trailing)
                     )
+                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                    .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.bottom, ShineSpacing.md)
+                }
+
+                // ── Cleaning sub-category tabs ───────────────────────────
+                if category == .cleaning {
+                    HStack(spacing: 0) {
+                        ForEach(CleaningSubType.allCases, id: \.self) { subType in
+                            Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    cleaningSubType = subType
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text(subType.icon)
+                                        .font(.system(size: 14))
+                                    Text(isArabic ? subType.titleAR : subType.title)
+                                        .font(ShineFont.body(13, weight: cleaningSubType == subType ? .semibold : .regular))
+                                        .foregroundColor(cleaningSubType == subType ? .shineTeal : .shineInk3)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    cleaningSubType == subType
+                                        ? Color.shineTealLight
+                                        : Color.shineSurface
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(4)
+                    .background(Color.shineSurface2)
                     .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.bottom, ShineSpacing.md)
@@ -358,18 +431,15 @@ private struct DateTimePickerSection: View {
     @State private var minimumDate: Date = Date().addingTimeInterval(2 * 60 * 60)
 
     private func computedMinimumDate(from now: Date = Date()) -> Date {
-        let calendar = Calendar.current
-        let currentHour = calendar.component(.hour, from: now)
+        BookingViewModel.earliestBookableDate(from: now)
+    }
 
-        // If it's 7 PM or later, earliest booking starts next day at 8:00 AM.
-        if currentHour >= 19 {
-            let nextDay = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 60 * 60)
-            let nextDayStart = calendar.startOfDay(for: nextDay)
-            return calendar.date(byAdding: .hour, value: 8, to: nextDayStart) ?? now.addingTimeInterval(13 * 60 * 60)
-        }
-
-        // Otherwise enforce the existing 2-hour lead time.
-        return now.addingTimeInterval(2 * 60 * 60)
+    /// Old default was always “tomorrow at 10:00”; replace with real minimum so early-morning booking isn’t stuck on the wrong day.
+    private func isStaleDefaultBookingTime(_ date: Date, now: Date = Date()) -> Bool {
+        let cal = Calendar.current
+        guard let tomorrowStart = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: now)),
+              let legacy = cal.date(bySettingHour: 10, minute: 0, second: 0, of: tomorrowStart) else { return false }
+        return abs(date.timeIntervalSince(legacy)) < 60
     }
 
     var body: some View {
@@ -433,7 +503,7 @@ private struct DateTimePickerSection: View {
         .padding(.bottom, ShineSpacing.md)
         .onAppear {
             minimumDate = computedMinimumDate()
-            if selectedDate < minimumDate {
+            if selectedDate < minimumDate || isStaleDefaultBookingTime(selectedDate) {
                 selectedDate = minimumDate
             }
         }

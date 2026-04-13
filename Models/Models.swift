@@ -13,71 +13,85 @@ struct User: Identifiable, Codable {
 
 // MARK: - Service Category
 enum ServiceCategory: String, CaseIterable, Identifiable {
-    case laundry   = "laundry"
-    case cleaning  = "cleaning"
-    case carWash   = "carwash"
-    case pest      = "pest"
-    case bundle    = "bundle"
+    case laundry      = "laundry"
+    case cleaning     = "cleaning"
+    case officeClean  = "office-cleaning"
+    case shopClean    = "shop-cleaning"
+    case carWash      = "carwash"
+    case pest         = "pest"
+    case bundle       = "bundle"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
-        case .laundry:  return "🧺"
-        case .cleaning: return "🧹"
-        case .carWash:  return "🚗"
-        case .pest:     return "🪲"
-        case .bundle:   return "🎁"
+        case .laundry:     return "🧺"
+        case .cleaning:    return "🧹"
+        case .officeClean: return "🏢"
+        case .shopClean:   return "🏪"
+        case .carWash:     return "🚗"
+        case .pest:        return "🪲"
+        case .bundle:      return "🎁"
         }
     }
 
     var title: String {
         switch self {
-        case .laundry:  return "Laundry"
-        case .cleaning: return "Home Clean"
-        case .carWash:  return "Car Wash"
-        case .pest:     return "Pest Control"
-        case .bundle:   return "Bundle"
+        case .laundry:     return "Laundry"
+        case .cleaning:    return "Home Clean"
+        case .officeClean: return "Office Clean"
+        case .shopClean:   return "Shop Clean"
+        case .carWash:     return "Car Wash"
+        case .pest:        return "Pest Control"
+        case .bundle:      return "Bundle"
         }
     }
 
     var titleAR: String {
         switch self {
-        case .laundry:  return "الغسيل"
-        case .cleaning: return "تنظيف المنزل"
-        case .carWash:  return "غسيل سيارة"
-        case .pest:     return "مكافحة الحشرات"
-        case .bundle:   return "الباقة"
+        case .laundry:     return "الغسيل"
+        case .cleaning:    return "تنظيف المنزل"
+        case .officeClean: return "تنظيف المكتب"
+        case .shopClean:   return "تنظيف المحل"
+        case .carWash:     return "غسيل سيارة"
+        case .pest:        return "مكافحة الحشرات"
+        case .bundle:      return "الباقة"
         }
     }
 
     var optionsCount: String {
         switch self {
-        case .laundry:  return "8 options"
-        case .cleaning: return "6 options"
-        case .carWash:  return "5 options"
-        case .pest:     return "4 options"
-        case .bundle:   return "4 plans"
+        case .laundry:     return "8 options"
+        case .cleaning:    return "6 options"
+        case .officeClean: return "4 options"
+        case .shopClean:   return "4 options"
+        case .carWash:     return "5 options"
+        case .pest:        return "4 options"
+        case .bundle:      return "4 plans"
         }
     }
 
     var color: Color {
         switch self {
-        case .laundry:  return .shineCoral
-        case .cleaning: return .shineTeal
-        case .carWash:  return .shineAmber
-        case .pest:     return .shineLavender
-        case .bundle:   return .shineCoral
+        case .laundry:     return .shineCoral
+        case .cleaning:    return .shineTeal
+        case .officeClean: return .shineTeal
+        case .shopClean:   return .shineTeal
+        case .carWash:     return .shineAmber
+        case .pest:        return .shineLavender
+        case .bundle:      return .shineCoral
         }
     }
 
     var softColor: Color {
         switch self {
-        case .laundry:  return .shineCoralLight
-        case .cleaning: return .shineTealLight
-        case .carWash:  return .shineAmberLight
-        case .pest:     return .shineLavLight
-        case .bundle:   return .shineCoralLight
+        case .laundry:     return .shineCoralLight
+        case .cleaning:    return .shineTealLight
+        case .officeClean: return .shineTealLight
+        case .shopClean:   return .shineTealLight
+        case .carWash:     return .shineAmberLight
+        case .pest:        return .shineLavLight
+        case .bundle:      return .shineCoralLight
         }
     }
 }
@@ -207,6 +221,7 @@ struct Booking: Identifiable, Codable {
     var status: BookingStatus
     var price: String
     var priceAmount: Double
+    var cancelReason: String?
 
     enum BookingStatus: String, Codable {
         case pending    = "pending"
@@ -234,10 +249,37 @@ struct Booking: Identifiable, Codable {
             case .cancelled:  return "ملغى"
             }
         }
+
+        var actionLabel: String {
+            switch self {
+            case .inProgress: return "Start Work"
+            case .completed:  return "Mark Complete"
+            case .cancelled:  return "Cancel"
+            default:          return displayTitle
+            }
+        }
+
+        var actionIcon: String {
+            switch self {
+            case .inProgress: return "play.fill"
+            case .completed:  return "checkmark.seal.fill"
+            case .cancelled:  return "xmark.circle.fill"
+            default:          return "circle"
+            }
+        }
+
+        var actionColor: Color {
+            switch self {
+            case .inProgress: return Color(hex: "1565C0")
+            case .completed:  return Color(hex: "2E7D32")
+            case .cancelled:  return .shineCoral
+            default:          return .shineTeal
+            }
+        }
     }
 
     // Convenience init for local/mock creation
-    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0) {
+    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0, cancelReason: String? = nil) {
         self.id              = id
         self.apiId           = apiId
         self.serviceCategory = serviceCategory
@@ -248,6 +290,7 @@ struct Booking: Identifiable, Codable {
         self.status          = status
         self.price           = price
         self.priceAmount     = priceAmount
+        self.cancelReason    = cancelReason
     }
 
     // Init from API response
@@ -262,6 +305,7 @@ struct Booking: Identifiable, Codable {
         self.status          = BookingStatus(rawValue: api.status) ?? .pending
         self.price           = "QAR \(Int(api.priceAmount))"
         self.priceAmount     = api.priceAmount
+        self.cancelReason    = api.cancelReason
     }
 }
 
@@ -504,6 +548,18 @@ struct SampleData {
             ServicePackage(emoji:"✨", name:"Deep Clean",      nameAR:"تنظيف عميق",     detail:"4–5 hrs · full home",           detailAR:"٤–٥ ساعات · المنزل كاملاً",    price:"QAR 299",   category:.cleaning),
             ServicePackage(emoji:"🏠", name:"Villa Package",   nameAR:"باقة فيلا",      detail:"Full day · all rooms",          detailAR:"يوم كامل · جميع الغرف",        price:"QAR 349",   category:.cleaning),
             ServicePackage(emoji:"🪟", name:"Window Cleaning", nameAR:"تنظيف نوافذ",    detail:"Interior & exterior",           detailAR:"من الداخل والخارج",             price:"QAR 99",    category:.cleaning),
+        ],
+        .officeClean: [
+            ServicePackage(emoji:"🧹", name:"Basic Office Clean",    nameAR:"تنظيف مكتب أساسي",   detail:"Up to 100 sqm · 2–3 hrs",    detailAR:"حتى ١٠٠ م² · ٢–٣ ساعات",  price:"QAR 199",    category:.officeClean),
+            ServicePackage(emoji:"✨", name:"Deep Office Clean",      nameAR:"تنظيف مكتب عميق",    detail:"Up to 200 sqm · 4–5 hrs",    detailAR:"حتى ٢٠٠ م² · ٤–٥ ساعات",  price:"QAR 349",    category:.officeClean),
+            ServicePackage(emoji:"🏢", name:"Full-Floor Package",     nameAR:"باقة الطابق كاملاً", detail:"Large spaces · full day",     detailAR:"مساحات كبيرة · يوم كامل",  price:"QAR 599",    category:.officeClean),
+            ServicePackage(emoji:"📅", name:"Weekly Office Contract", nameAR:"عقد أسبوعي",          detail:"Once a week · fixed crew",   detailAR:"مرة أسبوعياً · فريق ثابت", price:"QAR 799/mo", category:.officeClean),
+        ],
+        .shopClean: [
+            ServicePackage(emoji:"🧺", name:"Small Shop Clean",      nameAR:"تنظيف محل صغير",   detail:"Up to 50 sqm · 1–2 hrs",      detailAR:"حتى ٥٠ م² · ١–٢ ساعة",    price:"QAR 129",    category:.shopClean),
+            ServicePackage(emoji:"🏪", name:"Standard Shop Clean",   nameAR:"تنظيف محل قياسي",  detail:"Up to 150 sqm · 3–4 hrs",     detailAR:"حتى ١٥٠ م² · ٣–٤ ساعات",  price:"QAR 249",    category:.shopClean),
+            ServicePackage(emoji:"✨", name:"Deep Shop Clean",        nameAR:"تنظيف محل عميق",   detail:"Full interior & surfaces",     detailAR:"داخل كامل وجميع الأسطح",   price:"QAR 399",    category:.shopClean),
+            ServicePackage(emoji:"📆", name:"Monthly Shop Contract",  nameAR:"عقد شهري للمحل",   detail:"4 visits/month · fixed team",  detailAR:"٤ زيارات/شهر · فريق ثابت", price:"QAR 699/mo", category:.shopClean),
         ],
         .carWash: [
             ServicePackage(emoji:"🚿", name:"Exterior Wash",  nameAR:"غسيل خارجي",     detail:"Quick wash & dry",              detailAR:"غسيل وتجفيف سريع",             price:"QAR 45",    category:.carWash),

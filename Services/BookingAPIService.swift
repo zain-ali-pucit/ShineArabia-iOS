@@ -14,6 +14,7 @@ struct APIBooking: Codable, Identifiable {
     let discountAmount: Double
     let createdAt: Date
     let welcomePromoApplied: Bool?
+    let cancelReason: String?
 }
 
 struct APIBookingsResponse: Decodable {
