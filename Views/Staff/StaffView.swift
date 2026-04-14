@@ -38,8 +38,20 @@ private struct StaffHeaderView: View {
     @ObservedObject var vm: StaffViewModel
     @State private var showSignOutConfirmation = false
     @State private var showNotifications       = false
+    @State private var showProfileEdit         = false
 
     private var hasUnread: Bool { appState.unreadCount > 0 || vm.hasNewBooking }
+
+    private var avatarFallback: some View {
+        ZStack {
+            Circle()
+                .fill(Color.shineTeal.opacity(0.15))
+                .frame(width: 36, height: 36)
+            Text(appState.currentUser?.avatarInitials ?? "SA")
+                .font(ShineFont.body(12, weight: .bold))
+                .foregroundColor(.shineTeal)
+        }
+    }
 
     var body: some View {
         HStack(alignment: .center) {
@@ -82,6 +94,30 @@ private struct StaffHeaderView: View {
             .sheet(isPresented: $showNotifications) {
                 StaffNotificationSheet(notifications: appState.notifications)
             }
+
+            // Profile
+            Button { showProfileEdit = true } label: {
+                ZStack {
+                    if let urlStr = appState.currentUser?.avatarUrl, let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let img) = phase {
+                                img.resizable().scaledToFill()
+                            } else {
+                                avatarFallback
+                            }
+                        }
+                        .frame(width: 36, height: 36)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.shineTeal.opacity(0.4), lineWidth: 1.5))
+                    } else {
+                        avatarFallback
+                    }
+                }
+            }
+            .sheet(isPresented: $showProfileEdit) {
+                StaffProfileEditView()
+            }
+            .padding(.trailing, 4)
 
             // Sign-out
             Button { showSignOutConfirmation = true } label: {
@@ -236,16 +272,27 @@ private struct StaffBookingListView: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: ShineSpacing.sm) {
-                        ForEach(vm.filteredBookings) { booking in
-                            StaffBookingCard(booking: booking, vm: vm)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: ShineSpacing.sm) {
+                            Color.clear.frame(height: 0).id("bookingListTop")
+                            ForEach(vm.filteredBookings) { booking in
+                                StaffBookingCard(booking: booking, vm: vm)
+                                    .transition(.asymmetric(
+                                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal:   .move(edge: .leading).combined(with: .opacity)
+                                    ))
+                            }
                         }
+                        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: vm.filteredBookings.map { $0.id })
+                        .padding(.horizontal, ShineSpacing.md)
+                        .padding(.bottom, ShineSpacing.xl)
                     }
-                    .padding(.horizontal, ShineSpacing.md)
-                    .padding(.bottom, ShineSpacing.xl)
+                    .refreshable { await vm.fetchBookings() }
+                    .onChange(of: vm.selectedFilter) { _ in
+                        proxy.scrollTo("bookingListTop", anchor: .top)
+                    }
                 }
-                .refreshable { await vm.fetchBookings() }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

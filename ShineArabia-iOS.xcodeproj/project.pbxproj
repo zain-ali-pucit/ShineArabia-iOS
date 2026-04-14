@@ -12,6 +12,9 @@
 		526FA28D2F8705A1007E714D /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28C2F8705A1007E714D /* EditProfileView.swift */; };
 		526FA28E2F8705A1007E714D /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526FA28F2F8705A1007E714D /* ChangePasswordView.swift */; };
 		5276C62D2F845E1B003AD0D8 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5276C62C2F845E1B003AD0D8 /* LocationService.swift */; };
+		52CD3AE52F8E4BFC007F6CF3 /* StaffProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CD3AE32F8E4BFC007F6CF3 /* StaffProfileEditView.swift */; };
+		52CD3AE62F8E4BFC007F6CF3 /* StaffProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CD3AE42F8E4BFC007F6CF3 /* StaffProfileSetupView.swift */; };
+		52CD3AE82F8E4C36007F6CF3 /* StaffProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CD3AE72F8E4C36007F6CF3 /* StaffProfileViewModel.swift */; };
 		AA0000000000000000000300 /* ShineArabiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000200 /* ShineArabiaApp.swift */; };
 		AA0000000000000000000301 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000201 /* RootView.swift */; };
 		AA0000000000000000000302 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000202 /* AppState.swift */; };
@@ -37,9 +40,6 @@
 		BB0000000000000000000104 /* ServiceAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* ServiceAPIService.swift */; };
 		BB0000000000000000000105 /* UserAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000005 /* UserAPIService.swift */; };
 		BB0000000000000000000106 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000006 /* AuthViewModel.swift */; };
-		EE0000000000000000000101 /* StaffAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000001 /* StaffAPIService.swift */; };
-		EE0000000000000000000102 /* StaffViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* StaffViewModel.swift */; };
-		EE0000000000000000000103 /* StaffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000003 /* StaffView.swift */; };
 		BB0000000000000000000107 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* LoginView.swift */; };
 		BB0000000000000000000108 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* RegisterView.swift */; };
 		BB0000000000000000000109 /* LocalCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* LocalCacheService.swift */; };
@@ -47,6 +47,9 @@
 		CC0000000000000000000003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000007 /* GoogleSignIn */; };
 		CC0000000000000000000006 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = CC0000000000000000000005 /* FacebookLogin */; };
 		DD000000000000000000001B /* AddressesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* AddressesView.swift */; };
+		EE0000000000000000000101 /* StaffAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000001 /* StaffAPIService.swift */; };
+		EE0000000000000000000102 /* StaffViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* StaffViewModel.swift */; };
+		EE0000000000000000000103 /* StaffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000003 /* StaffView.swift */; };
 		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
 		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
 		FF0000000000000000000006 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */; };
@@ -60,6 +63,9 @@
 		526FA28F2F8705A1007E714D /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		5276C62C2F845E1B003AD0D8 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		52CD3AE32F8E4BFC007F6CF3 /* StaffProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffProfileEditView.swift; sourceTree = "<group>"; };
+		52CD3AE42F8E4BFC007F6CF3 /* StaffProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffProfileSetupView.swift; sourceTree = "<group>"; };
+		52CD3AE72F8E4C36007F6CF3 /* StaffProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffProfileViewModel.swift; sourceTree = "<group>"; };
 		AA0000000000000000000005 /* ShineArabia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShineArabia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000200 /* ShineArabiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShineArabiaApp.swift; sourceTree = "<group>"; };
 		AA0000000000000000000201 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -87,14 +93,14 @@
 		BB0000000000000000000004 /* ServiceAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000005 /* UserAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPIService.swift; sourceTree = "<group>"; };
 		BB0000000000000000000006 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
-		EE0000000000000000000001 /* StaffAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAPIService.swift; sourceTree = "<group>"; };
-		EE0000000000000000000002 /* StaffViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffViewModel.swift; sourceTree = "<group>"; };
-		EE0000000000000000000003 /* StaffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000007 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000009 /* LocalCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCacheService.swift; sourceTree = "<group>"; };
 		CC0000000000000000000002 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
 		DD000000000000000000001A /* AddressesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressesView.swift; sourceTree = "<group>"; };
+		EE0000000000000000000001 /* StaffAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAPIService.swift; sourceTree = "<group>"; };
+		EE0000000000000000000002 /* StaffViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffViewModel.swift; sourceTree = "<group>"; };
+		EE0000000000000000000003 /* StaffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,14 +124,6 @@
 				526FA2872F86FEC6007E714D /* AppTourView.swift */,
 			);
 			path = Tour;
-			sourceTree = "<group>";
-		};
-		EE0000000000000000000200 /* Staff */ = {
-			isa = PBXGroup;
-			children = (
-				EE0000000000000000000003 /* StaffView.swift */,
-			);
-			path = Staff;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000002 = {
@@ -172,10 +170,11 @@
 		AA0000000000000000000102 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				EE0000000000000000000002 /* StaffViewModel.swift */,
+				BB0000000000000000000006 /* AuthViewModel.swift */,
 				AA0000000000000000000204 /* HomeViewModel.swift */,
 				AA0000000000000000000205 /* BookingViewModel.swift */,
-				BB0000000000000000000006 /* AuthViewModel.swift */,
+				52CD3AE72F8E4C36007F6CF3 /* StaffProfileViewModel.swift */,
+				EE0000000000000000000002 /* StaffViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -311,6 +310,16 @@
 			path = Rewards;
 			sourceTree = "<group>";
 		};
+		EE0000000000000000000200 /* Staff */ = {
+			isa = PBXGroup;
+			children = (
+				52CD3AE32F8E4BFC007F6CF3 /* StaffProfileEditView.swift */,
+				52CD3AE42F8E4BFC007F6CF3 /* StaffProfileSetupView.swift */,
+				EE0000000000000000000003 /* StaffView.swift */,
+			);
+			path = Staff;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -406,6 +415,7 @@
 				AA0000000000000000000306 /* OnboardingView.swift in Sources */,
 				AA0000000000000000000307 /* HomeView.swift in Sources */,
 				AA0000000000000000000308 /* ExploreView.swift in Sources */,
+				52CD3AE82F8E4C36007F6CF3 /* StaffProfileViewModel.swift in Sources */,
 				AA0000000000000000000309 /* OrdersView.swift in Sources */,
 				AA000000000000000000030A /* ServiceBottomSheet.swift in Sources */,
 				AA000000000000000000030B /* ProfileView.swift in Sources */,
@@ -429,6 +439,8 @@
 				EE0000000000000000000103 /* StaffView.swift in Sources */,
 				526FA2892F86FEC6007E714D /* AppTourView.swift in Sources */,
 				BB0000000000000000000108 /* RegisterView.swift in Sources */,
+				52CD3AE52F8E4BFC007F6CF3 /* StaffProfileEditView.swift in Sources */,
+				52CD3AE62F8E4BFC007F6CF3 /* StaffProfileSetupView.swift in Sources */,
 				CC0000000000000000000001 /* RewardsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -16,7 +16,7 @@ struct HomeView: View {
 
                     // Default home content
                     PromoBannerView(bundle: vm.featuredBundle, isArabic: appState.isArabic) {
-                        vm.openService(.bundle)
+                        vm.openCustomBundle()
                     }
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.top, ShineSpacing.lg)
@@ -116,6 +116,28 @@ struct HomeView: View {
             LoginView()
                 .environmentObject(appState)
         }
+        .fullScreenCover(isPresented: $vm.showCustomBundleSheet) {
+            CustomBundleBuilderView(
+                isArabic: appState.isArabic,
+                components: vm.customBundleComponents,
+                isLoading: vm.isLoadingCleaningSubPackages
+            ) { selected in
+                vm.showCustomBundleSheet = false
+                vm.selectedPackages = selected
+                if appState.isAuthenticated {
+                    Task { @MainActor in
+                        await bookingVM.createMultiBooking(packages: selected)
+                        if bookingVM.errorMsg == nil {
+                            vm.confirmBooking()
+                        }
+                    }
+                } else {
+                    vm.pendingPackagesForAuth = selected
+                    vm.showAuthPrompt = true
+                }
+            }
+            .environmentObject(bookingVM)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { _ in
             guard !vm.pendingPackagesForAuth.isEmpty else { return }
             let pkgs = vm.pendingPackagesForAuth
@@ -133,6 +155,13 @@ struct HomeView: View {
             async let popular: ()  = vm.loadPopular()
             async let bundles: ()  = vm.loadBundles()
             _ = await (cats, popular, bundles)
+            vm.loadCleaningSubPackages()
+
+            if appState.isAuthenticated {
+                if let stats = try? await UserAPIService.shared.fetchStats() {
+                    await MainActor.run { appState.userPoints = stats.points }
+                }
+            }
         }
     }
 }
@@ -254,36 +283,16 @@ struct PromoBannerView: View {
     let onTap: () -> Void
 
     private var title: String {
-        guard let b = bundle else { return isArabic ? "احجز باقة\nووفّر أكثر" : "Bundle Services\n& Save" }
-        return isArabic ? b.nameAr : b.nameEn
+        isArabic ? "شاين عربيا 360" : "ShineArabia 360"
     }
 
     private var subtitle: String {
-        guard let b = bundle else { return isArabic ? "اكتشف باقاتنا" : "Discover our bundles" }
-        return b.componentSubtitle(isArabic: isArabic)
+        isArabic ? "تنظيف" : "Clean"
     }
 
-    private var discountText: String { "30%" }
-
-    private var bundleBasePrice: Double? {
-        guard let b = bundle else { return nil }
-        if b.originalTotal > 0 { return b.originalTotal }
-        if b.priceAmount > 0 { return b.priceAmount }
-        return nil
-    }
-
-    private var originalPriceText: String? {
-        guard let base = bundleBasePrice else { return nil }
-        return "QAR \(Int(base.rounded()))"
-    }
-
-    private var priceText: String {
-        guard let b = bundle else { return "" }
-        if let base = bundleBasePrice {
-            let discounted = base * 0.70
-            return "QAR \(Int(discounted.rounded()))"
-        }
-        return b.priceDisplay
+    private var discountText: String {
+        guard let pct = bundle?.discountPct, pct > 0 else { return "30%" }
+        return "\(pct)%"
     }
 
     var body: some View {
@@ -340,37 +349,20 @@ struct PromoBannerView: View {
                                 .lineLimit(1)
                         }
 
-                        // Price + CTA
-                        HStack(spacing: 10) {
-                            if !priceText.isEmpty || originalPriceText != nil {
-                                VStack(alignment: .leading, spacing: 1) {
-                                    if !priceText.isEmpty {
-                                        Text(priceText)
-                                            .font(ShineFont.displayBold(16))
-                                            .foregroundColor(Color(hex: "F4A799"))
-                                    }
-                                    if let original = originalPriceText {
-                                        Text(original)
-                                            .font(ShineFont.body(12))
-                                            .foregroundColor(.white.opacity(0.45))
-                                            .strikethrough(true, color: .white.opacity(0.45))
-                                    }
-                                }
-                            }
-                            HStack(spacing: 6) {
-                                Text(isArabic ? "احجز الآن" : "Book Bundle")
-                                    .font(ShineFont.body(13, weight: .semibold))
-                                Image(systemName: isArabic ? "arrow.left" : "arrow.right")
-                                    .font(.system(size: 12, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .background(Color.shineCoral)
-                            .clipShape(Capsule())
-                            .shadow(color: Color.shineCoral.opacity(0.35), radius: 8, x: 0, y: 4)
+                        // CTA
+                        HStack(spacing: 6) {
+                            Text(isArabic ? "احجز الآن" : "Book Bundle")
+                                .font(ShineFont.body(14, weight: .semibold))
+                            Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
                         }
-                        .padding(.top, 4)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.shineCoral)
+                        .clipShape(Capsule())
+                        .shadow(color: Color.shineCoral.opacity(0.4), radius: 10, x: 0, y: 4)
+                        .padding(.top, 6)
                     }
 
                     Spacer()

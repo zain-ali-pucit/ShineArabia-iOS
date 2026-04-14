@@ -20,7 +20,6 @@ struct ServiceBottomSheet: View {
     @State private var promoMsg: String?
     @State private var promoIsValid: Bool = false
     @State private var isValidating: Bool = false
-    @State private var showCustomBundleBuilder: Bool = false
     @State private var cleaningSubType: CleaningSubType = .home
 
     enum CleaningSubType: CaseIterable {
@@ -59,24 +58,7 @@ struct ServiceBottomSheet: View {
                 return shopPackages.isEmpty ? (SampleData.packages[.shopClean] ?? []) : shopPackages
             }
         }
-        guard category == .bundle else { return packages }
-
-        let preferred = packages.first {
-            let n = $0.name.lowercased()
-            let d = $0.detail.lowercased()
-            return n.contains("weekly") || d.contains("laundry + car")
-        }
-        if let preferred { return [preferred] }
-        return packages.isEmpty ? [] : [packages[0]]
-    }
-
-    private var customBundleOptions: [ServicePackage] {
-        let backend = customBundleComponents.filter { $0.category == .laundry || $0.category == .carWash }
-        if !backend.isEmpty { return backend }
-
-        let fallbackLaundry = SampleData.packages[.laundry] ?? []
-        let fallbackCarWash = SampleData.packages[.carWash] ?? []
-        return fallbackLaundry + fallbackCarWash
+        return packages
     }
 
     var body: some View {
@@ -196,39 +178,6 @@ struct ServiceBottomSheet: View {
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.bottom, ShineSpacing.md)
 
-                // ── Bundle discount banner ───────────────────────────────
-                if category == .bundle {
-                    HStack(spacing: 10) {
-                        Text("🎁")
-                            .font(.system(size: 20))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(isArabic ? "خصم ٣٠٪ عند اكتمال الباقة" : "30% off on complete bundles")
-                                .font(ShineFont.body(13, weight: .semibold))
-                                .foregroundColor(.white)
-                            Text(isArabic ? "ينطبق على الباقة الجاهزة أو باقتك الخاصة" : "Applies to app bundle or your own complete bundle")
-                                .font(ShineFont.body(11))
-                                .foregroundColor(.white.opacity(0.85))
-                        }
-                        Spacer()
-                        Text("30% OFF")
-                            .font(ShineFont.body(11, weight: .semibold))
-                            .foregroundColor(Color(hex: "F4A799"))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color.white.opacity(0.15))
-                            .clipShape(Capsule())
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(
-                        LinearGradient(colors: [Color(hex: "1C1917"), Color(hex: "3D3530")],
-                                       startPoint: .leading, endPoint: .trailing)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
-                }
-
                 // ── Scrollable: packages + date/time + address ───────────
                 if isLoading {
                     VStack(spacing: 10) {
@@ -249,23 +198,15 @@ struct ServiceBottomSheet: View {
                                         package: pkg,
                                         isSelected: selectedPackages.contains(where: { $0.id == pkg.id }),
                                         isArabic: isArabic,
-                                        overrideName: (category == .bundle && pkg.category == .bundle) ? "Bundle" : nil,
-                                        overrideNameAR: (category == .bundle && pkg.category == .bundle) ? "الباقة" : nil,
-                                        overrideDetail: (category == .bundle && pkg.category == .bundle) ? "Laundry + Car" : nil,
-                                        overrideDetailAR: (category == .bundle && pkg.category == .bundle) ? "غسيل + سيارة" : nil
+                                        overrideName: nil,
+                                        overrideNameAR: nil,
+                                        overrideDetail: nil,
+                                        overrideDetailAR: nil
                                     ) {
                                         withAnimation(.spring(response: 0.3)) {
                                             if let idx = selectedPackages.firstIndex(where: { $0.id == pkg.id }) {
                                                 selectedPackages.remove(at: idx)
                                             } else {
-                                                if category == .bundle {
-                                                    // Keep selection mode consistent: app bundle OR own bundle.
-                                                    if pkg.category == .bundle {
-                                                        selectedPackages.removeAll { $0.category != .bundle }
-                                                    } else {
-                                                        selectedPackages.removeAll { $0.category == .bundle }
-                                                    }
-                                                }
                                                 selectedPackages.append(pkg)
                                             }
                                         }
@@ -274,49 +215,6 @@ struct ServiceBottomSheet: View {
                             }
                             .padding(.horizontal, ShineSpacing.lg)
                             .padding(.bottom, ShineSpacing.md)
-
-                            if category == .bundle {
-                                Button {
-                                    showCustomBundleBuilder = true
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.shineTealLight)
-                                                .frame(width: 44, height: 44)
-                                            Image(systemName: "slider.horizontal.3")
-                                                .font(.system(size: 18, weight: .semibold))
-                                                .foregroundColor(.shineTeal)
-                                        }
-
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(isArabic ? "باقتك الخاصة" : "Custom Bundle")
-                                                .font(ShineFont.body(14, weight: .semibold))
-                                                .foregroundColor(.shineInk)
-                                            Text(isArabic ? "اختر خدمات الغسيل والسيارة بنفسك" : "Pick your own Laundry + Car services")
-                                                .font(ShineFont.body(12))
-                                                .foregroundColor(.shineInk3)
-                                        }
-
-                                        Spacer()
-
-                                        Image(systemName: isArabic ? "arrow.left" : "arrow.right")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(.shineCoral)
-                                    }
-                                    .padding(14)
-                                    .background(Color.shineSurface)
-                                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: ShineRadius.md)
-                                            .stroke(Color.shineBorder, lineWidth: 1)
-                                    )
-                                    .shineShadowXS()
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.horizontal, ShineSpacing.lg)
-                                .padding(.bottom, ShineSpacing.md)
-                            }
 
                             // Date & Time
                             DateTimePickerSection(
@@ -406,19 +304,6 @@ struct ServiceBottomSheet: View {
                     .padding(.bottom, 34)
                 }
             }
-        }
-        .fullScreenCover(isPresented: $showCustomBundleBuilder) {
-            CustomBundleBuilderView(
-                isArabic: isArabic,
-                components: customBundleOptions,
-                onBook: { selected in
-                    selectedPackages = selected
-                    showCustomBundleBuilder = false
-                    dismiss()
-                    onBook()
-                    appState.selectedTab = .home
-                }
-            )
         }
     }
 }
@@ -528,6 +413,7 @@ struct AddressInputSection: View {
     @EnvironmentObject private var appState: AppState
     @FocusState private var fieldFocused: Bool
     @State private var showPicker = false
+    @State private var isLocating = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -538,7 +424,7 @@ struct AddressInputSection: View {
                 .textCase(.uppercase)
                 .padding(.horizontal, ShineSpacing.lg)
 
-            // Text field + picker button
+            // Text field + GPS button + picker button
             HStack(spacing: 10) {
                 Image(systemName: "location.fill")
                     .font(.system(size: 15))
@@ -563,6 +449,22 @@ struct AddressInputSection: View {
                 }
 
                 Spacer()
+
+                // GPS current location button
+                Button {
+                    fieldFocused = false
+                    fetchCurrentLocation()
+                } label: {
+                    if isLocating {
+                        ProgressView()
+                            .frame(width: 26, height: 26)
+                    } else {
+                        Image(systemName: "location.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(.shineTeal)
+                    }
+                }
+                .disabled(isLocating)
 
                 // Open address picker
                 Button {
@@ -598,6 +500,28 @@ struct AddressInputSection: View {
                 longitude = saved.longitude
             })
             .environmentObject(appState)
+        }
+    }
+
+    private func fetchCurrentLocation() {
+        isLocating = true
+        Task {
+            if locationService.isNotDetermined { locationService.requestPermission() }
+            guard locationService.isAuthorized else {
+                await MainActor.run { isLocating = false }
+                return
+            }
+            async let locationTask = locationService.getCurrentLocation()
+            async let addressTask  = locationService.getCurrentAddress()
+            let (loc, addr) = await (locationTask, addressTask)
+            await MainActor.run {
+                if let loc {
+                    latitude  = loc.coordinate.latitude
+                    longitude = loc.coordinate.longitude
+                }
+                if !addr.isEmpty { address = addr }
+                isLocating = false
+            }
         }
     }
 }
@@ -879,11 +803,14 @@ struct PackageRow: View {
     }
 }
 
-private struct CustomBundleBuilderView: View {
+struct CustomBundleBuilderView: View {
     let isArabic: Bool
     let components: [ServicePackage]
+    var isLoading: Bool = false
     let onBook: ([ServicePackage]) -> Void
 
+    @EnvironmentObject private var bookingVM: BookingViewModel
+    @ObservedObject private var locationService = LocationService.shared
     @Environment(\.dismiss) private var dismiss
     @State private var selectedComponents: [ServicePackage] = []
 
@@ -911,19 +838,23 @@ private struct CustomBundleBuilderView: View {
                 HStack(alignment: .top, spacing: 14) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.shineTealLight)
+                            .fill(Color(hex: "1C1917").opacity(0.08))
                             .frame(width: 64, height: 64)
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(.shineTeal)
+                        Text("📦")
+                            .font(.system(size: 30))
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(isArabic ? "باقتك الخاصة" : "Custom Bundle")
+                        Text(isArabic ? "الباقة" : "Bundle")
                             .font(ShineFont.displayBold(26))
                             .foregroundColor(.shineInk)
-                        Text(isArabic ? "اختر خدمات الغسيل والسيارة" : "Select Laundry + Car services")
-                            .font(ShineFont.body(13))
-                            .foregroundColor(.shineInk3)
+                        HStack(spacing: 5) {
+                            Image(systemName: "tag.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.shineCoral)
+                            Text(isArabic ? "اختر ٣ خدمات أو أكثر للحصول على خصم ٣٠٪" : "Select 3+ services to get 30% off")
+                                .font(ShineFont.body(12, weight: .medium))
+                                .foregroundColor(.shineCoral)
+                        }
                     }
                     .padding(.top, 6)
                     Spacer()
@@ -948,6 +879,16 @@ private struct CustomBundleBuilderView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 10) {
+                        if isLoading {
+                            VStack(spacing: 10) {
+                                ProgressView()
+                                Text(isArabic ? "جاري تحميل الخدمات..." : "Loading services...")
+                                    .font(ShineFont.body(13))
+                                    .foregroundColor(.shineInk3)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                        }
                         ForEach(components) { item in
                             PackageRow(
                                 package: item,
@@ -965,15 +906,33 @@ private struct CustomBundleBuilderView: View {
                                         selectedComponents.append(item)
                                     }
                                 }
-                            }                            
+                            }
                         }
                     }
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.bottom, ShineSpacing.md)
                 }
 
-                VStack(spacing: 10) {
+                // ── Sticky footer ────────────────────────────────────────
+                VStack(spacing: 0) {
                     Divider()
+
+                    DateTimePickerSection(
+                        isArabic: isArabic,
+                        selectedDate: $bookingVM.selectedDate
+                    )
+                    .padding(.top, ShineSpacing.md)
+
+                    AddressInputSection(
+                        isArabic: isArabic,
+                        address: $bookingVM.address,
+                        latitude: $bookingVM.latitude,
+                        longitude: $bookingVM.longitude,
+                        locationService: locationService
+                    )
+
+                    Divider()
+                        .padding(.top, ShineSpacing.sm)
 
                     VStack(spacing: 6) {
                         HStack {
@@ -1011,23 +970,47 @@ private struct CustomBundleBuilderView: View {
                         }
                     }
                     .padding(.horizontal, ShineSpacing.lg)
+                    .padding(.top, ShineSpacing.md)
 
+                    if let err = bookingVM.errorMsg {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 13))
+                            Text(err)
+                                .font(ShineFont.body(13))
+                                .lineLimit(2)
+                        }
+                        .foregroundColor(.red)
+                        .padding(.horizontal, ShineSpacing.lg)
+                    }
+
+                    let canBook = !selectedComponents.isEmpty
+                        && !bookingVM.address.trimmingCharacters(in: .whitespaces).isEmpty
+                        && !bookingVM.isSubmitting
                     Button {
                         onBook(selectedComponents)
                     } label: {
-                        HStack(spacing: 8) {
-                            Text(isArabic ? "احجز الآن" : "Book Now")
-                                .font(ShineFont.body(16, weight: .semibold))
-                            Image(systemName: isArabic ? "arrow.left" : "arrow.right")
-                                .font(.system(size: 14, weight: .semibold))
+                        ZStack {
+                            HStack(spacing: 8) {
+                                Text(isArabic ? "احجز الآن" : "Book Now")
+                                    .font(ShineFont.body(16, weight: .semibold))
+                                Image(systemName: isArabic ? "arrow.left" : "arrow.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .opacity(bookingVM.isSubmitting ? 0 : 1)
+                            if bookingVM.isSubmitting {
+                                ProgressView().tint(.white)
+                            }
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(selectedComponents.isEmpty ? Color.shineInk3 : Color.shineCoral)
+                        .background(canBook ? Color.shineCoral : Color.shineInk3)
                         .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                        .shadow(color: Color.shineCoral.opacity(canBook ? 0.3 : 0), radius: 10, x: 0, y: 5)
                     }
-                    .disabled(selectedComponents.isEmpty)
+                    .animation(.easeInOut(duration: 0.2), value: canBook)
+                    .disabled(!canBook)
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.bottom, 34)
                 }

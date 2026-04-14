@@ -9,9 +9,14 @@ struct RootView: View {
             if splashFinished {
                 Group {
                     if appState.isStaff {
-                        // Staff / admin / manager users see the staff panel
-                        StaffView()
-                            .transition(.opacity)
+                        // Staff must complete profile (avatar + certificate) before the panel
+                        if appState.isStaffProfileComplete {
+                            StaffView()
+                                .transition(.opacity)
+                        } else {
+                            StaffProfileSetupView()
+                                .transition(.opacity)
+                        }
                     } else if !appState.hasCompletedOnboarding {
                         OnboardingView()
                             .transition(.opacity)

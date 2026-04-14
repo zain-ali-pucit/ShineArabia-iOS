@@ -8,6 +8,7 @@ struct User: Identifiable, Codable {
     var phone: String
     var address: String
     var avatarUrl: String?
+    var certificateUrl: String?
     var avatarInitials: String { String(name.prefix(2)).uppercased() }
 }
 
@@ -133,8 +134,8 @@ struct ServicePackage: Identifiable {
         self.emoji       = api.emoji
         self.name        = api.nameEn
         self.nameAR      = api.nameAr
-        self.detail      = isWeeklyBundle ? "Laundry + Car" : api.detailEn
-        self.detailAR    = isWeeklyBundle ? "غسيل + سيارة" : api.detailAr
+        self.detail      = isWeeklyBundle ? "Clean" : api.detailEn
+        self.detailAR    = isWeeklyBundle ? "تنظيف" : api.detailAr
         self.price       = api.priceDisplay
         self.priceAmount = api.priceAmount
         self.category    = mappedCategory
@@ -147,8 +148,8 @@ struct ServicePackage: Identifiable {
         self.emoji       = component.emoji
         self.name        = component.nameEn
         self.nameAR      = component.nameAr
-        self.detail      = component.categoryName ?? "Bundle component"
-        self.detailAR    = component.categoryName ?? "عنصر باقة"
+        self.detail      = component.detailEn ?? component.categoryName ?? "Bundle component"
+        self.detailAR    = component.detailAr ?? component.categoryName ?? "عنصر باقة"
         self.price       = component.priceDisplay
         self.priceAmount = component.priceAmount
         self.category    = ServiceCategory(rawValue: component.categorySlug) ?? .laundry
@@ -316,6 +317,8 @@ struct APIBundleComponent: Codable, Identifiable {
     let emoji: String
     let nameEn: String
     let nameAr: String
+    let detailEn: String?
+    let detailAr: String?
     let priceDisplay: String
     let priceAmount: Double
     let categorySlug: String
@@ -341,10 +344,7 @@ struct APIBundle: Codable, Identifiable {
 
     // Convenience: component names joined for subtitle
     func componentSubtitle(isArabic: Bool) -> String {
-        if nameEn.lowercased().contains("weekly") {
-            return isArabic ? "غسيل + سيارة" : "Laundry + Car"
-        }
-        return components
+        components
             .map { isArabic ? $0.nameAr : $0.nameEn }
             .joined(separator: " + ")
     }
@@ -393,12 +393,13 @@ extension APICategory {
 extension APIUser {
     func toUser() -> User {
         User(
-            id:        UUID(uuidString: id) ?? UUID(),
-            name:      name,
-            email:     email,
-            phone:     phone     ?? "",
-            address:   address   ?? "",
-            avatarUrl: avatarUrl
+            id:             UUID(uuidString: id) ?? UUID(),
+            name:           name,
+            email:          email,
+            phone:          phone          ?? "",
+            address:        address        ?? "",
+            avatarUrl:      avatarUrl,
+            certificateUrl: certificateUrl
         )
     }
 }
@@ -416,16 +417,29 @@ struct RewardTier: Identifiable {
 }
 
 let rewardTiers: [RewardTier] = [
-    RewardTier(points: 50,   reward: "1 kg Laundry Free",        rewardAR: "١ كغ غسيل مجاني",
-               icon: "🧺", detail: "Wash & Fold · 1 kg",               detailAR: "غسيل وطي · ١ كغ"),
-    RewardTier(points: 100,  reward: "2 kg Laundry Free",        rewardAR: "٢ كغ غسيل مجاني",
-               icon: "🧺", detail: "Wash & Fold · 2 kg",               detailAR: "غسيل وطي · ٢ كغ"),
-    RewardTier(points: 300,  reward: "Exterior Wash + 2 kg",     rewardAR: "غسيل خارجي + ٢ كغ",
-               icon: "🚿", detail: "Car exterior wash + 2 kg laundry",  detailAR: "غسيل خارجي للسيارة + ٢ كغ غسيل"),
-    RewardTier(points: 500,  reward: "Interior & Exterior Wash", rewardAR: "غسيل داخلي وخارجي",
-               icon: "✨", detail: "Full interior + exterior car wash",  detailAR: "غسيل كامل داخلي وخارجي للسيارة"),
-    RewardTier(points: 1000, reward: "Full Detail",              rewardAR: "تلميع كامل",
-               icon: "🏆", detail: "Complete car detailing package",     detailAR: "باقة تلميع شاملة للسيارة"),
+    // 100 pts — Regular cleaning services
+    RewardTier(points: 100, reward: "Regular Clean",       rewardAR: "تنظيف عادي",
+               icon: "🏠", detail: "Standard home cleaning session",      detailAR: "جلسة تنظيف منزلية عادية"),
+    RewardTier(points: 100, reward: "Basic Office Clean",  rewardAR: "تنظيف مكتب أساسي",
+               icon: "🏢", detail: "Essential office cleaning service",   detailAR: "خدمة تنظيف مكتبية أساسية"),
+    RewardTier(points: 100, reward: "Small Shop Clean",    rewardAR: "تنظيف محل صغير",
+               icon: "🏪", detail: "Cleaning for small retail spaces",    detailAR: "تنظيف المحلات التجارية الصغيرة"),
+
+    // 300 pts — Deep cleaning services
+    RewardTier(points: 300, reward: "Deep Clean",          rewardAR: "تنظيف عميق",
+               icon: "✨", detail: "Thorough deep cleaning for homes",    detailAR: "تنظيف عميق شامل للمنازل"),
+    RewardTier(points: 300, reward: "Deep Office Clean",   rewardAR: "تنظيف مكتب عميق",
+               icon: "🏢", detail: "Deep cleaning for office spaces",     detailAR: "تنظيف عميق للمساحات المكتبية"),
+    RewardTier(points: 300, reward: "Standard Shop Clean", rewardAR: "تنظيف محل معياري",
+               icon: "🏪", detail: "Standard cleaning for shops",         detailAR: "تنظيف معياري للمحلات التجارية"),
+
+    // 600 pts — Premium cleaning packages
+    RewardTier(points: 600, reward: "Villa Package",       rewardAR: "باقة فيلا",
+               icon: "🏡", detail: "Complete cleaning for villas",        detailAR: "تنظيف شامل للفلل"),
+    RewardTier(points: 600, reward: "Full-Floor Package",  rewardAR: "باقة طابق كامل",
+               icon: "🏗️", detail: "Full floor or large apartment clean",  detailAR: "تنظيف طابق كامل أو شقة كبيرة"),
+    RewardTier(points: 600, reward: "Deep Shop Clean",     rewardAR: "تنظيف محل عميق",
+               icon: "🛒", detail: "Deep cleaning for large retail shops", detailAR: "تنظيف عميق للمحلات التجارية الكبيرة"),
 ]
 
 // MARK: - Saved Address
@@ -548,6 +562,7 @@ struct SampleData {
             ServicePackage(emoji:"✨", name:"Deep Clean",      nameAR:"تنظيف عميق",     detail:"4–5 hrs · full home",           detailAR:"٤–٥ ساعات · المنزل كاملاً",    price:"QAR 299",   category:.cleaning),
             ServicePackage(emoji:"🏠", name:"Villa Package",   nameAR:"باقة فيلا",      detail:"Full day · all rooms",          detailAR:"يوم كامل · جميع الغرف",        price:"QAR 349",   category:.cleaning),
             ServicePackage(emoji:"🪟", name:"Window Cleaning", nameAR:"تنظيف نوافذ",    detail:"Interior & exterior",           detailAR:"من الداخل والخارج",             price:"QAR 99",    category:.cleaning),
+            ServicePackage(emoji:"📅", name:"Weekly Service",  nameAR:"خدمة أسبوعية",   detail:"3 days a week",                 detailAR:"٣ أيام في الأسبوع",             price:"QAR 500",   category:.cleaning),
         ],
         .officeClean: [
             ServicePackage(emoji:"🧹", name:"Basic Office Clean",    nameAR:"تنظيف مكتب أساسي",   detail:"Up to 100 sqm · 2–3 hrs",    detailAR:"حتى ١٠٠ م² · ٢–٣ ساعات",  price:"QAR 199",    category:.officeClean),

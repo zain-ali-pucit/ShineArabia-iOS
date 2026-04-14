@@ -7,6 +7,7 @@ class HomeViewModel: ObservableObject {
     @Published var showBookingConfirmed: Bool          = false
     @Published var showAuthPrompt: Bool                = false
     @Published var pendingPackagesForAuth: [ServicePackage] = []
+    @Published var showCustomBundleSheet: Bool         = false
     @Published var isLoading: Bool                  = false
     @Published var errorMsg: String?                = nil
 
@@ -16,7 +17,8 @@ class HomeViewModel: ObservableObject {
     @Published var packages: [ServicePackage]       = []
     @Published var popularItems: [PopularItem]      = []
 
-    // Cleaning sub-category packages (office + shop)
+    // Cleaning packages for all three sub-types (home + office + shop)
+    @Published var homeCleaningPackages: [ServicePackage]   = []
     @Published var officeCleaningPackages: [ServicePackage] = []
     @Published var shopCleaningPackages: [ServicePackage]   = []
     @Published var isLoadingCleaningSubPackages: Bool       = false
@@ -24,13 +26,9 @@ class HomeViewModel: ObservableObject {
     /// The first active bundle — drives the home promo banner
     var featuredBundle: APIBundle? { bundles.first }
 
-    /// Union of all bundle components users can combine as a custom bundle.
+    /// All cleaning packages combined — used to populate the Custom Bundle builder.
     var customBundleComponents: [ServicePackage] {
-        var seen = Set<String>()
-        return bundles
-            .flatMap(\.components)
-            .filter { seen.insert($0.id).inserted }
-            .map { ServicePackage(from: $0) }
+        homeCleaningPackages + officeCleaningPackages + shopCleaningPackages
     }
 
     // Loading flags (only true when no cache exists yet)
@@ -118,6 +116,7 @@ class HomeViewModel: ObservableObject {
     // MARK: - Open service sheet — from backend category card
 
     func openService(_ apiCategory: APICategory) {
+        if apiCategory.slug == ServiceCategory.bundle.rawValue { openCustomBundle(); return }
         guard !disabledCategorySlugs.contains(apiCategory.slug) else { return }
         selectedService  = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
         selectedPackages = []
@@ -131,6 +130,7 @@ class HomeViewModel: ObservableObject {
     // MARK: - Open service sheet — from popular items or bundle promo
 
     func openService(_ category: ServiceCategory) {
+        if category == .bundle { openCustomBundle(); return }
         guard !disabledCategorySlugs.contains(category.rawValue) else { return }
         selectedService  = category
         selectedPackages = []
@@ -141,10 +141,25 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Open custom bundle builder directly
+
+    func openCustomBundle() {
+        selectedPackages = []
+        showCustomBundleSheet = true
+        if customBundleComponents.isEmpty {
+            loadCleaningSubPackages()
+        }
+    }
+
     // MARK: - Cleaning sub-category packages (cache-first → background refresh)
+
+    private var isCleaningRefreshInFlight = false
 
     func loadCleaningSubPackages() {
         // 1. Show cached data instantly
+        if let cached = cache.loadPackages(slug: ServiceCategory.cleaning.rawValue) {
+            homeCleaningPackages = cached.map { ServicePackage(from: $0) }
+        }
         if let cached = cache.loadPackages(slug: ServiceCategory.officeClean.rawValue) {
             officeCleaningPackages = cached.map { ServicePackage(from: $0) }
         }
@@ -152,15 +167,22 @@ class HomeViewModel: ObservableObject {
             shopCleaningPackages = cached.map { ServicePackage(from: $0) }
         }
 
-        isLoadingCleaningSubPackages = officeCleaningPackages.isEmpty || shopCleaningPackages.isEmpty
+        isLoadingCleaningSubPackages = homeCleaningPackages.isEmpty || officeCleaningPackages.isEmpty || shopCleaningPackages.isEmpty
 
-        // 2. Background refresh for both slugs concurrently
+        // 2. Background refresh — skip if a fetch is already in flight
+        guard !isCleaningRefreshInFlight else { return }
+        isCleaningRefreshInFlight = true
+
         Task {
             await withTaskGroup(of: Void.self) { group in
+                group.addTask { await self.refreshSubPackages(slug: ServiceCategory.cleaning.rawValue) }
                 group.addTask { await self.refreshSubPackages(slug: ServiceCategory.officeClean.rawValue) }
                 group.addTask { await self.refreshSubPackages(slug: ServiceCategory.shopClean.rawValue) }
             }
-            await MainActor.run { isLoadingCleaningSubPackages = false }
+            await MainActor.run {
+                isLoadingCleaningSubPackages  = false
+                isCleaningRefreshInFlight     = false
+            }
         }
     }
 
@@ -170,15 +192,15 @@ class HomeViewModel: ObservableObject {
             let changed = cache.updatePackagesIfChanged(fresh, slug: slug)
             let mapped  = fresh.map { ServicePackage(from: $0) }
             await MainActor.run {
-                if slug == ServiceCategory.officeClean.rawValue {
+                if slug == ServiceCategory.cleaning.rawValue {
+                    if changed || homeCleaningPackages.isEmpty { homeCleaningPackages = mapped }
+                } else if slug == ServiceCategory.officeClean.rawValue {
                     if changed || officeCleaningPackages.isEmpty { officeCleaningPackages = mapped }
                 } else if slug == ServiceCategory.shopClean.rawValue {
                     if changed || shopCleaningPackages.isEmpty { shopCleaningPackages = mapped }
                 }
             }
-        } catch {
-            // Backend slug not yet set up — SampleData fallback applied in ServiceBottomSheet
-        }
+        } catch { }
     }
 
     private func sortCategoriesForDisplay(_ source: [APICategory]) -> [APICategory] {

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import UIKit
 import UserNotifications
 import CoreLocation
@@ -10,7 +11,7 @@ class StaffViewModel: NSObject, ObservableObject {
     @Published var bookings: [StaffBooking]    = []
     @Published var isLoading                   = false
     @Published var errorMessage: String?       = nil
-    @Published var selectedFilter: String?     = nil   // nil = All
+    @Published var selectedFilter: String?     = "pending"
     @Published var hasNewBooking               = false // drives notification bell badge
 
     @Published var staffLocation: CLLocation? = nil
@@ -43,8 +44,9 @@ class StaffViewModel: NSObject, ObservableObject {
     // MARK: - Filtered view
     var filteredBookings: [StaffBooking] {
         let base = isAdminRole ? bookings : bookings.filter { $0.status != "cancelled" }
-        guard let filter = selectedFilter else { return base }
-        return base.filter { $0.status == filter }
+        let filtered = selectedFilter == nil ? base : base.filter { $0.status == selectedFilter }
+        guard selectedFilter == "pending" else { return filtered }
+        return filtered.sorted { $0.scheduledDate < $1.scheduledDate }
     }
 
     // MARK: - Fetch
@@ -69,21 +71,44 @@ class StaffViewModel: NSObject, ObservableObject {
 
     // MARK: - Update Status
     func updateStatus(bookingId: String, newStatus: Booking.BookingStatus) async {
+        // Optimistic update: mutate local state immediately so the card
+        // appears in the new tab without waiting for the network round-trip.
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+            if let idx = bookings.firstIndex(where: { $0.id == bookingId }) {
+                bookings[idx].status = newStatus.rawValue
+            }
+            selectedFilter = newStatus.rawValue
+        }
+        // Sync with backend in the background; refetch reconciles any drift.
         do {
             let staffId = (newStatus == .inProgress || newStatus == .completed) ? currentStaffId : nil
             try await StaffAPIService.shared.updateBookingStatus(id: bookingId, status: newStatus.rawValue, staffId: staffId)
             await fetchBookings()
         } catch {
             errorMessage = error.localizedDescription
+            await fetchBookings() // revert to server truth on failure
         }
     }
 
     func cancelWithReason(bookingId: String, reason: String) async {
+        // Optimistic update: reflect the cancellation + reason immediately.
+        // Only admins/managers have a Cancelled tab, so only switch to it for them.
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+            if let idx = bookings.firstIndex(where: { $0.id == bookingId }) {
+                bookings[idx].status = "cancelled"
+                bookings[idx].cancelReason = reason
+            }
+            if isAdminRole {
+                selectedFilter = "cancelled"
+            }
+        }
+        // Sync with backend in the background.
         do {
             try await StaffAPIService.shared.updateBookingStatus(id: bookingId, status: "cancelled", cancelReason: reason)
             await fetchBookings()
         } catch {
             errorMessage = error.localizedDescription
+            await fetchBookings()
         }
     }
 

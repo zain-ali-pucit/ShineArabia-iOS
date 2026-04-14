@@ -73,6 +73,12 @@ class AppState: ObservableObject {
     var isArabic: Bool  { language == .arabic }
     // Any internal role (admin, manager, staff) goes to the Staff panel
     var isStaff: Bool   { userRole == "admin" || userRole == "manager" || userRole == "staff" }
+    // Staff must upload both avatar and certificate before using the app
+    var isStaffProfileComplete: Bool {
+        guard isStaff else { return true }
+        return (currentUser?.avatarUrl ?? "").isEmpty == false &&
+               (currentUser?.certificateUrl ?? "").isEmpty == false
+    }
 
     init() {
         NotificationCenter.default.addObserver(

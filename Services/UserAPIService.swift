@@ -96,13 +96,15 @@ class UserAPIService {
         let remainingPoints: Int
     }
 
-    func redeemReward(points: Int, rewardName: String, address: String, notes: String?) async throws -> Int {
-        let body: [String: Any] = [
+    func redeemReward(points: Int, rewardName: String, address: String, latitude: Double?, longitude: Double?, notes: String?) async throws -> Int {
+        var body: [String: Any] = [
             "points": points,
             "rewardName": rewardName,
             "address": address,
             "notes": notes ?? ""
         ]
+        if let lat = latitude  { body["latitude"]  = lat }
+        if let lng = longitude { body["longitude"] = lng }
         let res: APIResponse<RedeemResponse> = try await client.request("/users/rewards/redeem", method: "POST", body: body)
         guard let data = res.data else {
             throw APIError.serverError(500, "Redeem failed")

@@ -38,8 +38,9 @@ struct APIUser: Codable {
     let phone: String?
     let address: String?
     let avatarUrl: String?
+    let certificateUrl: String?
     let language: String?
-    let role: String?       // "customer", "admin", or "manager"
+    let role: String?       // "customer", "admin", "manager", or "staff"
 }
 
 // MARK: - AuthService

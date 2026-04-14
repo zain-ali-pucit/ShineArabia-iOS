@@ -45,7 +45,7 @@ struct RewardsView: View {
             }
         }
         .task { await loadStats() }
-        .sheet(item: $bookingTier) { tier in
+        .sheet(item: $bookingTier, onDismiss: { Task { await loadStats() } }) { tier in
             RewardBookingSheet(tier: tier, isArabic: isArabic)
                 .environmentObject(appState)
         }
@@ -279,7 +279,7 @@ private struct RewardServiceCard: View {
                     .frame(width: 56, height: 56)
                 Text(tier.icon)
                     .font(.system(size: 26))
-                    .opacity(unlocked ? 1 : 0.3)
+                    .opacity(unlocked ? 1 : 0.55)
             }
 
             // Info
@@ -300,18 +300,18 @@ private struct RewardServiceCard: View {
                 }
                 Text(isArabic ? tier.detailAR : tier.detail)
                     .font(ShineFont.body(12))
-                    .foregroundColor(unlocked ? .shineInk2 : .shineInk3.opacity(0.55))
+                    .foregroundColor(unlocked ? .shineInk2 : .shineInk3.opacity(0.75))
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
                     Image(systemName: unlocked ? "star.fill" : "lock.fill")
                         .font(.system(size: 9))
-                        .foregroundColor(unlocked ? .shineAmber : .shineInk3.opacity(0.4))
+                        .foregroundColor(unlocked ? .shineAmber : .shineInk3.opacity(0.6))
                     Text(unlocked
-                         ? (isArabic ? "مكتسب" : "Unlocked")
+                         ? (isArabic ? "يُخصم \(tier.points) نقطة" : "Costs \(tier.points) pts")
                          : (isArabic ? "يحتاج \(tier.points) نقطة" : "\(tier.points) pts required"))
                         .font(ShineFont.body(11, weight: .medium))
-                        .foregroundColor(unlocked ? .shineAmber : .shineInk3.opacity(0.5))
+                        .foregroundColor(unlocked ? .shineAmber : .shineInk3.opacity(0.65))
                 }
             }
 
@@ -334,7 +334,7 @@ private struct RewardServiceCard: View {
                         .frame(width: 36, height: 36)
                     Image(systemName: "lock.fill")
                         .font(.system(size: 13))
-                        .foregroundColor(.shineInk3.opacity(0.3))
+                        .foregroundColor(.shineInk3.opacity(0.5))
                 }
             }
         }
@@ -354,7 +354,7 @@ private struct RewardServiceCard: View {
                 )
         )
         .shineShadowXS()
-        .opacity(unlocked ? 1 : 0.72)
+        .opacity(unlocked ? 1 : 0.88)
     }
 }
 
@@ -625,6 +625,8 @@ struct RewardBookingSheet: View {
                     points: tier.points,
                     rewardName: tier.reward,
                     address: address,
+                    latitude: latitude,
+                    longitude: longitude,
                     notes: note.isEmpty ? nil : note
                 )
                 await MainActor.run {
