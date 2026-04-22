@@ -1,8 +1,9 @@
 import SwiftUI
 
 class HomeViewModel: ObservableObject {
-    @Published var selectedService: ServiceCategory? = nil
-    @Published var showServiceSheet: Bool           = false
+    @Published var selectedService: ServiceCategory?      = nil
+    @Published var selectedServiceIconEmoji: String?      = nil  // API icon — avoids hardcoding
+    @Published var showServiceSheet: Bool                 = false
     @Published var selectedPackages: [ServicePackage] = []
     @Published var showBookingConfirmed: Bool          = false
     @Published var showAuthPrompt: Bool                = false
@@ -118,9 +119,10 @@ class HomeViewModel: ObservableObject {
     func openService(_ apiCategory: APICategory) {
         if apiCategory.slug == ServiceCategory.bundle.rawValue { openCustomBundle(); return }
         guard !disabledCategorySlugs.contains(apiCategory.slug) else { return }
-        selectedService  = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
-        selectedPackages = []
-        showServiceSheet = true
+        selectedService          = ServiceCategory(rawValue: apiCategory.slug) ?? .laundry
+        selectedServiceIconEmoji = apiCategory.iconEmoji  // use API icon — not hardcoded
+        selectedPackages         = []
+        showServiceSheet         = true
         loadPackages(slug: apiCategory.slug)
         if apiCategory.slug == ServiceCategory.cleaning.rawValue {
             loadCleaningSubPackages()
@@ -132,9 +134,11 @@ class HomeViewModel: ObservableObject {
     func openService(_ category: ServiceCategory) {
         if category == .bundle { openCustomBundle(); return }
         guard !disabledCategorySlugs.contains(category.rawValue) else { return }
-        selectedService  = category
-        selectedPackages = []
-        showServiceSheet = true
+        selectedService          = category
+        // Prefer the API icon from loaded categories; fall back to enum if not yet loaded
+        selectedServiceIconEmoji = categories.first(where: { $0.slug == category.rawValue })?.iconEmoji
+        selectedPackages         = []
+        showServiceSheet         = true
         loadPackages(slug: category.rawValue)
         if category == .cleaning {
             loadCleaningSubPackages()

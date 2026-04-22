@@ -102,7 +102,8 @@ struct ExploreView: View {
                     customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
-                    isLoading: vm.isLoadingPackages
+                    isLoading: vm.isLoadingPackages,
+                    categoryIconEmoji: vm.selectedServiceIconEmoji
                 ) {
                     guard !vm.selectedPackages.isEmpty else { return }
                     if appState.isAuthenticated {
@@ -110,6 +111,10 @@ struct ExploreView: View {
                             await bookingVM.createMultiBooking(packages: vm.selectedPackages)
                             if bookingVM.errorMsg == nil {
                                 vm.confirmBooking()
+                                // Refresh points after successful booking
+                                if let stats = try? await UserAPIService.shared.fetchStats() {
+                                    await MainActor.run { appState.userPoints = stats.points }
+                                }
                             }
                         }
                     } else {
@@ -122,6 +127,7 @@ struct ExploreView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(32)
+                .interactiveDismissDisabled(true)
             }
         }
         // Auth prompt sheet (shown when unauthenticated user tries to book)

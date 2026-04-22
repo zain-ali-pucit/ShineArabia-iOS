@@ -27,7 +27,7 @@ struct MainTabView: View {
 
             // Floating pill tab bar
             ShineTabBar(onAuthRequired: { tab in pendingTab = tab })
-                .padding(.bottom, 24)
+                .padding(.bottom, 14)
         }
         .ignoresSafeArea(edges: .bottom)
         .background(Color.shineBG)

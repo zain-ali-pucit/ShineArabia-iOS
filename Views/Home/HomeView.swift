@@ -25,7 +25,7 @@ struct HomeView: View {
                         title: Loc.string("home.services", isArabic: appState.isArabic),
                         action: Loc.string("home.see_all", isArabic: appState.isArabic)
                     )
-                    .padding(.top, ShineSpacing.xl)
+                    .padding(.top, ShineSpacing.sm)
 
                     ServiceCardsRow(categories: vm.categories, isLoading: vm.isLoadingCategories) { category in
                         vm.openService(category)
@@ -90,7 +90,8 @@ struct HomeView: View {
                     customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,
-                    isLoading: vm.isLoadingPackages
+                    isLoading: vm.isLoadingPackages,
+                    categoryIconEmoji: vm.selectedServiceIconEmoji
                 ) {
                     guard !vm.selectedPackages.isEmpty else { return }
                     if appState.isAuthenticated {
@@ -98,6 +99,10 @@ struct HomeView: View {
                             await bookingVM.createMultiBooking(packages: vm.selectedPackages)
                             if bookingVM.errorMsg == nil {
                                 vm.confirmBooking()
+                                // Refresh points after successful booking
+                                if let stats = try? await UserAPIService.shared.fetchStats() {
+                                    await MainActor.run { appState.userPoints = stats.points }
+                                }
                             }
                         }
                     } else {
@@ -110,6 +115,7 @@ struct HomeView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(32)
+                .interactiveDismissDisabled(true)
             }
         }
         .sheet(isPresented: $vm.showAuthPrompt) {
@@ -692,11 +698,16 @@ struct BookingConfirmedToast: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20))
+                .font(.system(size: 22))
                 .foregroundColor(.shineTeal)
-            Text(Loc.string("home.booking_confirmed", isArabic: isArabic))
-                .font(ShineFont.body(14, weight: .medium))
-                .foregroundColor(.shineInk)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(isArabic ? "✅ تم تأكيد الحجز!" : "✅ Booking confirmed!")
+                    .font(ShineFont.body(14, weight: .semibold))
+                    .foregroundColor(.shineInk)
+                Text(isArabic ? "سنتواصل معك قريباً." : "We'll be in touch shortly.")
+                    .font(ShineFont.body(12))
+                    .foregroundColor(.shineInk3)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)

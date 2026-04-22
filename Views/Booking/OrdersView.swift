@@ -95,14 +95,17 @@ struct BookingCard: View {
     @State private var showCancelConfirm = false
     @State private var newDate: Date = Date()
 
+    // Prefer API-provided values; fall back to local enum so offline still works
     var categoryIcon: String {
-        ServiceCategory(rawValue: booking.serviceCategory)?.icon ?? "✨"
+        if let emoji = booking.categoryIconEmoji, !emoji.isEmpty { return emoji }
+        return ServiceCategory(rawValue: booking.serviceCategory)?.icon ?? "✨"
     }
     var categoryColor: Color {
         ServiceCategory(rawValue: booking.serviceCategory)?.color ?? .shineCoral
     }
     var categorySoft: Color {
-        ServiceCategory(rawValue: booking.serviceCategory)?.softColor ?? .shineCoralLight
+        if let hex = booking.categorySoftColorHex, !hex.isEmpty { return Color(hex: hex) }
+        return ServiceCategory(rawValue: booking.serviceCategory)?.softColor ?? .shineCoralLight
     }
 
     var canReschedule: Bool {

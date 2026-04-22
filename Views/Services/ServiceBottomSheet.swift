@@ -9,6 +9,7 @@ struct ServiceBottomSheet: View {
     @Binding var selectedPackages: [ServicePackage]
     let isArabic: Bool
     let isLoading: Bool
+    var categoryIconEmoji: String? = nil  // API icon — overrides enum fallback when set
     let onBook: () -> Void
 
     @EnvironmentObject var bookingVM: BookingViewModel
@@ -73,7 +74,7 @@ struct ServiceBottomSheet: View {
                         RoundedRectangle(cornerRadius: 20)
                             .fill(category.softColor)
                             .frame(width: 64, height: 64)
-                        Text(category.icon)
+                        Text(categoryIconEmoji ?? category.icon)  // prefer API icon
                             .font(.system(size: 30))
                     }
                     VStack(alignment: .leading, spacing: 4) {

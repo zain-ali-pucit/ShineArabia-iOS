@@ -76,8 +76,8 @@ enum ServiceCategory: String, CaseIterable, Identifiable {
         switch self {
         case .laundry:     return .shineCoral
         case .cleaning:    return .shineTeal
-        case .officeClean: return .shineTeal
-        case .shopClean:   return .shineTeal
+        case .officeClean: return .shineLavender   // lavender — matches DB #7B6FA0
+        case .shopClean:   return .shineAmber      // amber — matches DB #D4893A
         case .carWash:     return .shineAmber
         case .pest:        return .shineLavender
         case .bundle:      return .shineCoral
@@ -88,8 +88,8 @@ enum ServiceCategory: String, CaseIterable, Identifiable {
         switch self {
         case .laundry:     return .shineCoralLight
         case .cleaning:    return .shineTealLight
-        case .officeClean: return .shineTealLight
-        case .shopClean:   return .shineTealLight
+        case .officeClean: return .shineLavLight   // lavender light — matches DB #F0EEF8
+        case .shopClean:   return .shineAmberLight // amber light — matches DB #FEF3E8
         case .carWash:     return .shineAmberLight
         case .pest:        return .shineLavLight
         case .bundle:      return .shineCoralLight
@@ -223,6 +223,8 @@ struct Booking: Identifiable, Codable {
     var price: String
     var priceAmount: Double
     var cancelReason: String?
+    var categoryIconEmoji: String?      // from API — preferred over enum fallback
+    var categorySoftColorHex: String?   // from API — preferred over enum fallback
 
     enum BookingStatus: String, Codable {
         case pending    = "pending"
@@ -280,33 +282,37 @@ struct Booking: Identifiable, Codable {
     }
 
     // Convenience init for local/mock creation
-    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0, cancelReason: String? = nil) {
-        self.id              = id
-        self.apiId           = apiId
-        self.serviceCategory = serviceCategory
-        self.packageName     = packageName
-        self.packageNameAR   = packageNameAR
-        self.scheduledDate   = scheduledDate
-        self.address         = address
-        self.status          = status
-        self.price           = price
-        self.priceAmount     = priceAmount
-        self.cancelReason    = cancelReason
+    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0, cancelReason: String? = nil, categoryIconEmoji: String? = nil, categorySoftColorHex: String? = nil) {
+        self.id                   = id
+        self.apiId                = apiId
+        self.serviceCategory      = serviceCategory
+        self.packageName          = packageName
+        self.packageNameAR        = packageNameAR
+        self.scheduledDate        = scheduledDate
+        self.address              = address
+        self.status               = status
+        self.price                = price
+        self.priceAmount          = priceAmount
+        self.cancelReason         = cancelReason
+        self.categoryIconEmoji    = categoryIconEmoji
+        self.categorySoftColorHex = categorySoftColorHex
     }
 
     // Init from API response
     init(from api: APIBooking, language: AppLanguage = .english) {
-        self.id              = UUID()
-        self.apiId           = api.id
-        self.serviceCategory = api.serviceCategory
-        self.packageName     = api.packageNameEn
-        self.packageNameAR   = api.packageNameAr
-        self.scheduledDate   = api.scheduledDate
-        self.address         = api.address
-        self.status          = BookingStatus(rawValue: api.status) ?? .pending
-        self.price           = "QAR \(Int(api.priceAmount))"
-        self.priceAmount     = api.priceAmount
-        self.cancelReason    = api.cancelReason
+        self.id                   = UUID()
+        self.apiId                = api.id
+        self.serviceCategory      = api.serviceCategory
+        self.packageName          = api.packageNameEn
+        self.packageNameAR        = api.packageNameAr
+        self.scheduledDate        = api.scheduledDate
+        self.address              = api.address
+        self.status               = BookingStatus(rawValue: api.status) ?? .pending
+        self.price                = "QAR \(Int(api.priceAmount))"
+        self.priceAmount          = api.priceAmount
+        self.cancelReason         = api.cancelReason
+        self.categoryIconEmoji    = api.categoryIconEmoji
+        self.categorySoftColorHex = api.categorySoftColorHex
     }
 }
 

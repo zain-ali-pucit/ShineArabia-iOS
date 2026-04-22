@@ -15,6 +15,8 @@ struct APIBooking: Codable, Identifiable {
     let createdAt: Date
     let welcomePromoApplied: Bool?
     let cancelReason: String?
+    let categoryIconEmoji: String?      // API-provided icon (avoids hardcoding)
+    let categorySoftColorHex: String?   // API-provided background colour
 }
 
 struct APIBookingsResponse: Decodable {
