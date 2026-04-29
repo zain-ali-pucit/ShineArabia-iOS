@@ -70,6 +70,19 @@ class AppState: ObservableObject {
     @Published var notifications: [AppNotification] = []
     var unreadCount: Int { notifications.filter { !$0.isRead }.count }
 
+    // MARK: - Push notification deep-link state
+    /// Set when a notification tap should deep-link to a specific booking.
+    /// Cleared by the consumer (StaffView / OrdersView) once handled.
+    @Published var pendingBookingDeepLink: String? = nil
+    /// Bumped whenever a `booking_refresh` push arrives — staff/booking VMs
+    /// observe this to reload their lists.
+    @Published var bookingRefreshTick: Int = 0
+    /// Recently-arrived booking IDs (set by `new_booking` push). UI can decorate
+    /// these cards for ~30 s before they fade back to normal.
+    @Published var newBookingIds: Set<String> = []
+    /// Cached FCM token captured before login — registered after auth completes.
+    var pendingFcmToken: String? = nil
+
     var isArabic: Bool  { language == .arabic }
     // Any internal role (admin, manager, staff) goes to the Staff panel
     var isStaff: Bool   { userRole == "admin" || userRole == "manager" || userRole == "staff" }
@@ -93,7 +106,48 @@ class AppState: ObservableObject {
                 AppNotification(title: title, body: body, date: Date()),
                 at: 0
             )
+
+            // If the push carried structured payload data, react accordingly:
+            //   - type == "booking_refresh"  → bump refresh tick
+            //   - type == "new_booking"      → mark booking new + bump refresh
+            let type     = note.userInfo?["type"]      as? String
+            let bookingId = note.userInfo?["bookingId"] as? String
+            if type == "booking_refresh" {
+                self.bookingRefreshTick += 1
+            }
+            if type == "new_booking", let id = bookingId, !id.isEmpty {
+                self.markBookingAsNew(id)
+                self.bookingRefreshTick += 1
+            }
         }
+
+        // Tap → deep-link routing
+        NotificationCenter.default.addObserver(
+            forName: .pushNotificationTapped,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let self,
+                  let userInfo = note.object as? [AnyHashable: Any] else { return }
+            if let bookingId = userInfo["bookingId"] as? String, !bookingId.isEmpty {
+                self.pendingBookingDeepLink = bookingId
+                // Switch to the orders tab so the user lands on a sensible screen.
+                if !self.isStaff { self.selectedTab = .orders }
+            }
+        }
+    }
+
+    /// Mark a booking as freshly arrived; auto-clears after `duration`.
+    func markBookingAsNew(_ bookingId: String, duration: TimeInterval = 30) {
+        guard !bookingId.isEmpty else { return }
+        newBookingIds.insert(bookingId)
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
+            self?.newBookingIds.remove(bookingId)
+        }
+    }
+
+    func clearPendingBookingDeepLink() {
+        pendingBookingDeepLink = nil
     }
 
     func markAllNotificationsRead() {

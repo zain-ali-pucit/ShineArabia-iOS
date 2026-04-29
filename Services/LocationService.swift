@@ -102,9 +102,44 @@ class LocationService: NSObject, ObservableObject {
                                                          location.coordinate.longitude))
                     return
                 }
-                continuation.resume(returning: place.fullAddress(fallback: location.coordinate))
+                // Booking sheet wants a short address: house no (if any), area, city.
+                // No state / no country — Apple's geocoder for some regions
+                // (e.g. Pakistan) populates locality with the province, so the
+                // long form would read "Punjab, Punjab, Pakistan".
+                continuation.resume(returning: place.bookingAddress(fallback: location.coordinate))
             }
         }
+    }
+}
+
+// MARK: - CLPlacemark short address helper (for booking sheet)
+
+extension CLPlacemark {
+    /// Booking-sheet address: only "house no (if any), area, city".
+    /// Drops state and country because Apple's geocoder occasionally returns
+    /// the province as the locality + administrativeArea (e.g. "Punjab, Punjab")
+    /// for regions where the data is sparse — adding state/country just
+    /// duplicates the noise.
+    func bookingAddress(fallback coordinate: CLLocationCoordinate2D) -> String {
+        var parts: [String] = []
+
+        // House / building number, if present
+        if let number = subThoroughfare, !number.isEmpty {
+            parts.append(number)
+        }
+        // Area / neighbourhood
+        if let area = subLocality, !area.isEmpty, !parts.contains(area) {
+            parts.append(area)
+        }
+        // City
+        if let city = locality, !city.isEmpty, !parts.contains(city) {
+            parts.append(city)
+        }
+
+        if parts.isEmpty {
+            return String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+        }
+        return parts.joined(separator: ", ")
     }
 }
 

@@ -89,6 +89,14 @@ class StaffAPIService {
         )
     }
 
+    // POST /api/staff/location
+    func updateLocation(latitude: Double, longitude: Double) async throws {
+        let body: [String: Any] = ["latitude": latitude, "longitude": longitude]
+        let _: APIResponse<EmptyData> = try await client.request(
+            "/staff/location", method: "POST", body: body
+        )
+    }
+
     // MARK: - Profile
 
     // GET /api/staff/profile

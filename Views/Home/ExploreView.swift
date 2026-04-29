@@ -97,8 +97,6 @@ struct ExploreView: View {
                 ServiceBottomSheet(
                     category: svc,
                     packages: vm.packages,
-                    officePackages: vm.officeCleaningPackages,
-                    shopPackages: vm.shopCleaningPackages,
                     customBundleComponents: vm.customBundleComponents,
                     selectedPackages: $vm.selectedPackages,
                     isArabic: appState.isArabic,

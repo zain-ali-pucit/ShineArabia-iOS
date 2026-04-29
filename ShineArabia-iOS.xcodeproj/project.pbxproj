@@ -53,6 +53,10 @@
 		FF0000000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000002 /* FirebaseCore */; };
 		FF0000000000000000000005 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FF0000000000000000000003 /* FirebaseMessaging */; };
 		FF0000000000000000000006 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B2C1372F808A21008EC2C4 /* GoogleService-Info.plist */; };
+		FF0000000000000000000020 /* RatingAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000010 /* RatingAPIService.swift */; };
+		FF0000000000000000000021 /* RatingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000011 /* RatingViewModel.swift */; };
+		FF0000000000000000000022 /* AssignedStaffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000012 /* AssignedStaffView.swift */; };
+		FF0000000000000000000023 /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000013 /* LocationPickerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -101,6 +105,10 @@
 		EE0000000000000000000001 /* StaffAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAPIService.swift; sourceTree = "<group>"; };
 		EE0000000000000000000002 /* StaffViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffViewModel.swift; sourceTree = "<group>"; };
 		EE0000000000000000000003 /* StaffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffView.swift; sourceTree = "<group>"; };
+		FF0000000000000000000010 /* RatingAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingAPIService.swift; sourceTree = "<group>"; };
+		FF0000000000000000000011 /* RatingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingViewModel.swift; sourceTree = "<group>"; };
+		FF0000000000000000000012 /* AssignedStaffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignedStaffView.swift; sourceTree = "<group>"; };
+		FF0000000000000000000013 /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +183,7 @@
 				AA0000000000000000000205 /* BookingViewModel.swift */,
 				52CD3AE72F8E4C36007F6CF3 /* StaffProfileViewModel.swift */,
 				EE0000000000000000000002 /* StaffViewModel.swift */,
+				FF0000000000000000000011 /* RatingViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -218,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000209 /* OrdersView.swift */,
+				FF0000000000000000000012 /* AssignedStaffView.swift */,
 			);
 			path = Booking;
 			sourceTree = "<group>";
@@ -237,6 +247,7 @@
 				526FA28F2F8705A1007E714D /* ChangePasswordView.swift */,
 				AA000000000000000000020B /* ProfileView.swift */,
 				DD000000000000000000001A /* AddressesView.swift */,
+				FF0000000000000000000013 /* LocationPickerView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -288,6 +299,7 @@
 				BB0000000000000000000009 /* LocalCacheService.swift */,
 				BB0000000000000000000005 /* UserAPIService.swift */,
 				EE0000000000000000000001 /* StaffAPIService.swift */,
+				FF0000000000000000000010 /* RatingAPIService.swift */,
 				5276C62C2F845E1B003AD0D8 /* LocationService.swift */,
 			);
 			path = Services;
@@ -441,6 +453,10 @@
 				BB0000000000000000000108 /* RegisterView.swift in Sources */,
 				52CD3AE52F8E4BFC007F6CF3 /* StaffProfileEditView.swift in Sources */,
 				52CD3AE62F8E4BFC007F6CF3 /* StaffProfileSetupView.swift in Sources */,
+				FF0000000000000000000020 /* RatingAPIService.swift in Sources */,
+				FF0000000000000000000021 /* RatingViewModel.swift in Sources */,
+				FF0000000000000000000022 /* AssignedStaffView.swift in Sources */,
+				FF0000000000000000000023 /* LocationPickerView.swift in Sources */,
 				CC0000000000000000000001 /* RewardsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -17,6 +17,24 @@ struct APIBooking: Codable, Identifiable {
     let cancelReason: String?
     let categoryIconEmoji: String?      // API-provided icon (avoids hardcoding)
     let categorySoftColorHex: String?   // API-provided background colour
+    // Coordinates
+    let latitude: Double?
+    let longitude: Double?
+    // Customer info (returned by staff endpoints)
+    let customerName: String?
+    let customerEmail: String?
+    let customerPhone: String?
+    // Completion attribution (staff endpoints)
+    let completedByStaffId: String?
+    let completedByStaffName: String?
+    let completedAt: Date?
+    // Assigned staff info (customer bookings endpoint)
+    let staffId: String?
+    let staffName: String?
+    let staffPhone: String?
+    let staffAvatarUrl: String?
+    let staffAvgRating: Double?
+    let staffRatingCount: Int?
 }
 
 struct APIBookingsResponse: Decodable {

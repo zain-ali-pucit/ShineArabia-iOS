@@ -83,7 +83,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         NotificationCenter.default.post(
             name: .pushNotificationReceived,
             object: nil,
-            userInfo: ["title": content.title, "body": content.body]
+            userInfo: makeReceivedUserInfo(content: content)
         )
         completionHandler([.banner, .sound, .badge])
     }
@@ -98,10 +98,25 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         NotificationCenter.default.post(
             name: .pushNotificationReceived,
             object: nil,
-            userInfo: ["title": content.title, "body": content.body]
+            userInfo: makeReceivedUserInfo(content: content)
         )
         NotificationCenter.default.post(name: .pushNotificationTapped, object: content.userInfo)
         completionHandler()
+    }
+
+    /// Builds the userInfo dict broadcast on `.pushNotificationReceived`,
+    /// merging title/body with any structured fields from the FCM payload
+    /// (type, bookingId, status) so AppState can react to them.
+    private func makeReceivedUserInfo(content: UNNotificationContent) -> [AnyHashable: Any] {
+        var info: [AnyHashable: Any] = [
+            "title": content.title,
+            "body":  content.body,
+        ]
+        let payload = content.userInfo
+        if let type      = payload["type"]      as? String { info["type"]      = type }
+        if let bookingId = payload["bookingId"] as? String { info["bookingId"] = bookingId }
+        if let status    = payload["status"]    as? String { info["status"]    = status }
+        return info
     }
 }
 

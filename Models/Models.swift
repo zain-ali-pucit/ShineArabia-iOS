@@ -225,6 +225,13 @@ struct Booking: Identifiable, Codable {
     var cancelReason: String?
     var categoryIconEmoji: String?      // from API — preferred over enum fallback
     var categorySoftColorHex: String?   // from API — preferred over enum fallback
+    // Assigned staff info (customer view)
+    var staffId: String?
+    var staffName: String?
+    var staffPhone: String?
+    var staffAvatarUrl: String?
+    var staffAvgRating: Double?
+    var staffRatingCount: Int?
 
     enum BookingStatus: String, Codable {
         case pending    = "pending"
@@ -282,7 +289,7 @@ struct Booking: Identifiable, Codable {
     }
 
     // Convenience init for local/mock creation
-    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0, cancelReason: String? = nil, categoryIconEmoji: String? = nil, categorySoftColorHex: String? = nil) {
+    init(id: UUID = UUID(), apiId: String? = nil, serviceCategory: String, packageName: String, packageNameAR: String = "", scheduledDate: Date, address: String, status: BookingStatus, price: String, priceAmount: Double = 0, cancelReason: String? = nil, categoryIconEmoji: String? = nil, categorySoftColorHex: String? = nil, staffId: String? = nil, staffName: String? = nil, staffPhone: String? = nil, staffAvatarUrl: String? = nil) {
         self.id                   = id
         self.apiId                = apiId
         self.serviceCategory      = serviceCategory
@@ -296,6 +303,10 @@ struct Booking: Identifiable, Codable {
         self.cancelReason         = cancelReason
         self.categoryIconEmoji    = categoryIconEmoji
         self.categorySoftColorHex = categorySoftColorHex
+        self.staffId              = staffId
+        self.staffName            = staffName
+        self.staffPhone           = staffPhone
+        self.staffAvatarUrl       = staffAvatarUrl
     }
 
     // Init from API response
@@ -313,6 +324,12 @@ struct Booking: Identifiable, Codable {
         self.cancelReason         = api.cancelReason
         self.categoryIconEmoji    = api.categoryIconEmoji
         self.categorySoftColorHex = api.categorySoftColorHex
+        self.staffId              = api.staffId
+        self.staffName            = api.staffName
+        self.staffPhone           = api.staffPhone
+        self.staffAvatarUrl       = api.staffAvatarUrl
+        self.staffAvgRating       = api.staffAvgRating
+        self.staffRatingCount     = api.staffRatingCount
     }
 }
 
@@ -552,6 +569,65 @@ class AddressStore: ObservableObject {
         else { return }
         addresses = decoded
     }
+}
+
+// MARK: - Reviews / Ratings
+
+struct APIReview: Decodable {
+    let rating: Int
+    let comment: String?
+    let reviewerName: String?
+    let createdAt: String?
+}
+
+struct StaffRatingData: Decodable {
+    let averageRating: Double
+    let totalCount: Int
+    let reviews: [APIReview]?
+}
+
+struct APIMyReview: Decodable {
+    let id: String
+    let rating: Int
+    let comment: String?
+    let createdAt: String?
+}
+
+struct StaffMyRatingData: Decodable {
+    let averageRating: Double
+    let totalCount: Int
+}
+
+struct StaffReviewItem: Decodable, Identifiable {
+    let id: String
+    let rating: Int
+    let comment: String?
+    let createdAt: String
+    let serviceName: String?
+}
+
+struct ReviewPagination: Decodable {
+    let total: Int
+    let page: Int
+    let limit: Int
+}
+
+struct StaffMyReviewsData: Decodable {
+    let averageRating: Double
+    let totalCount: Int
+    let reviews: [StaffReviewItem]
+    let pagination: ReviewPagination
+}
+
+// MARK: - API Address (server-side)
+
+struct APIAddress: Codable, Identifiable {
+    let id: String
+    let label: String
+    let address: String
+    let isDefault: Bool
+    let latitude: Double?
+    let longitude: Double?
 }
 
 // MARK: - Sample Data

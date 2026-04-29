@@ -25,6 +25,21 @@ struct StaffView: View {
             await vm.fetchBookings()
             vm.startPolling()
         }
+        // FCM-driven refresh: a `booking_refresh` push (other staff accepted)
+        // or a `new_booking` push (customer just booked) bumps this counter,
+        // and we refetch immediately rather than waiting for the 30 s poll.
+        .onChange(of: appState.bookingRefreshTick) { _ in
+            Task { await vm.fetchBookings() }
+        }
+        // When a brand-new booking arrives via FCM, force the Pending tab so
+        // staff don't have to switch tabs to find the freshly-arrived card.
+        // (The card's "NEW" decoration is already driven by appState.newBookingIds.)
+        .onChange(of: appState.newBookingIds) { ids in
+            guard !ids.isEmpty else { return }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+                vm.selectedFilter = "pending"
+            }
+        }
         .onDisappear {
             vm.stopPolling()
             vm.stopLocationTracking()
@@ -303,9 +318,10 @@ private struct StaffBookingListView: View {
 private struct StaffBookingCard: View {
     let booking: StaffBooking
     @ObservedObject var vm: StaffViewModel
-    @State private var isUpdating = false
     @State private var showCancelSheet = false
     @State private var cancelReason = ""
+
+    private var isUpdating: Bool { vm.inFlightBookingIds.contains(booking.id) }
 
     private var distanceText: String? {
         guard let lat = booking.latitude,
@@ -559,20 +575,16 @@ private struct StaffBookingCard: View {
                             .sheet(isPresented: $showCancelSheet) {
                                 CancelReasonSheet(reason: $cancelReason) {
                                     showCancelSheet = false
-                                    isUpdating = true
                                     Task {
                                         await vm.cancelWithReason(bookingId: booking.id, reason: cancelReason)
                                         cancelReason = ""
-                                        isUpdating = false
                                     }
                                 }
                             }
                         } else {
                             Button {
-                                isUpdating = true
                                 Task {
                                     await vm.updateStatus(bookingId: booking.id, newStatus: nextStatus)
-                                    isUpdating = false
                                 }
                             } label: {
                                 HStack(spacing: 7) {

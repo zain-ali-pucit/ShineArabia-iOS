@@ -6,6 +6,12 @@ struct OrdersView: View {
     @State private var selectedSegment = 0
 
     var body: some View {
+        NavigationStack {
+            content
+        }
+    }
+
+    private var content: some View {
         ZStack {
             Color.shineBG.ignoresSafeArea()
 
@@ -124,6 +130,10 @@ struct BookingCard: View {
         return formatter.string(from: booking.scheduledDate)
     }
 
+    var hasAssignedStaff: Bool {
+        booking.staffId != nil && !(booking.staffName ?? "").isEmpty
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
@@ -156,6 +166,79 @@ struct BookingCard: View {
                     .font(ShineFont.body(12))
                     .foregroundColor(.shineInk3)
                     .lineLimit(1)
+            }
+
+            if hasAssignedStaff,
+               let staffId   = booking.staffId,
+               let staffName = booking.staffName {
+                NavigationLink {
+                    AssignedStaffView(
+                        staffName:      staffName,
+                        staffPhone:     booking.staffPhone,
+                        staffAvatarUrl: booking.staffAvatarUrl,
+                        serviceName:    booking.packageName,
+                        statusLabel:    isArabic ? booking.status.displayTitleAR : booking.status.displayTitle,
+                        staffId:        staffId,
+                        bookingId:      booking.apiId ?? ""
+                    )
+                } label: {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.shineTealLight)
+                                .frame(width: 32, height: 32)
+                            if let avatar = booking.staffAvatarUrl, !avatar.isEmpty, let url = URL(string: avatar) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let img):
+                                        img.resizable().scaledToFill()
+                                    default:
+                                        Text(String(staffName.prefix(1)).uppercased())
+                                            .font(ShineFont.body(12, weight: .semibold))
+                                            .foregroundColor(.shineTeal)
+                                    }
+                                }
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                            } else {
+                                Text(String(staffName.prefix(1)).uppercased())
+                                    .font(ShineFont.body(12, weight: .semibold))
+                                    .foregroundColor(.shineTeal)
+                            }
+                        }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(isArabic ? "المحترف المعيّن" : "Assigned Professional")
+                                .font(ShineFont.body(10))
+                                .foregroundColor(.shineInk3)
+                            HStack(spacing: 6) {
+                                Text(staffName)
+                                    .font(ShineFont.body(13, weight: .semibold))
+                                    .foregroundColor(.shineInk)
+                                if let rating = booking.staffAvgRating,
+                                   let count = booking.staffRatingCount,
+                                   count > 0 {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(Color(hex: "F59E0B"))
+                                    Text(String(format: "%.1f", rating))
+                                        .font(ShineFont.body(11, weight: .medium))
+                                        .foregroundColor(.shineInk)
+                                    Text("(\(count))")
+                                        .font(ShineFont.body(11))
+                                        .foregroundColor(.shineInk3)
+                                }
+                            }
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.shineInk3)
+                    }
+                    .padding(10)
+                    .background(Color.shineTealLight.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
             }
 
             if booking.status == .cancelled, let reason = booking.cancelReason, !reason.isEmpty {

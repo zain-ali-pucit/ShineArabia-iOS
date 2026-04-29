@@ -3,8 +3,6 @@ import SwiftUI
 struct ServiceBottomSheet: View {
     let category: ServiceCategory
     let packages: [ServicePackage]
-    let officePackages: [ServicePackage]
-    let shopPackages: [ServicePackage]
     let customBundleComponents: [ServicePackage]
     @Binding var selectedPackages: [ServicePackage]
     let isArabic: Bool
@@ -21,45 +19,9 @@ struct ServiceBottomSheet: View {
     @State private var promoMsg: String?
     @State private var promoIsValid: Bool = false
     @State private var isValidating: Bool = false
-    @State private var cleaningSubType: CleaningSubType = .home
-
-    enum CleaningSubType: CaseIterable {
-        case home, office, shop
-        var title: String {
-            switch self {
-            case .home:   return "Home"
-            case .office: return "Office"
-            case .shop:   return "Shop"
-            }
-        }
-        var titleAR: String {
-            switch self {
-            case .home:   return "منزل"
-            case .office: return "مكتب"
-            case .shop:   return "محل"
-            }
-        }
-        var icon: String {
-            switch self {
-            case .home:   return "🏠"
-            case .office: return "🏢"
-            case .shop:   return "🏪"
-            }
-        }
-    }
 
     private var displayedPackages: [ServicePackage] {
-        if category == .cleaning {
-            switch cleaningSubType {
-            case .home:
-                return packages.isEmpty ? (SampleData.packages[.cleaning] ?? []) : packages
-            case .office:
-                return officePackages.isEmpty ? (SampleData.packages[.officeClean] ?? []) : officePackages
-            case .shop:
-                return shopPackages.isEmpty ? (SampleData.packages[.shopClean] ?? []) : shopPackages
-            }
-        }
-        return packages
+        packages
     }
 
     var body: some View {
@@ -68,131 +30,97 @@ struct ServiceBottomSheet: View {
 
             VStack(spacing: 0) {
 
-                // ── Sheet header ─────────────────────────────────────────
-                HStack(alignment: .top, spacing: 14) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(category.softColor)
-                            .frame(width: 64, height: 64)
-                        Text(categoryIconEmoji ?? category.icon)  // prefer API icon
-                            .font(.system(size: 30))
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(isArabic ? category.titleAR : category.title)
-                            .font(ShineFont.displayBold(26))
-                            .foregroundColor(.shineInk)
-                        Text(Loc.string("sheet.choose_package", isArabic: isArabic))
-                            .font(ShineFont.body(13))
-                            .foregroundColor(.shineInk3)
-                    }
-                    .padding(.top, 6)
-                    Spacer()
-                    Button { dismiss() } label: {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.shineSurface2)
-                                .frame(width: 34, height: 34)
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.shineInk2)
-                        }
-                    }
-                    .padding(.top, 4)
-                }
-                .padding(.horizontal, ShineSpacing.lg)
-                .padding(.top, ShineSpacing.lg)
+                // ── Scrollable content (everything above the sticky footer) ─
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
 
-                Divider()
-                    .padding(.vertical, ShineSpacing.lg)
-                    .padding(.horizontal, ShineSpacing.lg)
-
-                // ── Welcome promo banner ─────────────────────────────────
-                if bookingVM.welcomePromoEligible {
-                    HStack(spacing: 10) {
-                        Text("🎁")
-                            .font(.system(size: 20))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(isArabic ? "عرض العميل الجديد!" : "First booking offer!")
-                                .font(ShineFont.body(13, weight: .semibold))
-                                .foregroundColor(.white)
-                            Text(isArabic
-                                 ? "خصم 20% يُطبَّق تلقائياً على طلبك الأول"
-                                 : "20% off applied automatically to your first booking")
-                                .font(ShineFont.body(11))
-                                .foregroundColor(.white.opacity(0.85))
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(
-                        LinearGradient(colors: [Color(hex: "6C5CE7"), Color(hex: "a29bfe")],
-                                       startPoint: .leading, endPoint: .trailing)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
-                }
-
-                // ── Cleaning sub-category tabs ───────────────────────────
-                if category == .cleaning {
-                    HStack(spacing: 0) {
-                        ForEach(CleaningSubType.allCases, id: \.self) { subType in
-                            Button {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    cleaningSubType = subType
-                                }
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Text(subType.icon)
-                                        .font(.system(size: 14))
-                                    Text(isArabic ? subType.titleAR : subType.title)
-                                        .font(ShineFont.body(13, weight: cleaningSubType == subType ? .semibold : .regular))
-                                        .foregroundColor(cleaningSubType == subType ? .shineTeal : .shineInk3)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(
-                                    cleaningSubType == subType
-                                        ? Color.shineTealLight
-                                        : Color.shineSurface
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: ShineRadius.sm))
+                        // ── Sheet header ─────────────────────────────────
+                        HStack(alignment: .top, spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(category.softColor)
+                                    .frame(width: 64, height: 64)
+                                Text(categoryIconEmoji ?? category.icon)  // prefer API icon
+                                    .font(.system(size: 30))
                             }
-                            .buttonStyle(.plain)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(isArabic ? category.titleAR : category.title)
+                                    .font(ShineFont.displayBold(26))
+                                    .foregroundColor(.shineInk)
+                                Text(Loc.string("sheet.choose_package", isArabic: isArabic))
+                                    .font(ShineFont.body(13))
+                                    .foregroundColor(.shineInk3)
+                            }
+                            .padding(.top, 6)
+                            Spacer()
+                            Button { dismiss() } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.shineSurface2)
+                                        .frame(width: 34, height: 34)
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.shineInk2)
+                                }
+                            }
+                            .padding(.top, 4)
                         }
-                    }
-                    .padding(4)
-                    .background(Color.shineSurface2)
-                    .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
-                }
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.top, ShineSpacing.lg)
 
-                // ── Packages label ───────────────────────────────────────
-                Text(Loc.string("sheet.packages", isArabic: isArabic))
-                    .font(ShineFont.body(11, weight: .semibold))
-                    .foregroundColor(.shineInk3)
-                    .kerning(0.8)
-                    .textCase(.uppercase)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
+                        Divider()
+                            .padding(.vertical, ShineSpacing.lg)
+                            .padding(.horizontal, ShineSpacing.lg)
 
-                // ── Scrollable: packages + date/time + address ───────────
-                if isLoading {
-                    VStack(spacing: 10) {
-                        ProgressView()
-                        Text(isArabic ? "جاري تحميل الخدمات..." : "Loading packages...")
-                            .font(ShineFont.body(13))
+                        // ── Welcome promo banner ─────────────────────────
+                        if bookingVM.welcomePromoEligible {
+                            HStack(spacing: 10) {
+                                Text("🎁")
+                                    .font(.system(size: 20))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(isArabic ? "عرض العميل الجديد!" : "First booking offer!")
+                                        .font(ShineFont.body(13, weight: .semibold))
+                                        .foregroundColor(.white)
+                                    Text(isArabic
+                                         ? "خصم 20% يُطبَّق تلقائياً على طلبك الأول"
+                                         : "20% off applied automatically to your first booking")
+                                        .font(ShineFont.body(11))
+                                        .foregroundColor(.white.opacity(0.85))
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                LinearGradient(colors: [Color(hex: "6C5CE7"), Color(hex: "a29bfe")],
+                                               startPoint: .leading, endPoint: .trailing)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
+                            .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.bottom, ShineSpacing.md)
+                        }
+
+                        // ── Packages label ───────────────────────────────
+                        Text(Loc.string("sheet.packages", isArabic: isArabic))
+                            .font(ShineFont.body(11, weight: .semibold))
                             .foregroundColor(.shineInk3)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                } else {
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 0) {
-                            // Package list
+                            .kerning(0.8)
+                            .textCase(.uppercase)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.bottom, ShineSpacing.md)
+
+                        // ── Packages / loading ───────────────────────────
+                        if isLoading {
+                            VStack(spacing: 10) {
+                                ProgressView()
+                                Text(isArabic ? "جاري تحميل الخدمات..." : "Loading packages...")
+                                    .font(ShineFont.body(13))
+                                    .foregroundColor(.shineInk3)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                        } else {
                             VStack(spacing: 10) {
                                 ForEach(displayedPackages) { pkg in
                                     PackageRow(
@@ -836,102 +764,106 @@ struct CustomBundleBuilderView: View {
             Color.shineBG.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack(alignment: .top, spacing: 14) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(hex: "1C1917").opacity(0.08))
-                            .frame(width: 64, height: 64)
-                        Text("📦")
-                            .font(.system(size: 30))
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(isArabic ? "الباقة" : "Bundle")
-                            .font(ShineFont.displayBold(26))
-                            .foregroundColor(.shineInk)
-                        HStack(spacing: 5) {
-                            Image(systemName: "tag.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.shineCoral)
-                            Text(isArabic ? "اختر ٣ خدمات أو أكثر للحصول على خصم ٣٠٪" : "Select 3+ services to get 30% off")
-                                .font(ShineFont.body(12, weight: .medium))
-                                .foregroundColor(.shineCoral)
-                        }
-                    }
-                    .padding(.top, 6)
-                    Spacer()
-                    Button { dismiss() } label: {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.shineSurface2)
-                                .frame(width: 34, height: 34)
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.shineInk2)
-                        }
-                    }
-                    .padding(.top, 4)
-                }
-                .padding(.horizontal, ShineSpacing.lg)
-                .padding(.top, ShineSpacing.lg)
-
-                Divider()
-                    .padding(.vertical, ShineSpacing.lg)
-                    .padding(.horizontal, ShineSpacing.lg)
-
+                // ── Scrollable content (everything above the sticky footer) ─
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        if isLoading {
-                            VStack(spacing: 10) {
-                                ProgressView()
-                                Text(isArabic ? "جاري تحميل الخدمات..." : "Loading services...")
-                                    .font(ShineFont.body(13))
-                                    .foregroundColor(.shineInk3)
+                    VStack(alignment: .leading, spacing: 0) {
+                        // ── Header ────────────────────────────────────────
+                        HStack(alignment: .top, spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(hex: "1C1917").opacity(0.08))
+                                    .frame(width: 64, height: 64)
+                                Text("📦")
+                                    .font(.system(size: 30))
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 40)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(isArabic ? "الباقة" : "Bundle")
+                                    .font(ShineFont.displayBold(26))
+                                    .foregroundColor(.shineInk)
+                                HStack(spacing: 5) {
+                                    Image(systemName: "tag.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.shineCoral)
+                                    Text(isArabic ? "اختر ٣ خدمات أو أكثر للحصول على خصم ٣٠٪" : "Select 3+ services to get 30% off")
+                                        .font(ShineFont.body(12, weight: .medium))
+                                        .foregroundColor(.shineCoral)
+                                }
+                            }
+                            .padding(.top, 6)
+                            Spacer()
+                            Button { dismiss() } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.shineSurface2)
+                                        .frame(width: 34, height: 34)
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.shineInk2)
+                                }
+                            }
+                            .padding(.top, 4)
                         }
-                        ForEach(components) { item in
-                            PackageRow(
-                                package: item,
-                                isSelected: selectedComponents.contains(where: { $0.id == item.id }),
-                                isArabic: isArabic,
-                                overrideName: nil,
-                                overrideNameAR: nil,
-                                overrideDetail: nil,
-                                overrideDetailAR: nil
-                            ) {
-                                withAnimation(.spring(response: 0.3)) {
-                                    if let idx = selectedComponents.firstIndex(where: { $0.id == item.id }) {
-                                        selectedComponents.remove(at: idx)
-                                    } else {
-                                        selectedComponents.append(item)
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.top, ShineSpacing.lg)
+
+                        Divider()
+                            .padding(.vertical, ShineSpacing.lg)
+                            .padding(.horizontal, ShineSpacing.lg)
+
+                        // ── Package list ──────────────────────────────────
+                        VStack(alignment: .leading, spacing: 10) {
+                            if isLoading {
+                                VStack(spacing: 10) {
+                                    ProgressView()
+                                    Text(isArabic ? "جاري تحميل الخدمات..." : "Loading services...")
+                                        .font(ShineFont.body(13))
+                                        .foregroundColor(.shineInk3)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 40)
+                            }
+                            ForEach(components) { item in
+                                PackageRow(
+                                    package: item,
+                                    isSelected: selectedComponents.contains(where: { $0.id == item.id }),
+                                    isArabic: isArabic,
+                                    overrideName: nil,
+                                    overrideNameAR: nil,
+                                    overrideDetail: nil,
+                                    overrideDetailAR: nil
+                                ) {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        if let idx = selectedComponents.firstIndex(where: { $0.id == item.id }) {
+                                            selectedComponents.remove(at: idx)
+                                        } else {
+                                            selectedComponents.append(item)
+                                        }
                                     }
                                 }
                             }
                         }
+                        .padding(.horizontal, ShineSpacing.lg)
+                        .padding(.bottom, ShineSpacing.md)
+
+                        // ── Date & Time ──────────────────────────────────
+                        DateTimePickerSection(
+                            isArabic: isArabic,
+                            selectedDate: $bookingVM.selectedDate
+                        )
+
+                        // ── Address ──────────────────────────────────────
+                        AddressInputSection(
+                            isArabic: isArabic,
+                            address: $bookingVM.address,
+                            latitude: $bookingVM.latitude,
+                            longitude: $bookingVM.longitude,
+                            locationService: locationService
+                        )
                     }
-                    .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.md)
                 }
 
-                // ── Sticky footer ────────────────────────────────────────
+                // ── Sticky footer (price summary + book button) ──────────
                 VStack(spacing: 0) {
-                    Divider()
-
-                    DateTimePickerSection(
-                        isArabic: isArabic,
-                        selectedDate: $bookingVM.selectedDate
-                    )
-                    .padding(.top, ShineSpacing.md)
-
-                    AddressInputSection(
-                        isArabic: isArabic,
-                        address: $bookingVM.address,
-                        latitude: $bookingVM.latitude,
-                        longitude: $bookingVM.longitude,
-                        locationService: locationService
-                    )
-
                     Divider()
                         .padding(.top, ShineSpacing.sm)
 

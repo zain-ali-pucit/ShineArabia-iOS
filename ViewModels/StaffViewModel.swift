@@ -15,6 +15,9 @@ class StaffViewModel: NSObject, ObservableObject {
     @Published var hasNewBooking               = false // drives notification bell badge
 
     @Published var staffLocation: CLLocation? = nil
+    // Bookings with an in-flight status transition. Drives button-disable
+    // state so a double-tap can't fire two requests for the same row.
+    @Published var inFlightBookingIds: Set<String> = []
     var userRole: String?
     var currentStaffId: String?
     var currentStaffName: String?
@@ -30,9 +33,10 @@ class StaffViewModel: NSObject, ObservableObject {
     private var isAdminRole: Bool { userRole == "admin" || userRole == "manager" }
 
     // MARK: - Filter options
+    // "All" is intentionally hidden for now so staff always view a specific
+    // status bucket. Default filter is "pending" (set on selectedFilter init).
     var filters: [(label: String, value: String?)] {
         var result: [(label: String, value: String?)] = [
-            ("All",         nil),
             ("Pending",     "pending"),
             ("In Progress", "in_progress"),
             ("Completed",   "completed"),
@@ -71,44 +75,41 @@ class StaffViewModel: NSObject, ObservableObject {
 
     // MARK: - Update Status
     func updateStatus(bookingId: String, newStatus: Booking.BookingStatus) async {
-        // Optimistic update: mutate local state immediately so the card
-        // appears in the new tab without waiting for the network round-trip.
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
-            if let idx = bookings.firstIndex(where: { $0.id == bookingId }) {
-                bookings[idx].status = newStatus.rawValue
-            }
-            selectedFilter = newStatus.rawValue
-        }
-        // Sync with backend in the background; refetch reconciles any drift.
+        // Guard against double-tap: bail if a transition for this booking is
+        // already in flight.
+        guard !inFlightBookingIds.contains(bookingId) else { return }
+        inFlightBookingIds.insert(bookingId)
+        defer { inFlightBookingIds.remove(bookingId) }
+        // Wait for the server before touching the UI — only switch tabs once
+        // the backend confirms the transition succeeded.
         do {
             let staffId = (newStatus == .inProgress || newStatus == .completed) ? currentStaffId : nil
             try await StaffAPIService.shared.updateBookingStatus(id: bookingId, status: newStatus.rawValue, staffId: staffId)
             await fetchBookings()
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+                selectedFilter = newStatus.rawValue
+            }
         } catch {
             errorMessage = error.localizedDescription
-            await fetchBookings() // revert to server truth on failure
         }
     }
 
     func cancelWithReason(bookingId: String, reason: String) async {
-        // Optimistic update: reflect the cancellation + reason immediately.
-        // Only admins/managers have a Cancelled tab, so only switch to it for them.
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
-            if let idx = bookings.firstIndex(where: { $0.id == bookingId }) {
-                bookings[idx].status = "cancelled"
-                bookings[idx].cancelReason = reason
-            }
-            if isAdminRole {
-                selectedFilter = "cancelled"
-            }
-        }
-        // Sync with backend in the background.
+        guard !inFlightBookingIds.contains(bookingId) else { return }
+        inFlightBookingIds.insert(bookingId)
+        defer { inFlightBookingIds.remove(bookingId) }
+        // Wait for the server before touching the UI. Only admins/managers have
+        // a Cancelled tab, so only switch to it for them on success.
         do {
             try await StaffAPIService.shared.updateBookingStatus(id: bookingId, status: "cancelled", cancelReason: reason)
             await fetchBookings()
+            if isAdminRole {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
+                    selectedFilter = "cancelled"
+                }
+            }
         } catch {
             errorMessage = error.localizedDescription
-            await fetchBookings()
         }
     }
 

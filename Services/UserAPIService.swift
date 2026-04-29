@@ -123,4 +123,62 @@ class UserAPIService {
         guard let token = UserDefaults.standard.string(forKey: "fcm_token") else { return }
         try? await registerDeviceToken(token)
     }
+
+    // MARK: - Addresses (server-side CRUD)
+
+    struct AddressesResponse: Decodable {
+        struct DataWrapper: Decodable { let addresses: [APIAddress] }
+        let success: Bool
+        let data: DataWrapper?
+    }
+
+    struct AddressResponse: Decodable {
+        struct DataWrapper: Decodable { let address: APIAddress? }
+        let success: Bool
+        let data: DataWrapper?
+        let message: String?
+    }
+
+    // GET /api/addresses
+    func fetchAddresses() async throws -> [APIAddress] {
+        let res: AddressesResponse = try await client.request("/addresses")
+        return res.data?.addresses ?? []
+    }
+
+    // POST /api/addresses
+    func addAddress(label: String, address: String, isDefault: Bool, latitude: Double?, longitude: Double?) async throws -> APIAddress {
+        var body: [String: Any] = [
+            "label":     label,
+            "address":   address,
+            "isDefault": isDefault,
+        ]
+        if let lat = latitude  { body["latitude"]  = lat }
+        if let lng = longitude { body["longitude"] = lng }
+        let res: AddressResponse = try await client.request("/addresses", method: "POST", body: body)
+        guard let saved = res.data?.address else {
+            throw APIError.serverError(400, res.message ?? "Failed to save address")
+        }
+        return saved
+    }
+
+    // PUT /api/addresses/:id
+    func updateAddress(id: String, label: String, address: String, isDefault: Bool, latitude: Double?, longitude: Double?) async throws -> APIAddress {
+        var body: [String: Any] = [
+            "label":     label,
+            "address":   address,
+            "isDefault": isDefault,
+        ]
+        if let lat = latitude  { body["latitude"]  = lat }
+        if let lng = longitude { body["longitude"] = lng }
+        let res: AddressResponse = try await client.request("/addresses/\(id)", method: "PUT", body: body)
+        guard let saved = res.data?.address else {
+            throw APIError.serverError(400, res.message ?? "Failed to update address")
+        }
+        return saved
+    }
+
+    // DELETE /api/addresses/:id
+    func deleteAddress(id: String) async throws {
+        let _: APIResponse<EmptyData> = try await client.request("/addresses/\(id)", method: "DELETE")
+    }
 }
