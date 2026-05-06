@@ -322,7 +322,10 @@ private struct DateTimePickerSection: View {
             }
         }
         .onChange(of: selectedDate) { newValue in
-            minimumDate = computedMinimumDate()
+            // Reuse the minimumDate captured on appear — recomputing here against
+            // a microsecond-fresh `Date()` makes the clamp infinite-loop because
+            // each tick produces a slightly later minimum and the write re-fires
+            // this closure (full main-thread freeze).
             if newValue < minimumDate {
                 selectedDate = minimumDate
             }
