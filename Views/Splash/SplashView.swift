@@ -59,7 +59,6 @@ struct SplashView: View {
                     .interpolation(.high)
                     .scaledToFit()
                     .padding(.horizontal, 120)
-                    .overlay(shimmerOverlay)
 
                 // Reserved space keeps logo position stable whether tagline is
                 // visible or not, so it never jumps when the text fades in.
@@ -74,6 +73,11 @@ struct SplashView: View {
 
                 Spacer()
             }
+
+            // ── Gold shimmer — full screen, sweeps left edge → right edge ──
+            shimmerOverlay
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             // ── Progress bar ──────────────────────────────────
             VStack {
