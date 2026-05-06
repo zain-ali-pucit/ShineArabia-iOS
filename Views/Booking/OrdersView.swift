@@ -188,7 +188,7 @@ struct BookingCard: View {
                                 .fill(Color.shineTealLight)
                                 .frame(width: 32, height: 32)
                             if let avatar = booking.staffAvatarUrl, !avatar.isEmpty, let url = URL(string: avatar) {
-                                AsyncImage(url: url) { phase in
+                                CachedAsyncImage(url: url) { phase in
                                     switch phase {
                                     case .success(let img):
                                         img.resizable().scaledToFill()

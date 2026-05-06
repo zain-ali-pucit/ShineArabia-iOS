@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import CryptoKit
 
 // MARK: - Keyboard Dismissal
 extension View {
@@ -338,5 +339,94 @@ struct EmptyStateView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(ShineSpacing.xl)
+    }
+}
+
+// MARK: - Avatar Image Cache (memory + disk, keyed by URL)
+
+final class AvatarImageCache {
+    static let shared = AvatarImageCache()
+
+    private let memory = NSCache<NSString, UIImage>()
+    private let directory: URL
+
+    private init() {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        directory = caches.appendingPathComponent("AvatarCache", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        memory.countLimit = 200
+    }
+
+    func image(for url: URL) -> UIImage? {
+        let key = url.absoluteString as NSString
+        if let img = memory.object(forKey: key) { return img }
+        guard let data = try? Data(contentsOf: diskPath(for: url)),
+              let img = UIImage(data: data) else { return nil }
+        memory.setObject(img, forKey: key)
+        return img
+    }
+
+    func store(_ image: UIImage, data: Data, for url: URL) {
+        memory.setObject(image, forKey: url.absoluteString as NSString)
+        try? data.write(to: diskPath(for: url))
+    }
+
+    func evict(url: URL) {
+        memory.removeObject(forKey: url.absoluteString as NSString)
+        try? FileManager.default.removeItem(at: diskPath(for: url))
+    }
+
+    private func diskPath(for url: URL) -> URL {
+        let digest = SHA256.hash(data: Data(url.absoluteString.utf8))
+        let name = digest.map { String(format: "%02x", $0) }.joined()
+        return directory.appendingPathComponent(name)
+    }
+}
+
+// MARK: - CachedAsyncImage (drop-in for AsyncImage, backed by AvatarImageCache)
+
+struct CachedAsyncImage<Content: View>: View {
+    let url: URL?
+    let content: (AsyncImagePhase) -> Content
+
+    @State private var phase: AsyncImagePhase
+
+    init(url: URL?, @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
+        self.url = url
+        self.content = content
+        if let url, let cached = AvatarImageCache.shared.image(for: url) {
+            self._phase = State(initialValue: .success(Image(uiImage: cached)))
+        } else {
+            self._phase = State(initialValue: .empty)
+        }
+    }
+
+    var body: some View {
+        content(phase).task(id: url) { await load() }
+    }
+
+    @MainActor
+    private func load() async {
+        guard let url else { phase = .empty; return }
+        if let cached = AvatarImageCache.shared.image(for: url) {
+            phase = .success(Image(uiImage: cached))
+            return
+        }
+        phase = .empty
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                phase = .failure(URLError(.badServerResponse))
+                return
+            }
+            guard let img = UIImage(data: data) else {
+                phase = .failure(URLError(.cannotDecodeContentData))
+                return
+            }
+            AvatarImageCache.shared.store(img, data: data, for: url)
+            phase = .success(Image(uiImage: img))
+        } catch {
+            phase = .failure(error)
+        }
     }
 }

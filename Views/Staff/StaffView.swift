@@ -114,7 +114,7 @@ private struct StaffHeaderView: View {
             Button { showProfileEdit = true } label: {
                 ZStack {
                     if let urlStr = appState.currentUser?.avatarUrl, let url = URL(string: urlStr) {
-                        AsyncImage(url: url) { phase in
+                        CachedAsyncImage(url: url) { phase in
                             if case .success(let img) = phase {
                                 img.resizable().scaledToFill()
                             } else {

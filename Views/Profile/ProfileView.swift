@@ -610,7 +610,7 @@ struct ProfileAvatarView: View {
 
     var body: some View {
         if let urlStr = user?.avatarUrl, let url = URL(string: urlStr) {
-            AsyncImage(url: url) { phase in
+            CachedAsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let img):
                     img.resizable().scaledToFill()

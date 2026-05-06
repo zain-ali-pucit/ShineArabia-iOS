@@ -199,7 +199,7 @@ struct EditProfileView: View {
                 .overlay(Circle().stroke(Color.shineSurface, lineWidth: 3))
                 .shadow(color: Color.shineCoral.opacity(0.25), radius: 12, x: 0, y: 4)
         } else if let urlStr = appState.currentUser?.avatarUrl, let url = URL(string: urlStr) {
-            AsyncImage(url: url) { phase in
+            CachedAsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let img):
                     img.resizable().scaledToFill()
@@ -251,6 +251,7 @@ struct EditProfileView: View {
                 if let oldUrlStr = appState.currentUser?.avatarUrl,
                    let oldUrl = URL(string: oldUrlStr) {
                     URLCache.shared.removeCachedResponse(for: URLRequest(url: oldUrl))
+                    AvatarImageCache.shared.evict(url: oldUrl)
                 }
 
                 let avatarUser = try await UserAPIService.shared.uploadAvatar(imageData: compressed)

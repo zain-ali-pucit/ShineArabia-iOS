@@ -69,7 +69,7 @@ struct StaffProfileEditView: View {
             // Avatar preview
             Group {
                 if let urlStr = vm.profile?.avatarUrl, let url = URL(string: urlStr) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let img):
                             img.resizable().scaledToFill()
