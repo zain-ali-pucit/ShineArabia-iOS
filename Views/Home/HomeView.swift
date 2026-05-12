@@ -64,8 +64,8 @@ struct HomeView: View {
 
                     HowItWorksView()
                         .padding(.horizontal, ShineSpacing.lg)
-                        .padding(.bottom, ShineSpacing.xl)
                 }
+                .padding(.bottom, 100)
             }
 
             // Booking confirmed toast

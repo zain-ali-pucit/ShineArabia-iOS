@@ -60,7 +60,6 @@ struct ExploreView: View {
                         }
                     }
                     .padding(.horizontal, ShineSpacing.lg)
-                    .padding(.bottom, ShineSpacing.xl)
 
                     // Pricing pills
                     if !vm.popularItems.isEmpty {
@@ -70,14 +69,15 @@ struct ExploreView: View {
                             .kerning(0.8)
                             .textCase(.uppercase)
                             .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.top, ShineSpacing.xl)
                             .padding(.bottom, ShineSpacing.md)
 
                         PricingPillsRow(items: vm.popularItems) { category in
                             vm.openService(category)
                         }
-                        .padding(.bottom, ShineSpacing.xl)
                     }
                 }
+                .padding(.bottom, 100)
             }
 
             // Booking confirmed toast

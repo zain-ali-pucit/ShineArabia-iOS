@@ -69,6 +69,7 @@ struct OrdersView: View {
                                 }
                             }
                             .padding(.horizontal, ShineSpacing.lg)
+                            .padding(.bottom, 100)
                         }
                     }
                 }

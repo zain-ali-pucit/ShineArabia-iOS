@@ -269,8 +269,8 @@ struct ProfileView: View {
                         .clipShape(RoundedRectangle(cornerRadius: ShineRadius.md))
                 }
                 .padding(.horizontal, ShineSpacing.lg)
-                .padding(.bottom, ShineSpacing.xl)
             }
+            .padding(.bottom, 100)
         }
     }
 
