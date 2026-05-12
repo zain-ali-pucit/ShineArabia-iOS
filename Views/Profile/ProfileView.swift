@@ -270,7 +270,7 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal, ShineSpacing.lg)
             }
-            .padding(.bottom, 100)
+            .padding(.bottom, 70)
         }
     }
 

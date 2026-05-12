@@ -77,7 +77,7 @@ struct ExploreView: View {
                         }
                     }
                 }
-                .padding(.bottom, 100)
+                .padding(.bottom, 70)
             }
 
             // Booking confirmed toast
@@ -92,7 +92,7 @@ struct ExploreView: View {
             }
         }
         // Service bottom sheet
-        .sheet(isPresented: $vm.showServiceSheet) {
+        .fullScreenCover(isPresented: $vm.showServiceSheet) {
             if let svc = vm.selectedService {
                 ServiceBottomSheet(
                     category: svc,
@@ -122,10 +122,6 @@ struct ExploreView: View {
                     }
                 }
                 .environmentObject(bookingVM)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
-                .presentationCornerRadius(32)
-                .interactiveDismissDisabled(true)
             }
         }
         // Auth prompt sheet (shown when unauthenticated user tries to book)

@@ -65,7 +65,7 @@ struct HomeView: View {
                     HowItWorksView()
                         .padding(.horizontal, ShineSpacing.lg)
                 }
-                .padding(.bottom, 100)
+                .padding(.bottom, 70)
             }
 
             // Booking confirmed toast
@@ -80,7 +80,7 @@ struct HomeView: View {
             }
         }
         // Service bottom sheet
-        .sheet(isPresented: $vm.showServiceSheet) {
+        .fullScreenCover(isPresented: $vm.showServiceSheet) {
             if let svc = vm.selectedService {
                 ServiceBottomSheet(
                     category: svc,
@@ -110,10 +110,6 @@ struct HomeView: View {
                     }
                 }
                 .environmentObject(bookingVM)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
-                .presentationCornerRadius(32)
-                .interactiveDismissDisabled(true)
             }
         }
         .sheet(isPresented: $vm.showAuthPrompt) {

@@ -40,7 +40,7 @@ struct RewardsView: View {
                     }
                     .padding(.horizontal, ShineSpacing.lg)
                     .padding(.top, ShineSpacing.lg)
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 70)
                 }
             }
         }
