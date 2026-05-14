@@ -59,8 +59,13 @@ struct RootView: View {
                 appState.userRole        = user.role
                 await UserAPIService.shared.registerPendingDeviceToken()
             } catch {
+                // Session is dead — fully reset auth state so the user lands on
+                // the customer Home screen instead of a zombie staff panel.
                 TokenStore.clear()
                 appState.isAuthenticated = false
+                appState.currentUser     = nil
+                appState.userRole        = nil
+                appState.userPoints      = 0
             }
         }
     }

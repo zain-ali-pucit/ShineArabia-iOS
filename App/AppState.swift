@@ -84,8 +84,12 @@ class AppState: ObservableObject {
     var pendingFcmToken: String? = nil
 
     var isArabic: Bool  { language == .arabic }
-    // Any internal role (admin, manager, staff) goes to the Staff panel
-    var isStaff: Bool   { userRole == "admin" || userRole == "manager" || userRole == "staff" }
+    // Any internal role (admin, manager, staff) goes to the Staff panel — but
+    // only while authenticated, so a stale role can't strand the user there.
+    var isStaff: Bool   {
+        isAuthenticated &&
+        (userRole == "admin" || userRole == "manager" || userRole == "staff")
+    }
     // Staff must upload both avatar and certificate before using the app
     var isStaffProfileComplete: Bool {
         guard isStaff else { return true }
