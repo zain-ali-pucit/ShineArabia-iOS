@@ -412,16 +412,23 @@ private struct StaffBookingCard: View {
                 .background(Color.shineBorder)
                 .padding(.horizontal, ShineSpacing.md)
 
-            // ── Date + price ──────────────────────────────────────────
-            HStack(spacing: ShineSpacing.lg) {
+            // ── Date + price (with discount line, mirrors admin panel) ─
+            HStack(alignment: .top, spacing: ShineSpacing.lg) {
                 IconDetail(
                     icon: "calendar",
                     text: booking.scheduledDate.formatted(.dateTime.day().month(.abbreviated).year().hour().minute())
                 )
                 Spacer()
-                Text("QAR \(booking.priceAmount, specifier: "%.0f")")
-                    .font(ShineFont.body(16, weight: .semibold))
-                    .foregroundColor(.shineTeal)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("QAR \(booking.priceAmount, specifier: "%.0f")")
+                        .font(ShineFont.body(16, weight: .semibold))
+                        .foregroundColor(.shineTeal)
+                    if booking.discountAmount > 0 {
+                        Text("- QAR \(booking.discountAmount, specifier: "%.0f") disc")
+                            .font(ShineFont.body(11))
+                            .foregroundColor(.shineInk3)
+                    }
+                }
             }
             .padding(.horizontal, ShineSpacing.md)
             .padding(.top, 14)
