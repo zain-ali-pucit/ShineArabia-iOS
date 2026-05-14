@@ -549,11 +549,10 @@ private struct StaffBookingCard: View {
             }
 
             // ── Receipt actions ───────────────────────────────────────
-            // Completed bookings show the PAID receipt; in-progress bookings show
-            // an UNPAID quote that staff can hand to the customer right away.
-            // View downloads the PDF locally and opens it in QuickLook (in-app
-            // PDF viewer). Send also downloads it AND opens WhatsApp pre-targeted
-            // to the customer with the receipt link in the message body.
+            // Completed bookings show the PAID receipt; in-progress bookings
+            // show the same PDF without the stamp, plus a Send button so staff
+            // can push it to the customer over WhatsApp for payment.
+            // View downloads the PDF locally and opens it in QuickLook.
             if (booking.bookingStatus == .completed || booking.bookingStatus == .inProgress),
                let receiptURL = URL(string: "\(APIConfig.baseURL)/bookings/\(booking.id)/receipt") {
                 let isUnpaid = booking.bookingStatus == .inProgress
@@ -586,14 +585,7 @@ private struct StaffBookingCard: View {
                             } else {
                                 Image(systemName: "doc.text")
                                     .font(.system(size: 13, weight: .semibold))
-                                Text({
-                                    switch (isUnpaid, appState.isArabic) {
-                                    case (true,  true):  return "عرض الإيصال (غير مدفوع)"
-                                    case (true,  false): return "View Unpaid Receipt"
-                                    case (false, true):  return "عرض الإيصال"
-                                    case (false, false): return "View Receipt"
-                                    }
-                                }())
+                                Text(appState.isArabic ? "عرض الإيصال" : "View Receipt")
                                     .font(ShineFont.body(13, weight: .semibold))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.85)

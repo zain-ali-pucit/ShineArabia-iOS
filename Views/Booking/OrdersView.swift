@@ -269,14 +269,7 @@ struct BookingCard: View {
                let receiptURL = URL(string: "\(APIConfig.baseURL)/bookings/\(apiId)/receipt") {
                 let isUnpaid = booking.status == .inProgress
                 Link(destination: receiptURL) {
-                    Label({
-                        switch (isUnpaid, isArabic) {
-                        case (true,  true):  return "عرض الإيصال (غير مدفوع)"
-                        case (true,  false): return "View Unpaid Receipt"
-                        case (false, true):  return "عرض الإيصال"
-                        case (false, false): return "View Receipt"
-                        }
-                    }(), systemImage: "doc.text")
+                    Label(isArabic ? "عرض الإيصال" : "View Receipt", systemImage: "doc.text")
                         .font(ShineFont.body(13, weight: .medium))
                         .foregroundColor(isUnpaid ? .shineAmber : .shineTeal)
                 }
