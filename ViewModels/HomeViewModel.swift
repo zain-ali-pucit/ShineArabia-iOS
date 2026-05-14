@@ -8,6 +8,9 @@ class HomeViewModel: ObservableObject {
     @Published var showBookingConfirmed: Bool          = false
     @Published var showAuthPrompt: Bool                = false
     @Published var pendingPackagesForAuth: [ServicePackage] = []
+    // Tracks whether the deferred booking (waiting on login) came from the Custom
+    // Bundle sheet — required so the post-login retry preserves the 30% discount.
+    @Published var pendingIsBundleForAuth: Bool = false
     @Published var showCustomBundleSheet: Bool         = false
     @Published var isLoading: Bool                  = false
     @Published var errorMsg: String?                = nil
@@ -279,10 +282,10 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    private func applyPreselect(_ packageId: String?) {
-        guard let id = packageId,
-              selectedPackages.isEmpty,
-              let match = packages.first(where: { $0.id == id }) else { return }
+    private func applyPreselect(_ packageApiId: String?) {
+        guard let id = packageApiId else { return }
+        guard selectedPackages.isEmpty else { return }
+        guard let match = packages.first(where: { $0.apiId == id }) else { return }
         selectedPackages = [match]
     }
 

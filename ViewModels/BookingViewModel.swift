@@ -47,7 +47,7 @@ class BookingViewModel: ObservableObject {
     }
 
     // MARK: Create multi-package booking via API
-    func createMultiBooking(packages: [ServicePackage]) async {
+    func createMultiBooking(packages: [ServicePackage], isBundle: Bool = false) async {
         let deliveryAddress = address.trimmingCharacters(in: .whitespaces)
         await MainActor.run { isSubmitting = true; errorMsg = nil }
 
@@ -62,7 +62,8 @@ class BookingViewModel: ObservableObject {
                     notes:         notes.isEmpty ? nil : notes,
                     promoCode:     promoCode.isEmpty ? nil : promoCode,
                     latitude:      latitude,
-                    longitude:     longitude
+                    longitude:     longitude,
+                    isBundle:      isBundle
                 )
                 await MainActor.run {
                     let newBookings = apiBookings.map { Booking(from: $0) }

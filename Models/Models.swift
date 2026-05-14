@@ -159,6 +159,7 @@ struct ServicePackage: Identifiable {
 // MARK: - Popular Item
 struct PopularItem: Identifiable {
     let id: UUID
+    let apiId: String?         // backend UUID — used to pre-select the matching ServicePackage
     let emoji: String
     let name: String
     let nameAR: String
@@ -176,6 +177,7 @@ struct PopularItem: Identifiable {
     // Convenience init for SampleData
     init(emoji: String, name: String, nameAR: String, rating: Double, reviews: String, reviewsAR: String, price: String, unit: String, unitAR: String, badge: String?, badgeAR: String?, badgeColor: Color, category: ServiceCategory) {
         self.id       = UUID()
+        self.apiId    = nil
         self.emoji    = emoji
         self.name     = name
         self.nameAR   = nameAR
@@ -194,6 +196,7 @@ struct PopularItem: Identifiable {
     // Init from API response
     init(from api: APIPopularItem) {
         self.id       = UUID()
+        self.apiId    = api.id
         self.emoji    = api.emoji
         self.name     = api.nameEn
         self.nameAR   = api.nameAr

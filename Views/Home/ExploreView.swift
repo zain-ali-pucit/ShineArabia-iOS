@@ -73,7 +73,11 @@ struct ExploreView: View {
                             .padding(.bottom, ShineSpacing.md)
 
                         PricingPillsRow(items: vm.popularItems) { item in
-                            vm.openService(item.category, packageId: item.id)
+                            if let apiId = item.apiId {
+                                vm.openService(item.category, packageId: apiId)
+                            } else {
+                                vm.openService(item.category)
+                            }
                         }
                     }
                 }

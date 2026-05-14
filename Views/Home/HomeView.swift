@@ -50,7 +50,11 @@ struct HomeView: View {
                             .padding(.horizontal, ShineSpacing.lg)
                         } else {
                             PopularListView(items: vm.popularItems) { item in
-                                vm.openService(item.category, packageId: item.id)
+                                if let apiId = item.apiId {
+                                    vm.openService(item.category, packageId: apiId)
+                                } else {
+                                    vm.openService(item.category)
+                                }
                             }
                             .padding(.horizontal, ShineSpacing.lg)
                         }
@@ -126,13 +130,14 @@ struct HomeView: View {
                 vm.selectedPackages = selected
                 if appState.isAuthenticated {
                     Task { @MainActor in
-                        await bookingVM.createMultiBooking(packages: selected)
+                        await bookingVM.createMultiBooking(packages: selected, isBundle: true)
                         if bookingVM.errorMsg == nil {
                             vm.confirmBooking()
                         }
                     }
                 } else {
                     vm.pendingPackagesForAuth = selected
+                    vm.pendingIsBundleForAuth = true
                     vm.showAuthPrompt = true
                 }
             }
@@ -140,11 +145,13 @@ struct HomeView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { _ in
             guard !vm.pendingPackagesForAuth.isEmpty else { return }
-            let pkgs = vm.pendingPackagesForAuth
+            let pkgs    = vm.pendingPackagesForAuth
+            let bundle  = vm.pendingIsBundleForAuth
             vm.showAuthPrompt = false
             vm.pendingPackagesForAuth = []
+            vm.pendingIsBundleForAuth = false
             Task { @MainActor in
-                await bookingVM.createMultiBooking(packages: pkgs)
+                await bookingVM.createMultiBooking(packages: pkgs, isBundle: bundle)
                 if bookingVM.errorMsg == nil {
                     vm.confirmBooking()
                 }

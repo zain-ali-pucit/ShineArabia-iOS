@@ -129,7 +129,7 @@ class BookingAPIService {
         return booking
     }
 
-    func createMultiBooking(packageIds: [String], scheduledDate: Date, address: String, notes: String?, promoCode: String?, latitude: Double? = nil, longitude: Double? = nil) async throws -> [APIBooking] {
+    func createMultiBooking(packageIds: [String], scheduledDate: Date, address: String, notes: String?, promoCode: String?, latitude: Double? = nil, longitude: Double? = nil, isBundle: Bool = false) async throws -> [APIBooking] {
         var body: [String: Any] = [
             "packageIds":    packageIds,
             "scheduledDate": ISO8601DateFormatter().string(from: scheduledDate),
@@ -139,6 +139,7 @@ class BookingAPIService {
         if let promo = promoCode, !promo.isEmpty { body["promoCode"] = promo }
         if let lat = latitude  { body["latitude"]  = lat }
         if let lng = longitude { body["longitude"] = lng }
+        if isBundle { body["bundle"] = true }
 
         let res: APIMultiBookingResponse = try await client.request("/bookings/multi", method: "POST", body: body)
         guard let bookings = res.data?.bookings else {
