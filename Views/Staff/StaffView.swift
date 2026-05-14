@@ -318,6 +318,7 @@ private struct StaffBookingListView: View {
 private struct StaffBookingCard: View {
     let booking: StaffBooking
     @ObservedObject var vm: StaffViewModel
+    @EnvironmentObject var appState: AppState
     @State private var showCancelSheet = false
     @State private var cancelReason = ""
 
@@ -342,9 +343,12 @@ private struct StaffBookingCard: View {
         case "laundry":         return "🧺"
         case "carwash":         return "🚗"
         case "bundle":          return "🎁"
+        case "rewards":         return "🏆"
         default:                return "✨"
         }
     }
+
+    private var isReward: Bool { booking.serviceCategory == "rewards" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -370,7 +374,12 @@ private struct StaffBookingCard: View {
                 }
 
                 Spacer()
-                StatusBadge(status: booking.bookingStatus)
+                VStack(alignment: .trailing, spacing: 6) {
+                    if isReward {
+                        RewardBadge(isArabic: appState.isArabic)
+                    }
+                    StatusBadge(status: booking.bookingStatus)
+                }
             }
             .padding(.horizontal, ShineSpacing.md)
             .padding(.top, ShineSpacing.md)

@@ -305,6 +305,23 @@ struct StatusBadge: View {
     }
 }
 
+// MARK: - Reward Badge
+// Distinguishes a reward-redemption booking from a normal paid booking in the
+// staff panel — paired with the 🏆 emoji tile on the card.
+struct RewardBadge: View {
+    let isArabic: Bool
+
+    var body: some View {
+        Text(isArabic ? "🏆 مكافأة" : "🏆 REWARD")
+            .font(ShineFont.body(10, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color.shineAmber)
+            .clipShape(Capsule())
+    }
+}
+
 // MARK: - Empty State
 struct IconDetail: View {
     let icon: String
