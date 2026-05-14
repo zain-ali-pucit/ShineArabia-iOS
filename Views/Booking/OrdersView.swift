@@ -262,6 +262,17 @@ struct BookingCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
+            // View Receipt (completed only) — opens the public receipt URL in Safari
+            if booking.status == .completed,
+               let apiId = booking.apiId,
+               let receiptURL = URL(string: "\(APIClient.baseURL)/bookings/\(apiId)/receipt") {
+                Link(destination: receiptURL) {
+                    Label(isArabic ? "عرض الإيصال" : "View Receipt", systemImage: "doc.text")
+                        .font(ShineFont.body(13, weight: .medium))
+                        .foregroundColor(.shineTeal)
+                }
+            }
+
             if canReschedule {
                 HStack(spacing: 16) {
                     Button {
