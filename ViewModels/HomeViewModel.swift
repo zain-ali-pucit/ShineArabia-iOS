@@ -145,6 +145,24 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Open service sheet with a specific package pre-selected
+    // Used by the Popular list (Home) and Quick Pricing pills (Services) — tapping
+    // an individual service should land the user in the sheet with that service
+    // already ticked, not an empty selection.
+
+    func openService(_ category: ServiceCategory, packageId: String) {
+        if category == .bundle { openCustomBundle(); return }
+        guard !disabledCategorySlugs.contains(category.rawValue) else { return }
+        selectedService          = category
+        selectedServiceIconEmoji = categories.first(where: { $0.slug == category.rawValue })?.iconEmoji
+        selectedPackages         = []
+        showServiceSheet         = true
+        loadPackages(slug: category.rawValue, preselectPackageId: packageId)
+        if category == .cleaning {
+            loadCleaningSubPackages()
+        }
+    }
+
     // MARK: - Open custom bundle builder directly
 
     func openCustomBundle() {
@@ -225,11 +243,12 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Packages  (cache-first → background refresh)
 
-    private func loadPackages(slug: String) {
+    private func loadPackages(slug: String, preselectPackageId: String? = nil) {
         // 1. Show cached packages instantly — no spinner if cache exists
         if let cached = cache.loadPackages(slug: slug) {
             packages          = cached.map { ServicePackage(from: $0) }
             isLoadingPackages = false
+            applyPreselect(preselectPackageId)
         } else {
             packages          = []
             isLoadingPackages = true
@@ -243,17 +262,28 @@ class HomeViewModel: ObservableObject {
                 if changed || packages.isEmpty {
                     await MainActor.run {
                         packages = fresh.map { ServicePackage(from: $0) }
+                        applyPreselect(preselectPackageId)
                     }
                 }
             } catch {
                 // If no cache and fetch failed, fall back to sample data
                 if packages.isEmpty {
                     let fallback = SampleData.packages[ServiceCategory(rawValue: slug) ?? .laundry] ?? []
-                    await MainActor.run { packages = fallback }
+                    await MainActor.run {
+                        packages = fallback
+                        applyPreselect(preselectPackageId)
+                    }
                 }
             }
             await MainActor.run { isLoadingPackages = false }
         }
+    }
+
+    private func applyPreselect(_ packageId: String?) {
+        guard let id = packageId,
+              selectedPackages.isEmpty,
+              let match = packages.first(where: { $0.id == id }) else { return }
+        selectedPackages = [match]
     }
 
     // MARK: - Booking helpers

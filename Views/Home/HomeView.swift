@@ -50,7 +50,7 @@ struct HomeView: View {
                             .padding(.horizontal, ShineSpacing.lg)
                         } else {
                             PopularListView(items: vm.popularItems) { item in
-                                vm.openService(item.category)
+                                vm.openService(item.category, packageId: item.id)
                             }
                             .padding(.horizontal, ShineSpacing.lg)
                         }

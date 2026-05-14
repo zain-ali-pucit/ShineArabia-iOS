@@ -72,8 +72,8 @@ struct ExploreView: View {
                             .padding(.top, ShineSpacing.xl)
                             .padding(.bottom, ShineSpacing.md)
 
-                        PricingPillsRow(items: vm.popularItems) { category in
-                            vm.openService(category)
+                        PricingPillsRow(items: vm.popularItems) { item in
+                            vm.openService(item.category, packageId: item.id)
                         }
                     }
                 }
@@ -205,14 +205,14 @@ struct PricingPillsRow: View {
     @State private var selected = 0
 
     let items: [PopularItem]
-    let onSelect: (ServiceCategory) -> Void
+    let onSelect: (PopularItem) -> Void
 
     var body: some View {
         VStack(spacing: 10) {
             ForEach(Array(items.prefix(5).enumerated()), id: \.offset) { i, item in
                 Button {
                     withAnimation(.spring(response: 0.3)) { selected = i }
-                    onSelect(item.category)
+                    onSelect(item)
                 } label: {
                     HStack(spacing: 12) {
                         ZStack {
