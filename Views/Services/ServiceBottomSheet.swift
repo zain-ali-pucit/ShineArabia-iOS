@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// Formats a monetary amount: 2 decimals only when there's a fractional part.
+fileprivate func formatAmount(_ v: Double) -> String {
+    v.truncatingRemainder(dividingBy: 1) == 0
+        ? "\(Int(v))"
+        : String(format: "%.2f", v)
+}
+
 struct ServiceBottomSheet: View {
     let category: ServiceCategory
     let packages: [ServicePackage]
@@ -501,7 +508,7 @@ private struct PriceSummarySection: View {
                             .font(ShineFont.body(12))
                             .foregroundColor(.shineInk3)
                         Spacer()
-                        Text("QAR \(Int(subtotal))")
+                        Text("QAR \(formatAmount(subtotal))")
                             .font(ShineFont.body(13))
                             .foregroundColor(.shineInk2)
                     }
@@ -513,7 +520,7 @@ private struct PriceSummarySection: View {
                             .font(ShineFont.body(12))
                             .foregroundColor(.shineTeal)
                         Spacer()
-                        Text("- QAR \(String(format: "%.0f", bundleDiscount))")
+                        Text("- QAR \(formatAmount(bundleDiscount))")
                             .font(ShineFont.body(13, weight: .semibold))
                             .foregroundColor(.shineTeal)
                     }
@@ -527,7 +534,7 @@ private struct PriceSummarySection: View {
                             .font(ShineFont.body(12))
                             .foregroundColor(.shineTeal)
                         Spacer()
-                        Text("- QAR \(String(format: "%.0f", multiItemDiscount))")
+                        Text("- QAR \(formatAmount(multiItemDiscount))")
                             .font(ShineFont.body(13, weight: .semibold))
                             .foregroundColor(.shineTeal)
                     }
@@ -539,7 +546,7 @@ private struct PriceSummarySection: View {
                             .font(ShineFont.body(12))
                             .foregroundColor(.green)
                         Spacer()
-                        Text("- QAR \(String(format: "%.0f", promoDiscount))")
+                        Text("- QAR \(formatAmount(promoDiscount))")
                             .font(ShineFont.body(13, weight: .semibold))
                             .foregroundColor(.green)
                     }
@@ -550,7 +557,7 @@ private struct PriceSummarySection: View {
                         .font(ShineFont.body(14, weight: .semibold))
                         .foregroundColor(.shineInk)
                     Spacer()
-                    Text("QAR \(Int(total))")
+                    Text("QAR \(formatAmount(total))")
                         .font(ShineFont.displayBold(22))
                         .foregroundColor(.shineCoral)
                 }
@@ -876,7 +883,7 @@ struct CustomBundleBuilderView: View {
                                 .font(ShineFont.body(12))
                                 .foregroundColor(.shineInk3)
                             Spacer()
-                            Text("QAR \(Int(subtotal.rounded()))")
+                            Text("QAR \(formatAmount(subtotal))")
                                 .font(ShineFont.body(13))
                                 .foregroundColor(.shineInk2)
                         }
@@ -887,7 +894,7 @@ struct CustomBundleBuilderView: View {
                                     .font(ShineFont.body(12))
                                     .foregroundColor(.shineTeal)
                                 Spacer()
-                                Text("- QAR \(Int(customDiscount.rounded()))")
+                                Text("- QAR \(formatAmount(customDiscount))")
                                     .font(ShineFont.body(13, weight: .semibold))
                                     .foregroundColor(.shineTeal)
                             }
@@ -900,7 +907,7 @@ struct CustomBundleBuilderView: View {
                                 .font(ShineFont.body(14, weight: .semibold))
                                 .foregroundColor(.shineInk)
                             Spacer()
-                            Text("QAR \(Int(total.rounded()))")
+                            Text("QAR \(formatAmount(total))")
                                 .font(ShineFont.displayBold(22))
                                 .foregroundColor(.shineCoral)
                         }

@@ -419,13 +419,23 @@ private struct StaffBookingCard: View {
                     text: booking.scheduledDate.formatted(.dateTime.day().month(.abbreviated).year().hour().minute())
                 )
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("QAR \(booking.priceAmount, specifier: "%.0f")")
+                VStack(alignment: .trailing, spacing: 0) {
+                    // 2-decimal precision only when a discount creates an
+                    // actual fractional price; otherwise integer.
+                    let priceHasFraction = booking.priceAmount.truncatingRemainder(dividingBy: 1) != 0
+                    let priceText: String = (booking.discountAmount > 0 && priceHasFraction)
+                        ? String(format: "QAR %.2f", booking.priceAmount)
+                        : "QAR \(Int(booking.priceAmount))"
+                    Text(priceText)
                         .font(ShineFont.body(16, weight: .semibold))
                         .foregroundColor(.shineTeal)
                     if booking.discountAmount > 0 {
-                        Text("- QAR \(booking.discountAmount, specifier: "%.0f") disc")
-                            .font(ShineFont.body(11))
+                        let discountHasFraction = booking.discountAmount.truncatingRemainder(dividingBy: 1) != 0
+                        let discountText: String = discountHasFraction
+                            ? String(format: "- %.2f disc", booking.discountAmount)
+                            : "- \(Int(booking.discountAmount)) disc"
+                        Text(discountText)
+                            .font(ShineFont.body(11.5))
                             .foregroundColor(.shineInk3)
                     }
                 }
