@@ -1,10 +1,19 @@
 import SwiftUI
+import UIKit
 import CoreLocation
+import QuickLook
+
+// Wrapper so `.sheet(item:)` can drive a QuickLook preview off a downloaded URL.
+fileprivate struct ReceiptPreviewItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
 
 // MARK: - StaffView
 struct StaffView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = StaffViewModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -25,20 +34,32 @@ struct StaffView: View {
             await vm.fetchBookings()
             vm.startPolling()
         }
+        // Refresh whenever the app returns to foreground. FCM pushes that arrive
+        // while the app is backgrounded can't drive an in-memory refresh, so the
+        // booking list would otherwise wait for the 30 s background poll — too
+        // slow when staff just got pinged about a new order.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active {
+                Task { await vm.fetchBookings() }
+            }
+        }
         // FCM-driven refresh: a `booking_refresh` push (other staff accepted)
         // or a `new_booking` push (customer just booked) bumps this counter,
         // and we refetch immediately rather than waiting for the 30 s poll.
         .onChange(of: appState.bookingRefreshTick) { _ in
             Task { await vm.fetchBookings() }
         }
-        // When a brand-new booking arrives via FCM, force the Pending tab so
-        // staff don't have to switch tabs to find the freshly-arrived card.
-        // (The card's "NEW" decoration is already driven by appState.newBookingIds.)
+        // When a brand-new booking arrives via FCM, force the Pending tab AND
+        // refetch directly. We can't rely solely on bookingRefreshTick because
+        // SwiftUI's onChange skips changes that happened while the view was
+        // inactive — newBookingIds is the StateFlow-equivalent signal we always
+        // get reliably, so we trigger the reload here too.
         .onChange(of: appState.newBookingIds) { ids in
             guard !ids.isEmpty else { return }
             withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
                 vm.selectedFilter = "pending"
             }
+            Task { await vm.fetchBookings() }
         }
         .onDisappear {
             vm.stopPolling()
@@ -321,6 +342,8 @@ private struct StaffBookingCard: View {
     @EnvironmentObject var appState: AppState
     @State private var showCancelSheet = false
     @State private var cancelReason = ""
+    @State private var receiptPreview: ReceiptPreviewItem? = nil
+    @State private var isOpeningReceipt: Bool              = false
 
     private var isUpdating: Bool { vm.inFlightBookingIds.contains(booking.id) }
 
@@ -525,81 +548,101 @@ private struct StaffBookingCard: View {
                 .padding(.top, 10)
             }
 
-            // ── Completed by ──────────────────────────────────────────
-            if booking.status == "completed", let staffName = booking.completedByStaffName {
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.shineTeal)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Completed by")
-                            .font(ShineFont.body(11, weight: .semibold))
-                            .foregroundColor(.shineTeal)
-                        HStack(spacing: 6) {
-                            Text(staffName)
-                                .font(ShineFont.body(13, weight: .semibold))
-                                .foregroundColor(.shineInk)
-                            if let completedAt = booking.completedAt {
-                                Text("·")
-                                    .foregroundColor(.shineInk3)
-                                Text(completedAt.formatted(.dateTime.day().month(.abbreviated).hour().minute()))
-                                    .font(ShineFont.body(12))
-                                    .foregroundColor(.shineInk3)
-                            }
-                        }
-                    }
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.shineTealLight)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal, ShineSpacing.md)
-                .padding(.top, 10)
-            }
-
-            // ── Receipt actions (completed only) ──────────────────────
-            // Lets staff open the order receipt and share the link with the
-            // customer right from the completed card.
-            if booking.bookingStatus == .completed,
-               let receiptURL = URL(string: "\(APIClient.baseURL)/bookings/\(booking.id)/receipt") {
+            // ── Receipt actions ───────────────────────────────────────
+            // Completed bookings show the PAID receipt; in-progress bookings show
+            // an UNPAID quote that staff can hand to the customer right away.
+            // View downloads the PDF locally and opens it in QuickLook (in-app
+            // PDF viewer). Send also downloads it AND opens WhatsApp pre-targeted
+            // to the customer with the receipt link in the message body.
+            if (booking.bookingStatus == .completed || booking.bookingStatus == .inProgress),
+               let receiptURL = URL(string: "\(APIConfig.baseURL)/bookings/\(booking.id)/receipt") {
+                let isUnpaid = booking.bookingStatus == .inProgress
                 Divider()
                     .background(Color.shineBorder)
                     .padding(.horizontal, ShineSpacing.md)
                     .padding(.top, 14)
 
                 HStack(spacing: ShineSpacing.sm) {
-                    Link(destination: receiptURL) {
-                        HStack(spacing: 7) {
-                            Image(systemName: "doc.text")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(appState.isArabic ? "عرض الإيصال" : "View Receipt")
-                                .font(ShineFont.body(14, weight: .semibold))
+                    Button {
+                        if isOpeningReceipt { return }
+                        isOpeningReceipt = true
+                        Task { @MainActor in
+                            if let local = await downloadReceiptToCache(
+                                receiptURL: receiptURL,
+                                bookingId:  booking.id
+                            ) {
+                                receiptPreview = ReceiptPreviewItem(url: local)
+                            }
+                            isOpeningReceipt = false
                         }
-                        .foregroundColor(.shineTeal)
+                    } label: {
+                        HStack(spacing: 5) {
+                            if isOpeningReceipt {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(
+                                        tint: isUnpaid ? .shineAmber : .shineTeal
+                                    ))
+                                    .scaleEffect(0.75)
+                            } else {
+                                Image(systemName: "doc.text")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text({
+                                    switch (isUnpaid, appState.isArabic) {
+                                    case (true,  true):  return "عرض الإيصال (غير مدفوع)"
+                                    case (true,  false): return "View Unpaid Receipt"
+                                    case (false, true):  return "عرض الإيصال"
+                                    case (false, false): return "View Receipt"
+                                    }
+                                }())
+                                    .font(ShineFont.body(13, weight: .semibold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                            }
+                        }
+                        .foregroundColor(isUnpaid ? .shineAmber : .shineTeal)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.shineTealLight)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 11)
+                        .background(isUnpaid ? Color.shineAmberLight : Color.shineTealLight)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .disabled(isOpeningReceipt)
 
-                    ShareLink(item: receiptURL,
-                              subject: Text(appState.isArabic ? "إيصال خدمة ShineArabia" : "ShineArabia Service Receipt"),
-                              message: Text(appState.isArabic ? "إيصالك من ShineArabia" : "Your ShineArabia receipt")) {
-                        HStack(spacing: 7) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(appState.isArabic ? "مشاركة" : "Share")
-                                .font(ShineFont.body(14, weight: .semibold))
+                    // Send only on in-progress — completed bookings are already
+                    // paid, so there's nothing for the customer to act on.
+                    if isUnpaid {
+                        Button {
+                            shareReceiptViaWhatsApp(
+                                receiptURL:    receiptURL,
+                                bookingId:     booking.id,
+                                customerPhone: booking.customerPhone,
+                                customerName:  booking.customerName,
+                                isArabic:      appState.isArabic
+                            )
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: "paperplane.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text(appState.isArabic ? "إرسال" : "Send")
+                                    .font(ShineFont.body(13, weight: .semibold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 11)
+                            .background(Color.shineAmber)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.shineTeal)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
                 .padding(.horizontal, ShineSpacing.md)
                 .padding(.top, 12)
+                .sheet(item: $receiptPreview) { preview in
+                    ReceiptQuickLookView(fileURL: preview.url)
+                        .ignoresSafeArea()
+                }
             }
 
             // ── Action buttons ────────────────────────────────────────
@@ -782,5 +825,127 @@ private struct CancelReasonSheet: View {
         .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
         .onAppear { isFocused = true }
+    }
+}
+
+// MARK: - Receipt sharing helper
+// Downloads the receipt PDF into the app's Documents folder AND opens WhatsApp
+// pre-targeted to the customer with a message containing the receipt URL.
+// Both run in parallel so the staff lands on the chat immediately while the
+// file finishes saving in the background.
+//
+// Falls back gracefully:
+//   • If the phone is missing/too short, presents the system share sheet.
+//   • If WhatsApp isn't installed, wa.me hands off to Safari.
+fileprivate func shareReceiptViaWhatsApp(
+    receiptURL: URL,
+    bookingId: String,
+    customerPhone: String?,
+    customerName: String?,
+    isArabic: Bool
+) {
+    // 1. Background download of the PDF to Documents/Downloads/.
+    Task.detached(priority: .utility) {
+        do {
+            let (tempURL, _) = try await URLSession.shared.download(from: receiptURL)
+            let docs = try FileManager.default.url(
+                for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+            )
+            let downloads = docs.appendingPathComponent("Downloads", isDirectory: true)
+            try? FileManager.default.createDirectory(at: downloads, withIntermediateDirectories: true)
+            let shortId  = String(bookingId.prefix(8)).uppercased()
+            let dest = downloads.appendingPathComponent("ShineArabia-Receipt-\(shortId).pdf")
+            try? FileManager.default.removeItem(at: dest)
+            try FileManager.default.moveItem(at: tempURL, to: dest)
+        } catch {
+            // Best-effort — WhatsApp deep-link still carries the public URL.
+        }
+    }
+
+    // 2. Build the message and open WhatsApp targeted at the customer.
+    let firstName = customerName?.split(separator: " ").first.map(String.init)?
+        .trimmingCharacters(in: .whitespaces)
+    let greeting: String
+    let body: String
+    if isArabic {
+        greeting = (firstName?.isEmpty == false) ? "مرحبًا \(firstName!)،" : "مرحبًا،"
+        body = "إيصالك من ShineArabia جاهز:\n\(receiptURL.absoluteString)"
+    } else {
+        greeting = (firstName?.isEmpty == false) ? "Hi \(firstName!)," : "Hi,"
+        body = "Your ShineArabia service receipt is ready:\n\(receiptURL.absoluteString)"
+    }
+    let message = "\(greeting)\n\(body)"
+
+    let digits = (customerPhone ?? "").filter(\.isNumber)
+    let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+    let waURL: URL? = (digits.count >= 7)
+        ? URL(string: "https://wa.me/\(digits)?text=\(encoded)")
+        : nil
+
+    Task { @MainActor in
+        if let waURL, await UIApplication.shared.canOpenURL(waURL) || waURL.scheme == "https" {
+            await UIApplication.shared.open(waURL)
+            return
+        }
+        // Fallback — show the system share sheet so staff can pick another app.
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let root  = scene.windows.first?.rootViewController else { return }
+        let activity = UIActivityViewController(
+            activityItems: [message],
+            applicationActivities: nil
+        )
+        var presenter = root
+        while let presented = presenter.presentedViewController { presenter = presented }
+        presenter.present(activity, animated: true)
+    }
+}
+
+// MARK: - Receipt download helper
+// Downloads the receipt PDF into the app cache and returns the local file URL,
+// suitable for handing to QLPreviewController. Returns nil on failure.
+fileprivate func downloadReceiptToCache(receiptURL: URL, bookingId: String) async -> URL? {
+    do {
+        let (tempURL, _) = try await URLSession.shared.download(from: receiptURL)
+        let caches = try FileManager.default.url(
+            for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+        )
+        let dir = caches.appendingPathComponent("receipts", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let shortId = String(bookingId.prefix(8)).uppercased()
+        let dest = dir.appendingPathComponent("ShineArabia-Receipt-\(shortId).pdf")
+        try? FileManager.default.removeItem(at: dest)
+        try FileManager.default.moveItem(at: tempURL, to: dest)
+        return dest
+    } catch {
+        return nil
+    }
+}
+
+// MARK: - QuickLook wrapper
+// Hosts a QLPreviewController inside SwiftUI to render the PDF in-app, matching
+// Android's "download then open in PDF viewer" UX.
+fileprivate struct ReceiptQuickLookView: UIViewControllerRepresentable {
+    let fileURL: URL
+
+    func makeUIViewController(context: Context) -> UINavigationController {
+        let preview = QLPreviewController()
+        preview.dataSource = context.coordinator
+        return UINavigationController(rootViewController: preview)
+    }
+
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {
+        // No-op — fileURL is captured at init.
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(fileURL: fileURL) }
+
+    final class Coordinator: NSObject, QLPreviewControllerDataSource {
+        let fileURL: URL
+        init(fileURL: URL) { self.fileURL = fileURL }
+        func numberOfPreviewItems(in controller: QLPreviewController) -> Int { 1 }
+        func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+            fileURL as QLPreviewItem
+        }
     }
 }

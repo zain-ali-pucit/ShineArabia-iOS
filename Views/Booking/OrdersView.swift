@@ -262,14 +262,23 @@ struct BookingCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
-            // View Receipt (completed only) — opens the public receipt URL in Safari
-            if booking.status == .completed,
+            // View Receipt — completed bookings show the paid receipt; in-progress
+            // bookings show the unpaid quote so the customer can pay in time.
+            if (booking.status == .completed || booking.status == .inProgress),
                let apiId = booking.apiId,
-               let receiptURL = URL(string: "\(APIClient.baseURL)/bookings/\(apiId)/receipt") {
+               let receiptURL = URL(string: "\(APIConfig.baseURL)/bookings/\(apiId)/receipt") {
+                let isUnpaid = booking.status == .inProgress
                 Link(destination: receiptURL) {
-                    Label(isArabic ? "عرض الإيصال" : "View Receipt", systemImage: "doc.text")
+                    Label({
+                        switch (isUnpaid, isArabic) {
+                        case (true,  true):  return "عرض الإيصال (غير مدفوع)"
+                        case (true,  false): return "View Unpaid Receipt"
+                        case (false, true):  return "عرض الإيصال"
+                        case (false, false): return "View Receipt"
+                        }
+                    }(), systemImage: "doc.text")
                         .font(ShineFont.body(13, weight: .medium))
-                        .foregroundColor(.shineTeal)
+                        .foregroundColor(isUnpaid ? .shineAmber : .shineTeal)
                 }
             }
 

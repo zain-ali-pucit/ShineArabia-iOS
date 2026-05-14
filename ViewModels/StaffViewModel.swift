@@ -113,12 +113,14 @@ class StaffViewModel: NSObject, ObservableObject {
         }
     }
 
-    // MARK: - Polling (30 s interval while screen is visible)
+    // MARK: - Polling (10 s interval while screen is visible)
+    // Shortened from 30 s so the list converges quickly when the FCM realtime
+    // path is missed (rare, but possible).
     func startPolling() {
         guard pollingTask == nil else { return }
         pollingTask = Task {
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
                 if Task.isCancelled { break }
                 await fetchBookings()
             }
