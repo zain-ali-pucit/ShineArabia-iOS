@@ -557,6 +557,51 @@ private struct StaffBookingCard: View {
                 .padding(.top, 10)
             }
 
+            // ── Receipt actions (completed only) ──────────────────────
+            // Lets staff open the order receipt and share the link with the
+            // customer right from the completed card.
+            if booking.bookingStatus == .completed,
+               let receiptURL = URL(string: "\(APIClient.baseURL)/bookings/\(booking.id)/receipt") {
+                Divider()
+                    .background(Color.shineBorder)
+                    .padding(.horizontal, ShineSpacing.md)
+                    .padding(.top, 14)
+
+                HStack(spacing: ShineSpacing.sm) {
+                    Link(destination: receiptURL) {
+                        HStack(spacing: 7) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text(appState.isArabic ? "عرض الإيصال" : "View Receipt")
+                                .font(ShineFont.body(14, weight: .semibold))
+                        }
+                        .foregroundColor(.shineTeal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.shineTealLight)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+
+                    ShareLink(item: receiptURL,
+                              subject: Text(appState.isArabic ? "إيصال خدمة ShineArabia" : "ShineArabia Service Receipt"),
+                              message: Text(appState.isArabic ? "إيصالك من ShineArabia" : "Your ShineArabia receipt")) {
+                        HStack(spacing: 7) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text(appState.isArabic ? "مشاركة" : "Share")
+                                .font(ShineFont.body(14, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.shineTeal)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                }
+                .padding(.horizontal, ShineSpacing.md)
+                .padding(.top, 12)
+            }
+
             // ── Action buttons ────────────────────────────────────────
             if !booking.allowedNextStatuses.isEmpty {
                 Divider()
