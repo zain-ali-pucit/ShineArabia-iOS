@@ -23,12 +23,10 @@ struct LocationPickerView: View {
     @State private var pinLifted = false
     @FocusState private var searchFocused: Bool
 
-    private let geocoder = CLGeocoder()
-
     var body: some View {
         ZStack {
-            // Map
-            MapReader(region: $region, isMoving: $isMoving) { center in
+            // Map — OpenStreetMap tiles overlaid on MKMapView
+            OSMMapView(region: $region, isMoving: $isMoving) { center in
                 handleCameraSettled(at: center)
             }
             .ignoresSafeArea()
@@ -201,18 +199,14 @@ struct LocationPickerView: View {
 
     private func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async {
         isReverseGeocoding = true
-        defer { isReverseGeocoding = false }
-
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            if let place = placemarks.first {
-                await MainActor.run {
-                    selectedAddress = place.fullAddress(fallback: coordinate)
-                }
-            }
-        } catch {
-            // Silent fail — keep last known address
+        defer { Task { @MainActor in isReverseGeocoding = false } }
+        let address = await NominatimClient.reverseGeocode(
+            latitude:     coordinate.latitude,
+            longitude:    coordinate.longitude,
+            languageCode: isArabic ? "ar" : "en"
+        )
+        if let address {
+            await MainActor.run { selectedAddress = address }
         }
     }
 
@@ -225,73 +219,21 @@ struct LocationPickerView: View {
 
         Task {
             defer { Task { @MainActor in isSearching = false } }
-
-            do {
-                let placemarks = try await geocoder.geocodeAddressString(query)
-                if let place = placemarks.first, let location = place.location {
-                    await MainActor.run {
-                        let coord = location.coordinate
-                        selectedLat = coord.latitude
-                        selectedLng = coord.longitude
-                        selectedAddress = place.fullAddress(fallback: coord)
-                        withAnimation {
-                            region = MKCoordinateRegion(
-                                center: coord,
-                                span:   MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                            )
-                        }
-                    }
+            let hits = await NominatimClient.search(
+                query: query, languageCode: isArabic ? "ar" : "en", limit: 1
+            )
+            guard let hit = hits.first else { return }
+            await MainActor.run {
+                let coord = hit.coordinate
+                selectedLat     = coord.latitude
+                selectedLng     = coord.longitude
+                selectedAddress = hit.displayName
+                withAnimation {
+                    region = MKCoordinateRegion(
+                        center: coord,
+                        span:   MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )
                 }
-            } catch {
-                // Silent fail
-            }
-        }
-    }
-}
-
-// MARK: - MapReader (UIKit-backed map with idle/move callbacks)
-
-private struct MapReader: UIViewRepresentable {
-    @Binding var region: MKCoordinateRegion
-    @Binding var isMoving: Bool
-    let onSettled: (CLLocationCoordinate2D) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIView(context: Context) -> MKMapView {
-        let map = MKMapView()
-        map.delegate = context.coordinator
-        map.setRegion(region, animated: false)
-        map.showsCompass = true
-        return map
-    }
-
-    func updateUIView(_ map: MKMapView, context: Context) {
-        // Only update if region change came from outside (e.g. search)
-        let coordEqual = abs(map.region.center.latitude - region.center.latitude) < 1e-5 &&
-                        abs(map.region.center.longitude - region.center.longitude) < 1e-5
-        if !coordEqual {
-            map.setRegion(region, animated: true)
-        }
-    }
-
-    class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: MapReader
-
-        init(_ parent: MapReader) { self.parent = parent }
-
-        func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-            DispatchQueue.main.async { self.parent.isMoving = true }
-        }
-
-        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            let center = mapView.region.center
-            DispatchQueue.main.async {
-                self.parent.isMoving = false
-                self.parent.region = mapView.region
-                self.parent.onSettled(center)
             }
         }
     }

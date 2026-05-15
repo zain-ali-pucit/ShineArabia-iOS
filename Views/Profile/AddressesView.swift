@@ -9,6 +9,7 @@ struct AddressesView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject private var store = AddressStore.shared
     @State private var showAddAddress = false
+    @State private var pendingDelete: SavedAddress? = nil
 
     /// When non-nil the view is in selection mode: tapping an address calls this and dismisses.
     var onSelect: ((SavedAddress) -> Void)? = nil
@@ -54,6 +55,29 @@ struct AddressesView: View {
                 } else {
                     // Fallback on earlier versions
                 }
+            }
+            // Confirm before deleting — easy to lose a saved address by accident.
+            .confirmationDialog(
+                appState.isArabic ? "حذف العنوان" : "Delete Address",
+                isPresented: Binding(
+                    get: { pendingDelete != nil },
+                    set: { if !$0 { pendingDelete = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: pendingDelete
+            ) { target in
+                Button(appState.isArabic ? "حذف" : "Delete", role: .destructive) {
+                    store.remove(target)
+                    pendingDelete = nil
+                }
+                Button(appState.isArabic ? "إلغاء" : "Cancel", role: .cancel) {
+                    pendingDelete = nil
+                }
+            } message: { target in
+                let labelText = appState.isArabic ? target.label.titleAR : target.label.title
+                Text(appState.isArabic
+                     ? "هل أنت متأكد أنك تريد حذف \"\(labelText)\"؟ لا يمكن التراجع عن هذا الإجراء."
+                     : "Are you sure you want to delete \"\(labelText)\"? This can't be undone.")
             }
         }
     }
@@ -124,7 +148,7 @@ struct AddressesView: View {
                         AddressCard(address: addr, isArabic: appState.isArabic) {
                             store.setDefault(addr)
                         } onDelete: {
-                            store.remove(addr)
+                            pendingDelete = addr
                         }
                     }
                 }
@@ -249,10 +273,14 @@ struct AddAddressView: View {
     let onSave: (SavedAddress) -> Void
 
     @State private var searchText: String = ""
-    @State private var searchResults: [MKMapItem] = []
+    @State private var searchResults: [NominatimClient.Hit] = []
     @State private var selectedAddress: String = ""
     @State private var selectedCoordinate: CLLocationCoordinate2D? = nil
-    @State private var mapPosition: MapCameraPosition = .automatic
+    @State private var mapRegion: MKCoordinateRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 25.2854, longitude: 51.5310),
+        span:   MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
+    @State private var isMapMoving = false
     @State private var isLoadingLocation = false
     @State private var isDragging = false
     @State private var showLabelPicker = false
@@ -297,17 +325,15 @@ struct AddAddressView: View {
 
     private var mapSection: some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(position: $mapPosition)
-                .frame(height: UIScreen.main.bounds.height * 0.42)
-                .onMapCameraChange(frequency: .continuous) { _ in
-                    isDragging = true
-                }
-                .onMapCameraChange(frequency: .onEnd) { context in
-                    isDragging = false
-                    let center = context.region.center
-                    selectedCoordinate = center
-                    reverseGeocodeCenter(center)
-                }
+            OSMMapView(region: $mapRegion, isMoving: $isMapMoving) { center in
+                isDragging = false
+                selectedCoordinate = center
+                reverseGeocodeCenter(center)
+            }
+            .frame(height: UIScreen.main.bounds.height * 0.42)
+            .onChange(of: isMapMoving) { _, moving in
+                if moving { isDragging = true }
+            }
 
             // Fixed center pin — always at the map's focal point
             ZStack {
@@ -501,9 +527,9 @@ struct AddAddressView: View {
     private var searchResultsList: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                ForEach(searchResults, id: \.self) { item in
+                ForEach(Array(searchResults.enumerated()), id: \.offset) { _, hit in
                     Button {
-                        selectMapItem(item)
+                        selectSearchHit(hit)
                     } label: {
                         HStack(spacing: 12) {
                             ZStack {
@@ -515,13 +541,9 @@ struct AddAddressView: View {
                                     .foregroundColor(.shineCoral)
                             }
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(item.name ?? "")
+                                Text(hit.displayName)
                                     .font(ShineFont.body(14, weight: .medium))
                                     .foregroundColor(.shineInk)
-                                    .lineLimit(1)
-                                Text(item.placemark.formattedAddress)
-                                    .font(ShineFont.body(12))
-                                    .foregroundColor(.shineInk3)
                                     .lineLimit(2)
                             }
                             Spacer()
@@ -675,56 +697,55 @@ struct AddAddressView: View {
         let coord = location.coordinate
         await MainActor.run {
             selectedCoordinate = coord
-            mapPosition = .region(MKCoordinateRegion(
+            mapRegion = MKCoordinateRegion(
                 center: coord,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))
+                span:   MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
         }
         reverseGeocodeCenter(coord)
     }
 
-    /// Reverse-geocode a coordinate and update selectedAddress.
+    /// Reverse-geocode a coordinate (via Nominatim) and update selectedAddress.
     private func reverseGeocodeCenter(_ coordinate: CLLocationCoordinate2D) {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ in
-            DispatchQueue.main.async {
-                guard let place = placemarks?.first else {
-                    self.selectedAddress = String(format: "%.4f, %.4f",
-                                                  coordinate.latitude, coordinate.longitude)
-                    return
-                }
-                self.selectedAddress = place.fullAddress(fallback: coordinate)
+        Task {
+            let address = await NominatimClient.reverseGeocode(
+                latitude:     coordinate.latitude,
+                longitude:    coordinate.longitude,
+                languageCode: appState.isArabic ? "ar" : "en"
+            )
+            await MainActor.run {
+                self.selectedAddress = address ?? String(
+                    format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude
+                )
             }
         }
     }
 
     private func searchAddress(query: String) {
-        guard !query.isEmpty else { searchResults = []; return }
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = query
-        MKLocalSearch(request: request).start { response, _ in
-            DispatchQueue.main.async {
-                self.searchResults = response?.mapItems ?? []
-            }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 3 else {
+            Task { @MainActor in searchResults = [] }
+            return
+        }
+        Task {
+            let hits = await NominatimClient.search(
+                query: trimmed, languageCode: appState.isArabic ? "ar" : "en"
+            )
+            await MainActor.run { self.searchResults = hits }
         }
     }
 
-    private func selectMapItem(_ item: MKMapItem) {
-        let parts = [item.name, item.placemark.formattedAddress]
-            .compactMap { $0 }
-            .filter { !$0.isEmpty }
-        selectedAddress = parts.joined(separator: ", ")
-        selectedCoordinate = item.placemark.coordinate
-        searchText = ""
-        searchResults = []
-        searchFocused = false
-
-        let coord = item.placemark.coordinate
+    private func selectSearchHit(_ hit: NominatimClient.Hit) {
+        selectedAddress    = hit.displayName
+        selectedCoordinate = hit.coordinate
+        searchText         = ""
+        searchResults      = []
+        searchFocused      = false
         withAnimation {
-            mapPosition = .region(MKCoordinateRegion(
-                center: coord,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))
+            mapRegion = MKCoordinateRegion(
+                center: hit.coordinate,
+                span:   MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
         }
     }
 
@@ -742,10 +763,10 @@ struct AddAddressView: View {
             searchResults      = []
             searchFocused      = false
             withAnimation {
-                mapPosition = .region(MKCoordinateRegion(
+                mapRegion = MKCoordinateRegion(
                     center: coord,
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                ))
+                    span:   MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
             }
         }
         reverseGeocodeCenter(coord)
