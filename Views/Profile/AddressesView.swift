@@ -56,6 +56,10 @@ struct AddressesView: View {
                     // Fallback on earlier versions
                 }
             }
+            // Pull canonical address list from the server on each open. The
+            // local UserDefaults cache renders immediately; reload() replaces
+            // it with the server-side truth (and picks up new server IDs).
+            .task { await store.reload() }
             // Confirm before deleting — easy to lose a saved address by accident.
             .confirmationDialog(
                 appState.isArabic ? "حذف العنوان" : "Delete Address",

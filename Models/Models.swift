@@ -521,52 +521,130 @@ struct SavedAddress: Identifiable, Codable, Equatable {
         self.latitude  = latitude
         self.longitude = longitude
     }
+
+    /// Build a local SavedAddress from a server-side APIAddress. Uses the
+    /// server's UUID string as the SwiftUI `id` so the same row stays stable
+    /// across reloads and the local UUID can also be used as the server id
+    /// for subsequent PUT / DELETE calls (via `id.uuidString`).
+    init?(from api: APIAddress) {
+        guard let uuid = UUID(uuidString: api.id) else { return nil }
+        let label = AddressLabel(rawValue: api.label.lowercased()) ?? .other
+        self.id        = uuid
+        self.label     = label
+        self.address   = api.address
+        self.isDefault = api.isDefault
+        self.latitude  = api.latitude
+        self.longitude = api.longitude
+    }
 }
 
 // MARK: - Address Store
 
+@MainActor
 class AddressStore: ObservableObject {
     static let shared = AddressStore()
 
     @Published var addresses: [SavedAddress] = []
 
     private let udKey = "shine_saved_addresses"
+    private let api = UserAPIService.shared
 
-    init() { load() }
+    nonisolated init() {
+        Task { @MainActor in self.loadCache() }
+    }
 
     var defaultAddress: SavedAddress? {
         addresses.first { $0.isDefault } ?? addresses.first
     }
 
+    /// Fetches the canonical address list from the backend and replaces the
+    /// local cache. Safe to call repeatedly (idempotent).
+    func reload() async {
+        do {
+            let remote = try await api.fetchAddresses()
+            self.addresses = remote.compactMap { SavedAddress(from: $0) }
+            saveCache()
+        } catch {
+            // Keep the local cache so the screen still has something to show
+            // when the user is offline / the server is down.
+        }
+    }
+
+    /// Adds an address. Optimistically appends to the local list, then sends
+    /// to the server in the background and reloads so the row picks up the
+    /// server-assigned UUID + canonical fields.
     func add(_ address: SavedAddress) {
         var a = address
         if addresses.isEmpty { a.isDefault = true }
         addresses.append(a)
-        save()
+        saveCache()
+        Task { @MainActor in
+            do {
+                _ = try await api.addAddress(
+                    label:     a.label.rawValue,
+                    address:   a.address,
+                    isDefault: a.isDefault,
+                    latitude:  a.latitude,
+                    longitude: a.longitude
+                )
+                await reload()
+            } catch {
+                // Stay optimistic — the row remains in the cache so the user
+                // sees their input. A future reload() will reconcile or drop it.
+            }
+        }
     }
 
+    /// Removes an address. Optimistic local removal + backend DELETE.
     func remove(_ address: SavedAddress) {
         let wasDefault = address.isDefault
         addresses.removeAll { $0.id == address.id }
         if wasDefault, !addresses.isEmpty {
             addresses[0].isDefault = true
         }
-        save()
+        saveCache()
+        Task { @MainActor in
+            do {
+                try await api.deleteAddress(id: address.id.uuidString)
+                await reload()
+            } catch {
+                // Best-effort — server still has the row, will return on reload.
+            }
+        }
     }
 
+    /// Promotes one address to default. Server-side PUT clears other defaults
+    /// automatically (see addresses.js).
     func setDefault(_ address: SavedAddress) {
         for i in addresses.indices {
             addresses[i].isDefault = (addresses[i].id == address.id)
         }
-        save()
+        saveCache()
+        Task { @MainActor in
+            do {
+                _ = try await api.updateAddress(
+                    id:        address.id.uuidString,
+                    label:     address.label.rawValue,
+                    address:   address.address,
+                    isDefault: true,
+                    latitude:  address.latitude,
+                    longitude: address.longitude
+                )
+                await reload()
+            } catch {
+                // Local state already reflects the desired default; reload later.
+            }
+        }
     }
 
-    private func save() {
+    // MARK: - Local cache (UserDefaults)
+
+    private func saveCache() {
         guard let data = try? JSONEncoder().encode(addresses) else { return }
         UserDefaults.standard.set(data, forKey: udKey)
     }
 
-    private func load() {
+    private func loadCache() {
         guard let data = UserDefaults.standard.data(forKey: udKey),
               let decoded = try? JSONDecoder().decode([SavedAddress].self, from: data)
         else { return }
