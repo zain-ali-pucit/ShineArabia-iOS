@@ -545,6 +545,11 @@ class AddressStore: ObservableObject {
     static let shared = AddressStore()
 
     @Published var addresses: [SavedAddress] = []
+    // Latest user-visible error / success message. Screens observe these and
+    // present an alert / toast, then call clearError() / clearSuccess() so
+    // the next failure or save isn't masked by the previous one.
+    @Published var errorMessage: String?
+    @Published var successMessage: String?
 
     private let udKey = "shine_saved_addresses"
     private let api = UserAPIService.shared
@@ -552,6 +557,9 @@ class AddressStore: ObservableObject {
     nonisolated init() {
         Task { @MainActor in self.loadCache() }
     }
+
+    func clearError()   { errorMessage = nil }
+    func clearSuccess() { successMessage = nil }
 
     var defaultAddress: SavedAddress? {
         addresses.first { $0.isDefault } ?? addresses.first
@@ -578,6 +586,7 @@ class AddressStore: ObservableObject {
         if addresses.isEmpty { a.isDefault = true }
         addresses.append(a)
         saveCache()
+        print("[AddressStore] add → label=\(a.label.rawValue) address=\"\(a.address)\" isDefault=\(a.isDefault) lat=\(a.latitude as Any) lng=\(a.longitude as Any)")
         Task { @MainActor in
             do {
                 _ = try await api.addAddress(
@@ -587,10 +596,16 @@ class AddressStore: ObservableObject {
                     latitude:  a.latitude,
                     longitude: a.longitude
                 )
+                print("[AddressStore] add OK")
+                successMessage = "Address saved"
                 await reload()
             } catch {
-                // Stay optimistic — the row remains in the cache so the user
-                // sees their input. A future reload() will reconcile or drop it.
+                print("[AddressStore] add FAILED: \(error.localizedDescription)")
+                errorMessage = error.localizedDescription
+                // Roll back the optimistic insert so the user isn't fooled into
+                // thinking it persisted — keeps local and server state in sync.
+                addresses.removeAll { $0.id == a.id }
+                saveCache()
             }
         }
     }
@@ -606,9 +621,12 @@ class AddressStore: ObservableObject {
         Task { @MainActor in
             do {
                 try await api.deleteAddress(id: address.id.uuidString)
+                print("[AddressStore] delete OK")
                 await reload()
             } catch {
-                // Best-effort — server still has the row, will return on reload.
+                print("[AddressStore] delete FAILED: \(error.localizedDescription)")
+                errorMessage = error.localizedDescription
+                await reload()  // pull canonical list so the row reappears
             }
         }
     }
@@ -630,9 +648,12 @@ class AddressStore: ObservableObject {
                     latitude:  address.latitude,
                     longitude: address.longitude
                 )
+                print("[AddressStore] setDefault OK")
                 await reload()
             } catch {
-                // Local state already reflects the desired default; reload later.
+                print("[AddressStore] setDefault FAILED: \(error.localizedDescription)")
+                errorMessage = error.localizedDescription
+                await reload()
             }
         }
     }

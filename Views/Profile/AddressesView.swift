@@ -60,6 +60,15 @@ struct AddressesView: View {
             // local UserDefaults cache renders immediately; reload() replaces
             // it with the server-side truth (and picks up new server IDs).
             .task { await store.reload() }
+            // Surface backend errors so silent 4xx/5xx failures don't leave
+            // the user thinking the address was saved when it wasn't.
+            .alert("Couldn't save address",
+                   isPresented: Binding(
+                       get: { store.errorMessage != nil },
+                       set: { if !$0 { store.clearError() } }
+                   ),
+                   actions: { Button("OK", role: .cancel) { store.clearError() } },
+                   message: { Text(store.errorMessage ?? "") })
             // Confirm before deleting — easy to lose a saved address by accident.
             .confirmationDialog(
                 appState.isArabic ? "حذف العنوان" : "Delete Address",
